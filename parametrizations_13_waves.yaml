@@ -1,0 +1,282 @@
+########################################
+# 1++ Sector:
+########################################
+a1(1260):
+ parametrization: 5
+ parameters:
+ - name: M_a1(1260)
+   value: 1.2794
+ - name: G_a1(1260)
+   value: 0.40958
+
+a1(1930):
+ parametrization: 0
+ parameters:
+ - name: M_a1(1930)
+   value: 2.0108
+ - name: G_a1(1930)
+   value: 0.32212
+
+a1(1420):
+ parametrization: 0
+ parameters:
+ - name: M_a1(1420)
+   value: 1.4093
+ - name: G_a1(1420)
+   value: 0.13925
+
+tdepBKG(1++)0+_rho_pi_S:
+ parametrization: 101
+ parameters: 
+ - name: tdepBKG(1++)0+_rho_pi_S__b
+   value: 1.4795
+ - name: tdepBKG(1++)0+_rho_pi_S__c0
+   value: -4.3912
+ - name: tdepBKG(1++)0+_rho_pi_S__c1
+   value: 12.770
+ - name: tdepBKG(1++)0+_rho_pi_S__c2
+   value: -23.516
+ constants:
+ - name: m0
+   value: 0.5
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770
+ - name: t
+   value: 0.00
+ t_dependent: Yes
+
+cohBKG(1++)0+_f0(980)_pi_P:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(1++)0+_f0(980)_pi_P__b
+   value: -5.8146
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf0
+   value: 0.980
+
+cohBKG(1++)0+_rho_pi_D:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(1++)0+_rho_pi_D__b
+   value: 2.5961
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770
+
+########################################
+# 0-+ Sector:
+########################################
+pi(1800):
+ parametrization: 0
+ parameters:
+ - name: M_pi(1800)
+   value: 1.8005
+ - name: G_pi(1800)
+   value: 0.21337
+
+cohBKG(0-+)0+_f0(980)_pi_S:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(0-+)0+_f0(980)_pi_S__b
+   value: -3.3995
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf0
+   value: 0.980
+
+########################################
+# 2++ Sector:
+########################################
+a2(1320):
+ parametrization: 2
+ parameters:
+ - name: M_a2(1320)
+   value: 1.3136
+ - name: G_a2(1320)
+   value: 0.11089
+ constants: 
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770
+ - name: m2
+   value: 0.547
+ - name: BR
+   value: 0.2
+
+a2(1700):
+ parametrization: 0
+ parameters:
+ - name: M_a2(1700)
+   value: 1.6704
+ - name: G_a2(1700)
+   value: 0.41407
+
+cohBKG(2++)1+_f2_pi_P:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(2++)1+_f2_pi_P__b
+   value: -0.77708
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf2
+   value: 1.275
+
+tdepBKG(2++)1+_rho_pi_D:
+ parametrization: 101
+ parameters:
+ - name: tdepBKG(2++)1+_rho_pi_D__b
+   value: 0.66388
+ - name: tdepBKG(2++)1+_rho_pi_D__c0
+   value: -1.6812
+ - name: tdepBKG(2++)1+_rho_pi_D__c1
+   value: 0.51046
+ - name: tdepBKG(2++)1+_rho_pi_D__c2
+   value: 2.5439
+ constants:
+ - name: m0
+   value: 0.5 
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.77
+ - name: t
+   value: 0.00
+ t_dependent: Yes
+
+cohBKG(2++)2+_rho_pi_D:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(2++)2+_rho_pi_D__b
+   value: -0.89233
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770
+
+########################################
+# 2-+ Sector:
+########################################
+pi2(1670):
+ parametrization: 0
+ parameters:
+ - name: M_pi2(1670)
+   value: 1.6521
+ - name: G_pi2(1670)
+   value: 0.30451
+
+pi2(1880):
+ parametrization: 0
+ parameters:
+ - name: M_pi2(1880)
+   value: 1.8335
+ - name: G_pi2(1880)
+   value: 0.32157
+ 
+cohBKG(2-+)0+_f2_pi_D:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(2-+)0+_f2_pi_D__b
+   value: 2.4491
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf2
+   value: 1.275
+
+tdepBKG(2-+)0+_f2_pi_S:
+ parametrization: 101
+ parameters:
+ - name: tdepBKG(2-+)0+_f2_pi_S__b
+   value: 2.0204
+ - name: tdepBKG(2-+)0+_f2_pi_S__c0
+   value: -3.7016
+ - name: tdepBKG(2-+)0+_f2_pi_S__c1
+   value: 3.1433
+ - name: tdepBKG(2-+)0+_f2_pi_S__c2
+   value: -2.9780
+ constants:
+ - name: m0
+   value: 0.5
+ - name: mP
+   value: 0.139
+ - name: mf2
+   value: 1.275
+ - name: t
+   value: 0.00
+ t_dependent: Yes
+
+tdepBKG(2-+)0+_rho_pi_F:
+ parametrization: 101
+ parameters:
+ - name: tdepBKG(2-+)0+_rho_pi_F__b
+   value: -1.3158
+ - name: tdepBKG(2-+)0+_rho_pi_F__c0
+   value: 0.90445
+ - name: tdepBKG(2-+)0+_rho_pi_F__c1
+   value: -0.18399E-01
+ - name: tdepBKG(2-+)0+_rho_pi_F__c2
+   value: 2.0252
+ constants:
+ - name: m0
+   value: 0.5
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770
+ - name: t
+   value: 0.00
+ t_dependent: Yes 
+
+cohBKG(2-+)1+_f2_pi_S:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(2-+)1+_f2_pi_S__b
+   value: -0.92364
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf2
+   value: 1.275
+
+########################################
+# 4++ Sector:
+########################################
+a4(2040):
+ parametrization: 0
+ parameters:
+ - name: M_a4(2040)
+   value: 1.9256
+ - name: G_a4(2040)
+   value: 0.37209
+
+cohBKG(4++)1+_f2_pi_F:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(4++)1+_f2_pi_F__b
+   value: -0.18977
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mf2
+   value: 1.275
+
+cohBKG(4++)1+_rho_pi_G:
+ parametrization: 3
+ parameters:
+ - name: cohBKG(4++)1+_rho_pi_G__b
+   value: -4.3411
+ constants:
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.770

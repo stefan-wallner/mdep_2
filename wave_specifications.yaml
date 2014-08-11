@@ -1,0 +1,39 @@
+1-(0-+)0+ f0(980) pi S:
+  phase_space: 1000
+  spin: 0
+1-(1++)0+ f0(980) pi P:
+  phase_space: 1003
+  spin: 1
+1-(1++)0+ rho pi D:
+  phase_space: 1007
+  spin: 1
+1-(1++)0+ rho pi S:
+  phase_space: 1002
+  spin: 1
+1-(2++)1+ f2 pi P:
+  phase_space: 1008
+  spin: 2
+1-(2++)1+ rho pi D:
+  phase_space: 1005
+  spin: 2
+1-(2++)2+ rho pi D:
+  phase_space: 1009
+  spin: 2
+1-(2-+)0+ f2 pi D:
+  phase_space: 1012
+  spin: 2
+1-(2-+)0+ f2 pi S:
+  phase_space: 1004
+  spin: 2
+1-(2-+)0+ rho pi F:
+  phase_space: 1011
+  spin: 2
+1-(2-+)1+ f2 pi S:
+  phase_space: 1010
+  spin: 2
+1-(4++)1+ f2 pi F:
+  phase_space: 1006
+  spin: 4
+1-(4++)1+ rho pi G:
+  phase_space: 1001
+  spin: 4
