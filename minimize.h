@@ -58,40 +58,39 @@ class minimize : public anchor_t{
 		double fit();
 
 		void writePlots(int tbin,std::string filename);
+		void branchCouplingsToOne();
 
 
 
 	protected:
-		int _n_self;
+		bool _init; // true, if the minimizer is already initialized
+		bool _useBranch; // Switches the usage of branchings on/off (only in the operator() method
+		int _nOut; // Print output after _nOut iterations
 
-		bool _init;
-		bool _useBranch;
-		int _nOut;
+		int _nTot; // Total number of parameters
+		int _nPar; // Number of shape parameters
+		int _nCpl; // Number of couplings (total, all t' bins summed)
+		int _nBra; // Number of branchings
+		int _count;// Count of calls
 
-		int _nTot;
-		int _nPar;
-		int _nCpl;
-		int _nBra;
-		int _count;
-
-		int _maxFunctionCalls;
+		int _maxFunctionCalls; 
 		int _maxIterations;
 		double _tolerance;
-		double _randRange;
+		double _randRange; // Range for random paramters (couplings and branchings)
 
-		std::vector<double> _best_par;
+		std::vector<double> _best_par; // Best paramters
 
 		ROOT::Math::Minimizer* _min;
 		ROOT::Math::Functor _f;
 
-		double _minStepSize;
-		std::vector<double> _parameters;
-		std::vector<double> _upper_parameter_limits;
+		double _minStepSize; // Minimal step size
+		std::vector<double> _parameters; // Acutal paramters (2*_nCpl,_nPar,2*_nBra) - these are 'all' parameters!!! In the lower classes, parameters were only the shape parameters
+		std::vector<double> _upper_parameter_limits; // Paramters limits
 		std::vector<double> _lower_parameter_limits;
 
-		std::vector<double> _step_sizes;
-		std::vector<bool> _released;
-		std::vector<std::string> _parNames;
+		std::vector<double> _step_sizes; 
+		std::vector<bool> _released; // status of each paramters
+		std::vector<std::string> _parNames; // Name of each parameter
 
 };
 #endif//MINIMIZE_MINI_MICE

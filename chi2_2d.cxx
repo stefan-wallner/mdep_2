@@ -26,7 +26,7 @@ void print_vector(std::vector<T> in){
 chi2_2d::chi2_2d():chi2(),_nPoints(0),_nIso(0),_maxNparsIso(0),_maxBinIso(0){};
 
 template<typename xdouble>
-std::vector<std::complex<xdouble> > chi2_2d::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &funcEvals2pi){
+std::vector<std::complex<xdouble> > chi2_2d::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &funcEvals2pi){ // the amplitude for each wave and mass bin
 	std::vector<std::complex<xdouble> > funcEval = funcs(m,par); // Evalulated BW-functions
 	std::vector<std::complex<xdouble> > ampl = std::vector<std::complex<xdouble> >(_nPoints,std::complex<xdouble>(0.,0.)); // Vector of final amplitudes
 	std::vector<double> ps = phase_space(m);
@@ -68,7 +68,7 @@ std::vector<std::complex<xdouble> > chi2_2d::amps(double m,std::vector<std::comp
 template std::vector<std::complex<double> > chi2_2d::amps(double m, std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi);
 
 template<typename xdouble>
-std::vector<std::vector<std::complex<xdouble> > > chi2_2d::iso_funcs(std::vector<xdouble> &par){
+std::vector<std::vector<std::complex<xdouble> > > chi2_2d::iso_funcs(std::vector<xdouble> &par){ // Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
 	std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
 	int upPar=0;
 	int loPar=0;
@@ -101,7 +101,7 @@ std::vector<std::vector<std::complex<xdouble> > > chi2_2d::iso_funcs(std::vector
 };
 template std::vector<std::vector<std::complex<double> > > chi2_2d::iso_funcs(std::vector<double> &par);
 
-#ifdef ADOL_ON
+#ifdef ADOL_ON // Enables autodiff
 template std::vector<std::complex<adouble> > chi2_2d::amps(double m, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &funcEvals2pi);
 template std::vector<std::vector<std::complex<adouble> > > chi2_2d::iso_funcs(std::vector<adouble> &par);
 #endif//ADOL_ON
@@ -110,14 +110,14 @@ std::string className(){
 	return "chi2_2d";
 };
 
-void chi2_2d::add_wave(){
+void chi2_2d::add_wave(){ // Adds a wave
 	chi2::add_wave();
 	_L_iso.push_back(DEFAULT_L);
 	_wave_n_binning.push_back(-1);
 	_wave_binning_pts.push_back(-1);
 };
 
-void chi2_2d::add_func_to_wave(int wave, int func){
+void chi2_2d::add_func_to_wave(int wave, int func){ // Adds a function without an isobar to a wave
 	int border = _borders_waves[wave];
 	std::vector<int> new_relations;
 	std::vector<int> new_relations_iso;
@@ -144,7 +144,7 @@ void chi2_2d::add_func_to_wave(int wave, int func){
 	updateIsobar();
 	updateNftw();
 };
-void chi2_2d::add_funcs_to_wave(int wave, int func, int func2){
+void chi2_2d::add_funcs_to_wave(int wave, int func, int func2){ // Adds a function-isobar pair to a wave
 	int border = _borders_waves[wave];
 	std::vector<int> new_relations;
 	std::vector<int> new_relations_iso;
@@ -171,7 +171,8 @@ void chi2_2d::add_funcs_to_wave(int wave, int func, int func2){
 	updateIsobar();
 	updateNftw();
 };
-void chi2_2d::printStatus(){
+
+void chi2_2d::printStatus(){ // Prints the internal status
 	chi2::printStatus();
 	std::cout<<std::endl<<"_nIso: "<<_nIso<<std::endl;
 	std::cout<<std::endl<<"_nPoints: "<<_nPoints<<std::endl;
@@ -206,7 +207,7 @@ void chi2_2d::printStatus(){
 	print_vector(_iso_constNames);
 };
 
-bool chi2_2d::checkConsistency(){
+bool chi2_2d::checkConsistency(){ // Checks consistency
 	int nErr =0;
 	if (not chi2::checkConsistency()){
 		nErr++;
@@ -236,11 +237,11 @@ bool chi2_2d::checkConsistency(){
 };
 
 ////////////// 2d specials ////////////////////
-int chi2_2d::getNpoints(){
+int chi2_2d::getNpoints(){ // Getter
 	return _nPoints;
 };
 
-void chi2_2d::updateNpoints(){
+void chi2_2d::updateNpoints(){ // Updates the number of employed points
 	int nnn = 0;
 	for (int wave=0;wave<_nWaves;wave++){
 		nnn+=abs(_wave_binning_pts[wave]);
@@ -249,18 +250,18 @@ void chi2_2d::updateNpoints(){
 	_nPoints = nnn;
 };
 
-void chi2_2d::add_isobar_binning(std::vector<double> binning){
+void chi2_2d::add_isobar_binning(std::vector<double> binning){ // Adds a new isobar binning
 	_iso_binnings.push_back(binning);
 	int nnew = binning.size()-1;
 	if (_maxBinIso<nnew){
 		_maxBinIso=nnew;
 	};
 };
-void chi2_2d::setWaveIsobarSpin(int wave, int L){
+void chi2_2d::setWaveIsobarSpin(int wave, int L){ // Sets the isobar spin for a wave
 	_L_iso[wave]=L;
 	updateIsobar();
 };
-void chi2_2d::add_iso(int i){
+void chi2_2d::add_iso(int i){ // Add a new isobar, sets the internal definitions accordingly
 	_nIso+=1;
 	_isos.push_back(i);
 	int nPar = getNpars(i);
@@ -296,7 +297,7 @@ void chi2_2d::add_iso(int i){
 	_iso_n_binning.push_back(-1);
 };
 
-std::vector<int> chi2_2d::get_nParsIso(){
+std::vector<int> chi2_2d::get_nParsIso(){ // gets the numbers of paramters for each isobar
 	std::vector<int> nPars;
 	nPars.push_back(_iso_borders_par[0]);
 	unsigned int i_max = _iso_borders_par.size();
@@ -306,7 +307,7 @@ std::vector<int> chi2_2d::get_nParsIso(){
 	};
 	return nPars;
 };
-std::vector<int> chi2_2d::get_nConstIso(){
+std::vector<int> chi2_2d::get_nConstIso(){ // gets the numbers of constants for each isobar
 	std::vector<int> nConst;
 	nConst.push_back(_iso_borders_const[0]);
 	int i_max = _iso_borders_const.size();
@@ -317,7 +318,7 @@ std::vector<int> chi2_2d::get_nConstIso(){
 	return nConst;
 };
 
-std::vector<int> chi2_2d::get_wave_isobars(int wave){
+std::vector<int> chi2_2d::get_wave_isobars(int wave){ // Gets all isobars in wave
 	int upper = _borders_waves[wave];
 	int lower=0;
 	if (wave>0){
@@ -338,7 +339,7 @@ std::vector<int> chi2_2d::get_wave_isobars(int wave){
 	};
 	return isos;
 };
-std::vector<int> chi2_2d::get_wave_iso_pars(int wave){
+std::vector<int> chi2_2d::get_wave_iso_pars(int wave){ // Gets the isobar paramters for wave
 	std::vector<int> isos = get_wave_isobars(wave);
 	std::vector<int> pars;
 	for (int i=0;i<isos.size();i++){
@@ -348,7 +349,7 @@ std::vector<int> chi2_2d::get_wave_iso_pars(int wave){
 	return pars;
 };
 
-std::vector<int> chi2_2d::get_wave_iso_const(int wave){
+std::vector<int> chi2_2d::get_wave_iso_const(int wave){ // Gets the isobar constants for wave
 	std::vector<int> isos = get_wave_isobars(wave);
 	std::vector<int> consts;
 	for (int i=0;i<isos.size();i++){
@@ -358,7 +359,7 @@ std::vector<int> chi2_2d::get_wave_iso_const(int wave){
 	return consts;
 };
 
-std::vector<int> chi2_2d::get_isobar_pars(int func){
+std::vector<int> chi2_2d::get_isobar_pars(int func){ // Gets the numbers of paramters for the 'func' isobar paramterization
 	std::vector<int> pars;
 	if(0==_iso_borders_par.size()){
 		return pars;
@@ -373,7 +374,7 @@ std::vector<int> chi2_2d::get_isobar_pars(int func){
 	};
 	return pars;
 };
-std::vector<int> chi2_2d::get_isobar_const(int func){
+std::vector<int> chi2_2d::get_isobar_const(int func){ // Gets the numbers of constants for the 'func' isobar paramterization
 	std::vector<int> consts;
 	if(0==_iso_borders_const.size()){
 		return consts;
@@ -388,7 +389,7 @@ std::vector<int> chi2_2d::get_isobar_const(int func){
 	};
 	return consts;
 };
-std::vector<int> chi2_2d::get_isobar_waves(int iso){
+std::vector<int> chi2_2d::get_isobar_waves(int iso){ // Get the waves that employ a certain isobar
 	std::vector<int> waves;
 	for (int i=0;i<_nWaves;i++){
 		std::vector<int> isos = get_wave_isobars(i);
@@ -401,7 +402,7 @@ std::vector<int> chi2_2d::get_isobar_waves(int iso){
 	};
 	return waves;
 };
-void chi2_2d::updateIsobar(){
+void chi2_2d::updateIsobar(){ // Updates the internal definitions for the isobar paramterizations
 	for (int wave =0;wave<_nWaves	;wave++){
 		std::vector<int> isos = get_wave_isobars(wave);
 		for (int niso=0;niso<isos.size();niso++){
@@ -413,37 +414,37 @@ void chi2_2d::updateIsobar(){
 	};
 	updateNpoints();
 };
-void chi2_2d::setIsobarName(int i,std::string name){
+void chi2_2d::setIsobarName(int i,std::string name){ // Simple setter
 	_iso_funcNames[i]=name;
 };
-void chi2_2d::setIsoParName(int i,std::string name){
+void chi2_2d::setIsoParName(int i,std::string name){ // Simple setter
 	 _iso_parNames[i]=name;
 };
-void chi2_2d::setIsoConstName(int i,std::string name){
+void chi2_2d::setIsoConstName(int i,std::string name){ // Simple setter
 	_iso_constNames[i]=name;
 };
-std::string chi2_2d::getIsobarName(int i){
+std::string chi2_2d::getIsobarName(int i){ // Simple getter
 	return _iso_funcNames[i];
 };
-std::string chi2_2d::getIsoParName(int i){
+std::string chi2_2d::getIsoParName(int i){ // Simple getter
 	return  _iso_parNames[i];
 };
-std::string chi2_2d::getIsoConstName(int i){
+std::string chi2_2d::getIsoConstName(int i){ // Simple getter
 	return _iso_constNames[i];
 };
 
-void chi2_2d::setWaveIsobarBinning(int wave, int binning){
+void chi2_2d::setWaveIsobarBinning(int wave, int binning){ // Sets the isobar binning for a certain wave
 	_wave_n_binning[wave] = binning;
 	int npoints = _iso_binnings[binning].size()-1;
 	_wave_binning_pts[wave] = npoints;
 	updateIsobar();
 };
 
-void chi2_2d::set_iso_const(int con, double value){
+void chi2_2d::set_iso_const(int con, double value){ // Sets constants in isobar paramterizations
 	_iso_const[con] = value;
 };
 
-void chi2_2d::printParameters(){
+void chi2_2d::printParameters(){ // Prints the parameters in a nice way
 	int func_count = 0;
 	int iso_count =0;
 	for (int i=0;i<_nWaves;i++){

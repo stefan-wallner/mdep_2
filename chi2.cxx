@@ -9,7 +9,7 @@ double UPPER_MASS_LIMIT = 2.5;
 double LOWER_MASS_LIMIT = 0.5;
 int DEFAULT_L =0;
 
-std::vector<std::complex<double> > chi2::amps_class(double m, std::vector<double> &par){
+std::vector<std::complex<double> > chi2::amps_class(double m, std::vector<double> &par){ // Give the amplitudes with the 'old' parameter-vector format (couplings anf shape parameters mixed)
 	std::vector<double> params = std::vector<double>(_nPar);
 	std::vector<std::complex<double> > cpl = std::vector<std::complex<double> >(_nFtw);
 	int i_max = _interface.size();
@@ -35,7 +35,7 @@ std::vector<std::complex<double> > chi2::amps_class(double m, std::vector<double
 chi2::chi2():_nWaves(0),_nFuncs(0),_globalPs(0),_maxNpars(0){};
 
 template<typename xdouble>
-std::vector<std::complex<xdouble> > chi2::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){
+std::vector<std::complex<xdouble> > chi2::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Builds the amplitudes for each wave from functions with shape parameters par and cpl at m3pi = m 
 	std::vector<std::complex<xdouble> > funcEval = funcs(m,par); // Evalulated BW-functions
 	std::vector<std::complex<xdouble> > ampl = std::vector<std::complex<xdouble> >(_nWaves); // Vector of final amplitudes
 	std::vector<double> ps = phase_space(m);
@@ -59,7 +59,7 @@ std::vector<std::complex<xdouble> > chi2::amps(double m,std::vector<std::complex
 template std::vector<std::complex<double> > chi2::amps(double m, std::vector<std::complex<double> > &cpl,std::vector<double> &par);
 
 template<typename xdouble>
-std::vector<std::complex<xdouble> > chi2::funcs(double m,std::vector<xdouble> &par){
+std::vector<std::complex<xdouble> > chi2::funcs(double m,std::vector<xdouble> &par){ // returns the function values at m3pi = m and shape parameters par
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
 	int upPar=0;
 	int loPar=0;
@@ -97,7 +97,7 @@ template std::vector<std::complex<adouble> > chi2::amps(double m, std::vector<st
 template std::vector<std::complex<adouble> > chi2::funcs(double m,std::vector<adouble> &par);
 #endif//ADOL_ON
 
-std::vector<double> chi2::phase_space(double m){ // 
+std::vector<double> chi2::phase_space(double m){ // gives a vector with phase space factors for each wave at m3pi = m
 	double global_ps = phaseSpace(m,_globalPs,0,0.);
 	std::vector<double> ps = std::vector<double>(_nWaves);
 	for(int wave=0;wave<_nWaves;wave++){
@@ -111,7 +111,7 @@ std::string className(){
 	return "chi2";
 };
 
-void chi2::add_wave(){
+void chi2::add_wave(){ // Adds a wave, increases the internal definitions
 	_nWaves+=1;
 	unsigned int nBor = _borders_waves.size();
 	if (nBor==0){
@@ -125,9 +125,9 @@ void chi2::add_wave(){
 	_wavePs.push_back(0);
 	_waveNames.push_back("unnamed_wave");
 };
-void chi2::add_func(int i){
+void chi2::add_func(int i){ // Adds a function -  Sets internal definitions accordingly
 	_nFuncs+=1;
-	_funcs.push_back(i);
+	_funcs.push_back(i);// Add new
 	_L_func.push_back(DEFAULT_L);
 	int nPar = getNpars(i);
 	if (_maxNpars < nPar){
@@ -160,28 +160,30 @@ void chi2::add_func(int i){
 		_const.push_back(0.);
 	};
 };
-void chi2::add_func_to_wave(int wave, int func){
+
+void chi2::add_func_to_wave(int wave, int func){ // Sets func to be employed by wave. Set internal definitions accordingly
 	int border = _borders_waves[wave];
-	std::vector<int> new_relations;
-	unsigned int nRel = _funcs_to_waves.size();
+	std::vector<int> new_relations; // Make new relations
+	unsigned int nRel = _funcs_to_waves.size(); // Number of relations up to now
 	for (unsigned int i=0; i<nRel;i++){
-		new_relations.push_back(_funcs_to_waves[i]);
+		new_relations.push_back(_funcs_to_waves[i]); // Up to the end of the block for wave, reproduce old relations
 		if (i==border-1){
-			new_relations.push_back(func);
+			new_relations.push_back(func); // Add the new relations at the right point
 		};
 	};
-	if (new_relations.size() ==0){
+	if (new_relations.size() ==0){ // If non were set yet, start with one
 		new_relations.push_back(func);
 	};
-	_funcs_to_waves=new_relations;
-	for (int i=wave;i<_nWaves;i++){
+	_funcs_to_waves=new_relations; // Set new relations
+	for (int i=wave;i<_nWaves;i++){ // INcrease block size for 'wave'
 		_borders_waves[i]+=1;
 	};
-	updateFuncLims();
+	updateFuncLims(); // Update internal definitions
 	updateFuncSpin();
 	updateNftw();
 };
-std::vector<int> chi2::get_wave_functions(int wave){
+
+std::vector<int> chi2::get_wave_functions(int wave){ // Gets all functions used by wave
 	std::vector<int> wafe;
 	if(_borders_waves.size()==0){
 		return wafe;
@@ -206,7 +208,7 @@ std::vector<int> chi2::get_wave_functions(int wave){
 	};	
 	return wafe;
 };
-std::vector<int> chi2::get_wave_pars(int wave){
+std::vector<int> chi2::get_wave_pars(int wave){ // //  // Gets the parameters numbers for wave
 	std::vector<int> pars;
 	std::vector<int> funcs = get_wave_functions(wave);
 	unsigned int nFu = funcs.size();
@@ -216,7 +218,7 @@ std::vector<int> chi2::get_wave_pars(int wave){
 	};
 	return pars;
 };
-std::vector<int> chi2::get_wave_const(int wave){
+std::vector<int> chi2::get_wave_const(int wave){ //  // Gets the constants numbers for wave
 	std::vector<int> consts;
 	std::vector<int> funcs = get_wave_functions(wave);
 	unsigned int nFu = funcs.size();
@@ -226,7 +228,7 @@ std::vector<int> chi2::get_wave_const(int wave){
 	};
 	return consts;
 };
-std::vector<int> chi2::get_function_pars(int func){
+std::vector<int> chi2::get_function_pars(int func){ // Gets the paramters numbers for func
 	std::vector<int> pars;
 	if (_borders_par.size()==0){
 		return pars;
@@ -241,7 +243,7 @@ std::vector<int> chi2::get_function_pars(int func){
 	};
 	return pars;
 };
-std::vector<int> chi2::get_nPars(){
+std::vector<int> chi2::get_nPars(){ // gets the numbers of parameters for each func
 	std::vector<int> nPars;
 	nPars.push_back(_borders_par[0]);
 	unsigned int i_max = _borders_par.size();
@@ -251,7 +253,7 @@ std::vector<int> chi2::get_nPars(){
 	};
 	return nPars;
 };
-std::vector<int> chi2::get_nConst(){
+std::vector<int> chi2::get_nConst(){ // gets the numbers of constants for each func
 	std::vector<int> nConst;
 	nConst.push_back(_borders_const[0]);
 	int i_max = _borders_const.size();
@@ -261,7 +263,7 @@ std::vector<int> chi2::get_nConst(){
 	};
 	return nConst;
 };
-std::vector<int> chi2::get_function_const(int func){
+std::vector<int> chi2::get_function_const(int func){ // Get the constant numbers for func
 	std::vector<int> consts;
 	if (_borders_const.size()==0){
 		return consts;
@@ -276,7 +278,7 @@ std::vector<int> chi2::get_function_const(int func){
 	};
 	return consts;
 };
-std::vector<int> chi2::get_function_waves(int func){
+std::vector<int> chi2::get_function_waves(int func){ // Get the waves that aemploy the function number 'func'
 	std::vector<int> waves;
 	for (int wave=0;wave<_nWaves;wave++){
 		std::vector<int> funcs = get_wave_functions(wave);
@@ -290,50 +292,50 @@ std::vector<int> chi2::get_function_waves(int func){
 	return waves;
 };
 
-void chi2::setWaveName(int i,std::string name){
+void chi2::setWaveName(int i,std::string name){ // Simple setter
 	_waveNames[i] = name;
 };
-void chi2::setFunctionName(int i, std::string name){
+void chi2::setFunctionName(int i, std::string name){ // Simple setter
 	_funcNames[i] = name;
 };
-void chi2::setParameterName(int i, std::string name){
+void chi2::setParameterName(int i, std::string name){ // Simple setter
 	_parNames[i] = name;
 };
-void chi2::setConstantName(int i, std::string name){
+void chi2::setConstantName(int i, std::string name){ // Simple setter
 	_constNames[i] = name;
 };
-std::string chi2::getWaveName(int i){
+std::string chi2::getWaveName(int i){ // Simple getter
 	return _waveNames[i];
 };
-std::string chi2::getFunctionName(int i){
+std::string chi2::getFunctionName(int i){ // Simple getter
 	return _funcNames[i];
 };
-std::string chi2::getParameterName(int i){
+std::string chi2::getParameterName(int i){ // Simple getter
 	return _parNames[i];
 };
-std::string chi2::getConstantName(int i){
+std::string chi2::getConstantName(int i){ // Simple getter
 	return _constNames[i];
 };
-void chi2::setWaveLimits(int i, double lower, double upper){
+void chi2::setWaveLimits(int i, double lower, double upper){ // Simple setter
 	_upperLims[i] = upper;
 	_lowerLims[i] = lower;
 	updateFuncLims();
 };
-void chi2::setWaveSpin(int i, int L){
+void chi2::setWaveSpin(int i, int L){// Simple setter
 	_L[i]=L;
 	updateFuncSpin();
 };
-void chi2::setGlobalPhaseSpace(int i){
+void chi2::setGlobalPhaseSpace(int i){// Simple setter
 	_globalPs=i;
 };
-void chi2::setWavePhaseSpace(int i, int ps){
+void chi2::setWavePhaseSpace(int i, int ps){// Simple setter
 	_wavePs[i] = ps;
 };
-void chi2::setConst(int i,double con){
+void chi2::setConst(int i,double con){// Simple setter
 	_const[i] = con;
 };
 
-void chi2::updateFuncLims(){
+void chi2::updateFuncLims(){ // Updates the mass limits for the funtions from the mass limits for the waves 
 	for (int func=0;func<_nFuncs;func++){
 			double upper =  LOWER_MASS_LIMIT;// This is exchanged (upper <-> LOWER), since
 			double lower =  UPPER_MASS_LIMIT;// the smallest mass region is wanted
@@ -355,7 +357,7 @@ void chi2::updateFuncLims(){
 	};
 };
 
-void chi2::updateFuncSpin(){
+void chi2::updateFuncSpin(){ // Updates the function spin according to their corresponding wave spin (if there is a mistake (different spins for the same function), nothing will happen)
 	for (int func=0;func<_nFuncs;func++){
 		std::vector<int> waves = get_function_waves(func);
 		int i_max = waves.size();
@@ -373,7 +375,7 @@ void chi2::updateFuncSpin(){
 	};
 };
 
-bool chi2::checkConsistency(){
+bool chi2::checkConsistency(){ // Checks for internal consistency
 	int nErr =0;
 	if(_nWaves != _waveNames.size()){
 		nErr+=1;
@@ -447,7 +449,7 @@ bool chi2::checkConsistency(){
 	return true;
 };
 
-void chi2::printStatus(){
+void chi2::printStatus(){ // Prints the internal status
 	std::cout << "_nWaves: " <<_nWaves<<std::endl;
 	std::cout << std::endl;
 	std::cout << "_nFuncs: " << _nFuncs<<std::endl;
@@ -505,7 +507,8 @@ void chi2::printStatus(){
 	std::cout << "_interface" <<std::endl;
 	print_vector(_interface);
 };
-void chi2::printParameters(){
+
+void chi2::printParameters(){ // Prints the paramters in a 'nice' way
 	int func_count = 0;
 	for (int i=0;i<_nWaves;i++){
 		std::cout<<"────────────────────────────────────────────────"<<std::endl;
@@ -561,7 +564,7 @@ void chi2::printParameters(){
 
 };
 
-void chi2::setInterface(){
+void chi2::setInterface(){ // Sets up the interface for the 'old' paramter-vector format
 	_interface = std::vector<int>();
 	for (int wave = 0;wave<_nWaves;wave++){
 		int wave_up = _borders_waves[wave];
@@ -599,7 +602,7 @@ void chi2::setInterface(){
 		};
 	};
 };
-std::vector<std::complex<double> > chi2::cpls(std::vector<double> &par){
+std::vector<std::complex<double> > chi2::cpls(std::vector<double> &par){ // gets the couplings from a paramters-vector in the 'old' format
 	std::vector<std::complex<double> > cpl;
 	for (unsigned int i =0;i<par.size();i++){
 		if (_interface[i]==1){
@@ -608,7 +611,7 @@ std::vector<std::complex<double> > chi2::cpls(std::vector<double> &par){
 	};
 	return cpl;
 };
-std::vector<double> chi2::pars(std::vector<double> &par){
+std::vector<double> chi2::pars(std::vector<double> &par){ // gets the shape paramters from a paramters-vector in the 'old' format
 	std::vector<double> pars;
 	for(unsigned int i=0;i<par.size();i++){
 		if (_interface[i] == 3){
@@ -618,7 +621,7 @@ std::vector<double> chi2::pars(std::vector<double> &par){
 	return pars;
 };
 
-void chi2::updateNftw(){
+void chi2::updateNftw(){ // Updates the number of function-to-wave couplings
 	_nFtw = _funcs_to_waves.size();
 };
 

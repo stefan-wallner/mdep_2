@@ -80,17 +80,17 @@ class anchor_t : public chi2_2d {
 	protected:
 		bool _verbose;
 		bool _is_ampl; // Enable Amplitunde fitting, needs to be tested.
-		int _nBins;
-		int _minBin;
-		int _maxBin;
-		int _nTbin;
-		double _mMin;
-		double _mMax;
-		std::vector<int> _const_is_t; // List of parameters, that are t'
-		std::vector<double> _t_binning;
-		std::vector<double> _binning;
-		std::vector<std::vector<std::vector<double> > > _data;
-		std::vector<std::vector<std::vector<std::vector<double> > > > _coma;
+		int _nBins; // Number of bins
+		int _minBin; // Minimum bin used by any wave
+		int _maxBin; // Maximum bin used by any wave
+		int _nTbin;  // number of t' bins
+		double _mMin; // minimum mass (m3pi)
+		double _mMax; // maximum mass (m3pi)
+		std::vector<int> _const_is_t; // List of constants, that are t' actually (will then be set automatically)
+		std::vector<double> _t_binning; // Binning in t'
+		std::vector<double> _binning;   // Binning in m3pi
+		std::vector<std::vector<std::vector<double> > > _data; // data 
+		std::vector<std::vector<std::vector<std::vector<double> > > > _coma; // covariance matrix
 
 		int _nBranch;  // Number of branchings
 		int _nBrCpl;   // Number of couplings with branchings
@@ -99,7 +99,7 @@ class anchor_t : public chi2_2d {
 		std::vector<int> _n_branch; // Number of branching for wave/function
 		std::vector<int> _n_cpls;   // Number of coupling for wave/function
 					    // Map of how to treat the nonAnchor couplings in the analytic calculation.
-		std::vector<bool> _eval_tbin;
+		std::vector<bool> _eval_tbin; // switch on/off single t' bins
 
 
 };

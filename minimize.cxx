@@ -13,17 +13,17 @@
 
 minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};
 
-std::vector<std::string> minimize::getParNames(){
+std::vector<std::string> minimize::getParNames(){// Self explanatory
 	return _parNames;
 };
-std::vector<bool> minimize::getReleased(){
+std::vector<bool> minimize::getReleased(){// Self explanatory
 	return _released;
 };
-std::vector<double> minimize::getParameters(){
+std::vector<double> minimize::getParameters(){// Self explanatory
 	return _parameters;
 };
 
-void minimize::setParameter(std::string name, double par){
+void minimize::setParameter(std::string name, double par){// Self explanatory
 	int number = getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
@@ -33,7 +33,7 @@ void minimize::setParameter(std::string name, double par){
 		setParameter(number,par);
 	};
 };
-void minimize::setStepSize(std::string name, double par){
+void minimize::setStepSize(std::string name, double par){// Self explanatory
 	int number = getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
@@ -44,7 +44,7 @@ void minimize::setStepSize(std::string name, double par){
 	};
 };
 
-void minimize::fixPar(std::string name){
+void minimize::fixPar(std::string name){// Self explanatory
 	int number = getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
@@ -55,7 +55,7 @@ void minimize::fixPar(std::string name){
 	};
 };
 
-void minimize::relPar(std::string name){
+void minimize::relPar(std::string name){// Self explanatory
 	int number = getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
@@ -66,7 +66,7 @@ void minimize::relPar(std::string name){
 	};
 };
 
-int minimize::getParNumber(std::string name){
+int minimize::getParNumber(std::string name){ // Gets the number for a given name, if the name does not exist, return -1
 	for (int i=0;i<_parNames.size();i++){
 		if (_parNames[i] == name){
 			return i;
@@ -113,7 +113,7 @@ void minimize::setStepSize(int i, double step){
 	reload_par_definitions(i);
 };
 
-void minimize::setStepSizes(std::vector<double> steps){
+void minimize::setStepSizes(std::vector<double> steps){ // Self explanatory
 	if (steps.size() >= _nTot){
 		_step_sizes=steps;
 		reload_par_definitions();
@@ -123,7 +123,7 @@ void minimize::setStepSizes(std::vector<double> steps){
 
 };
 
-void minimize::fixPar(int i){
+void minimize::fixPar(int i){ // fix parameter by number
 	if (_released.size() == _nTot){
 		_released[i] = false;
 		reload_par_definitions(i);
@@ -132,7 +132,7 @@ void minimize::fixPar(int i){
 	};
 };
 
-void minimize::relPar(int i){
+void minimize::relPar(int i){ // Release parameter by number
 	if (_released.size() == _nTot){
 		_released[i] = true;
 		reload_par_definitions(i);
@@ -141,7 +141,7 @@ void minimize::relPar(int i){
 	};
 };
 
-void minimize::reload_par_definitions(int mara_peter){
+void minimize::reload_par_definitions(int mara_peter){ // Update the parameter definitions for parameter number mara_peter, if mara_peter ==-1, then all are updated
 	int uLim = 0;
 	int oLim = _nTot;
 	if (mara_peter > -1){
@@ -169,7 +169,7 @@ void minimize::reload_par_definitions(int mara_peter){
 	};
 };
 
-double minimize::operator()(){
+double minimize::operator()(){ // Evaluate Chi2 with the _parameters (Call the oter operator)
 	double pars[2*_nCpl+_nPar+2*_nBra];
 	for (int i=0;i<2*_nCpl+_nPar+2*_nBra;i++){
 		pars[i]=_parameters[i];
@@ -178,12 +178,12 @@ double minimize::operator()(){
 };
 
 
-double minimize::operator()(const double* xx){
+double minimize::operator()(const double* xx){ // Call of the operator
 	std::vector<std::complex<double> > cpl(_nCpl);
 	std::vector<double> par(_nPar);
 	std::vector<std::complex<double> > bra(_nBra);
 	int count_xx =0;
-	for (int i=0;i<_nCpl;i++){
+	for (int i=0;i<_nCpl;i++){ // Build cpl, par, bra from xx
 		cpl[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
 		count_xx+=2;
 	};
@@ -197,14 +197,14 @@ double minimize::operator()(const double* xx){
 	};
 //	std::cout<<par[0]<<std::endl;
 	double chi2;
-	if (_useBranch){
+	if (_useBranch){ // Evaluate
 		chi2 = EvalAutoCplBranch(bra,cpl,par);
 	}else{
-		chi2 = EvalAutoCpl(cpl,par);
+		chi2 = EvalAutoCpl(cpl,par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
 	};
 	_count++;
 
-/*	if (chi2 != chi2){
+/*	if (chi2 != chi2){ // Check for NaN
 			std::cout<<"NaN paramters are:"<<std::endl;
 			std::cout<<"bra:"<<std::endl;
 			print_vector(bra);
@@ -216,13 +216,13 @@ double minimize::operator()(const double* xx){
 			throw;
 	};*/
 
-	if (0==_count%_nOut){
+	if (0==_count%_nOut){ // Write every _nOut evaluation
 		std::cout<<"#"<<_count<<": "<<chi2<<std::endl;
 	};
 	return  chi2;
 };
 
-bool minimize::initialize(std::string s1, std::string s2){
+bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fitter (Has to be done at least once)
 	if (_parameters.size()<_nTot){
 		std::cout<<"_parameters.size() < _nTot. Abort initialize(initialization."<<std::endl;
 		return false;
@@ -252,7 +252,7 @@ bool minimize::initialize(std::string s1, std::string s2){
 	return true;
 };
 
-void minimize::update_definitions(){
+void minimize::update_definitions(){ // Updates definitions
 	_nTot = getNtotAnc();
 	_nPar = getNpar();
 	_nCpl = getNanc();
@@ -289,7 +289,7 @@ void minimize::update_definitions(){
 	};
 };
 
-double minimize::fit(){
+double minimize::fit(){ // Actual call for fitter. At the moment the instance is copied and fitted, this might be improved... 
 	print_vector(_released);
 	_f=ROOT::Math::Functor((*this),_nTot);
 	if(_init){
@@ -306,7 +306,7 @@ double minimize::fit(){
 	};
 };
 
-void minimize::printStatus(){
+void minimize::printStatus(){ // Prints the internal status
 	anchor_t::printStatus();
 	std::cout<<std::endl<<"_parNames:"<<std::endl;
 	print_vector(_parNames);
@@ -323,7 +323,7 @@ void minimize::printStatus(){
 void minimize::setRandRange(double range){
 	_randRange=range;
 };
-void minimize::setRandomCpl(){
+void minimize::setRandomCpl(){// Randomize couplings within _randRange
 	for(int i=0; i<2*_nCpl;i++){
 		if (_released[i]){
 			_parameters[i] = 2*((double)rand()/RAND_MAX-0.5)*_randRange;
@@ -332,7 +332,7 @@ void minimize::setRandomCpl(){
 	};
 	reload_par_definitions();
 };
-void minimize::setRandomBra(){
+void minimize::setRandomBra(){ // Randomize branchings within _randRange
 	for (int i=0;i<2*_nBra;i++){
 		if (_released[2*_nCpl+_nPar+i]){
 			_parameters[2*_nCpl+_nPar+i] = 2*((double)rand()/RAND_MAX-0.5)*_randRange;
@@ -341,11 +341,10 @@ void minimize::setRandomBra(){
 	reload_par_definitions();
 };
 
-void minimize::initCouplings(){
+void minimize::initCouplings(){ // Finds 'good' values for couplings and branchings
 	std::cout<<"Initialize couplings"<<std::endl;
 	int cpls = _nBrCplAnc;
 	setRandomCpl(); // Set random couplings
-	std::vector<int> f_b = getFirstBranch();
 	for(int tbin=0; tbin<_nTbin;tbin++){ // Switch off all t' bins
 		setEvalTbin(tbin,false);
 	};
@@ -366,7 +365,7 @@ void minimize::initCouplings(){
 	for(int tbin=0;tbin<_nTbin;tbin++){ // Switch on all t' bins
 		setEvalTbin(tbin,true);
 	};
-	std::vector<std::complex<double> > couplings = std::vector<std::complex<double> >(_nCpl);
+	std::vector<std::complex<double> > couplings(_nCpl);
 	std::vector<double> par(_nPar);
 	for (int i=0;i<_nCpl;i++){
 		couplings[i] = std::complex<double>(_parameters[2*i],_parameters[2*i+1]);
@@ -374,35 +373,33 @@ void minimize::initCouplings(){
 	for (int i=0;i<_nPar;i++){
 		par[i] = _parameters[2*_nCpl+i];
 	};
-	std::cout << "le totale shoule beeee: "<< EvalAutoCpl(couplings,par)<<std::endl;
-	std::vector<std::complex<double> > bra = get_branchings(couplings,par);
-	std::cout << "wisse found branchings "<< EvalAutoCplBranch(bra,couplings,par)<<std::endl; // Need to normalize and set the branchings here (still to do)
+	std::cout << "Total with EvalAutoCpl() (For consistency check): "<< EvalAutoCpl(couplings,par)<<std::endl;
 	_useBranch=true;
 	if (_nBra>0){
-		std::cout << "Find branchings"<<std::endl;
-
-		for (int i =0;i<2*_nCpl;i++){
+		std::vector<std::complex<double> > bra = get_branchings(couplings,par);
+//		branchCouplingsToOne(); // Set all coubled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
+		for (unsigned int i=0;i<bra.size();i++){ // Set found branchings
+			setParameter(2*_nCpl+_nPar+2*i  ,bra[i].real());
+			setParameter(2*_nCpl+_nPar+2*i+1,bra[i].imag());
+		};
+		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par)<<"  ('EvalAutoCplBranch(...)')"<<std::endl; 
+		for (int i =0;i<2*_nCpl;i++){ // Fix couplings
 			fixPar(i);
 		};
-		for (int i=0;i<2*_nBra;i++){
+		for (int i=0;i<2*_nBra;i++){ // Rel Branchings
 			relPar(2*_nCpl+_nPar+i);
-		};
-		for (int i=0;i<f_b.size();i++){ // Set the first for each section to 1.
-			setParameter(2*_nCpl+_nPar+2*f_b[i],1.);
-			setParameter(2*_nCpl+_nPar+2*f_b[i]+1,0.);
-			fixPar(2*_nCpl+_nPar+2*f_b[i]  );
-			fixPar(2*_nCpl+_nPar+2*f_b[i]+1);
 		};
 		fit();
 		std::cout<<"Couplings and branchings"<<std::endl;
-		for (int i =0;i<2*_nCpl;i++){
+		for (int i =0;i<2*_nCpl;i++){ // Rel couplings
 			relPar(i);
 		};
 		fit();
-	};
-	for(int i=0;i<_nCpl;i++){
-		relPar(2*i);
-		relPar(2*i+1);
+	}else{
+		for(int i=0;i<_nCpl;i++){
+			relPar(2*i);
+			relPar(2*i+1);
+		};
 	};
 	std::cout<<"Total: "<<(*this)(_min->X())<<std::endl;
 	std::cout<<"Couplings and branchings found"<<std::endl;
@@ -433,9 +430,22 @@ void minimize::writePlots(int tbin,std::string filename){ // Does not work with 
 	outfile.close();
 };
 
-std::string minimize::getParName(int i){
+std::string minimize::getParName(int i){ // Self explanatory
 	return _parNames[i];
 };
 
+void minimize::branchCouplingsToOne(){ // Set the anchor coupligs to one, that are coupled to another function
+	for (unsigned int i=0;i<_coupled.size();i++){
+		if(_coupled[i] >=0){
+			int nCpl = _n_cpls[i];
+			if (nCpl <= _nBrCplAnc){
+				for (int tbin =0;tbin<_nTbin;tbin++){
+					_parameters[2*_nBrCplAnc*tbin+2*nCpl  ]=1.;
+					_parameters[2*_nBrCplAnc*tbin+2*nCpl+1]=0.;
+				};
+			};
+		};
+	};
+};
 
 

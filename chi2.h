@@ -62,30 +62,32 @@ class chi2{
 		std::vector<double> pars(std::vector<double> &par);
 	protected:
 
-		int _nWaves;
-		int _nFuncs;
+		int _nWaves; 					//  Number of waves
+		int _nFuncs; 					// Number of functions
 
-		int _maxNpars;		// maximum Number of parameters a BW function has
-		int _nPar;
-		int _nFtw;
-		std::vector<int> _funcs;
-		std::vector<int> _borders_waves;
-		std::vector<int> _funcs_to_waves;
-		std::vector<int> _borders_par;
-		std::vector<int> _borders_const;
-		std::vector<int> _L;
-		std::vector<int> _L_func;
-		std::vector<double> _upperLims;
-		std::vector<double> _lowerLims;
-		std::vector<double> _funcUpperLims;
-		std::vector<double> _funcLowerLims;
-		std::vector<double> _const;
+		int _maxNpars;					// maximum Number of parameters a BW function has
+		int _nPar; 					// Number of parameters
+		int _nFtw; 					// Number of function-wave couplings (should be _funcs_to_waves.size())
+		std::vector<int> _funcs; 			// Defined functions (the int gives the number of the parametrization in 'breitWigners.h')
+		std::vector<int> _borders_waves; 		// Tells, which entries in funcs to waves belong to which wave
+		std::vector<int> _funcs_to_waves; 		// Tells, which function is to be coupled to the wave (the blocks for each wave are encoded in '_borders_waves')
+		std::vector<int> _borders_par; 			// Tells, which paramters belong to which function
+		std::vector<int> _borders_const;		// Tells, which constants belong to which function
+		std::vector<int> _L; 				// Gives the Spin of each wave
+		std::vector<int> _L_func; 			// Gives the spin of for each function
+		std::vector<double> _upperLims; 		// Gives     limits	each
+		std::vector<double> _lowerLims; 		// 	 the	    for	     wave
+		std::vector<double> _funcUpperLims; 		// Mass limits for each function
+		std::vector<double> _funcLowerLims; 		// ''	''	''	''
+		std::vector<double> _const; 			// Values for the constants in the functions
 
-		std::vector<int> _interface;
+		std::vector<int> _interface;			// Some inteface to be able to read parameter stes from the old version (not really needed anymore)
 
-		int _globalPs; // Assume only ONE global PS and   //Also assume ps that does not depend on the isobar mass
-		std::vector<int> _wavePs; // One PS for each wave // Or the spin
+		// Phase space definitions
+		int _globalPs; 					// Assume only ONE global PS and   //Also assume ps that does not depend on the isobar mass
+		std::vector<int> _wavePs; 			// One PS for each wave // Or the spin
 
+		// Names
 		std::vector<std::string> _waveNames;
 		std::vector<std::string> _funcNames;
 		std::vector<std::string> _parNames;

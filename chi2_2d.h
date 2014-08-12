@@ -62,25 +62,25 @@ class chi2_2d : public chi2{
 
 	protected:
 
-		int _nPoints;
+		int _nPoints; 					// Number of amplitudes in the end (+1 for each wave, +1 for each isobar step)
 
-		int _nIso;
-		int _maxNparsIso;
-		int _maxBinIso;
-		std::vector<int> _isos;
-		std::vector<int> _iso_to_waves;
-		std::vector<int> _iso_borders_par;
-		std::vector<int> _iso_borders_const;
-		std::vector<int> _L_iso;
-		std::vector<int> _L_iso_func;
-		std::vector<double> _iso_const;
-		std::vector<int> _iso_binning_pts;
-		std::vector<int> _wave_binning_pts;
-		std::vector<int> _iso_n_binning;
-		std::vector<int> _wave_n_binning;
-		std::vector<std::vector<double> > _iso_binnings;
+		int _nIso; 					// Number of isobars
+		int _maxNparsIso; 				// Maximum number of parameters for one isobar
+		int _maxBinIso; 				// Maximum number of bins for one isobar
+		std::vector<int> _isos; 			// Isobar paramterizations
+		std::vector<int> _iso_to_waves; 		// Couples isobars to waves (-1 -> no isobar paramtrization -> Standard mdep fit)
+		std::vector<int> _iso_borders_par; 		// Tells, which isobar parameters belong to which isobar
+		std::vector<int> _iso_borders_const; 		// Tells, which isobar constants belong to which isobar
+		std::vector<int> _L_iso; 			// Gives the spin of the isobar for the single waves
+		std::vector<int> _L_iso_func; 			// Gives the spin of the the single isobars
+		std::vector<double> _iso_const; 		// Give the isobar constants
+		std::vector<int> _iso_binning_pts; 		// Number of isobar bins for each wave (no isobar -> -1)
+		std::vector<int> _wave_binning_pts; 		// Number of bins for the isobars
+		std::vector<int> _iso_n_binning; 		// Tells, which isobar binning to use for the waves
+		std::vector<int> _wave_n_binning; 		// Tells, which isobar binning for the single isobars
+		std::vector<std::vector<double> > _iso_binnings;// Gives different isobar binnings
 
-
+		// Names
 		std::vector<std::string> _iso_funcNames;
 		std::vector<std::string> _iso_parNames;
 		std::vector<std::string> _iso_constNames;
