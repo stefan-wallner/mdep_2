@@ -192,6 +192,7 @@ minimize init_chi2(std::string card){
 		M+=binwidth;
 		binning.push_back(M);
 	};
+	print_vector(binning);
 	Chi2.setBinning(binning);
 	std::vector<double> tbinning;
 	int nTbin = waveset["t_binning"].size();
@@ -244,23 +245,75 @@ minimize init_chi2(std::string card){
 
 int main(int argc, char* argv[]){
 
+
 //	minimize Chi2 = init_chi2("../6w_11t.yaml"); //Commented version with 6 waves works
-	minimize Chi2 = init_chi2("../13w_11t.yaml");
+	minimize Chi2 = init_chi2("../13w_11t_testload.yaml");
 	int nPar = Chi2.getNpar();
 	int nCpl = Chi2.getNanc();
 	int nBra = Chi2.getNbra();
 	int nTot = Chi2.getNtotAnc();
 
 	Chi2.printParameters();
-
+//////////////////////////////////////////////////////////
+	Chi2.setParameter("M_a1(1260)",1.2794);
+	Chi2.setParameter("G_a1(1260)",0.40958);
+	Chi2.setParameter("M_a1(1930)",2.0108);
+	Chi2.setParameter("G_a1(1930)",0.32212);
+	Chi2.setParameter("M_a1(1420)",1.4093);
+	Chi2.setParameter("G_a1(1420)",0.13925);
+	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__b",1.4795);
+	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c0",-4.3912);
+	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c1",12.770);
+	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c2",-23.516);
+	Chi2.setParameter("cohBKG(1++)0+_f0(980)_pi_P__b",-5.8146);
+	Chi2.setParameter("cohBKG(1++)0+_rho_pi_D__b",2.5961);
+	Chi2.setParameter("M_pi(1800)",1.8005);
+	Chi2.setParameter("G_pi(1800)",0.21337);
+	Chi2.setParameter("cohBKG(0-+)0+_f0(980)_pi_S__b",-3.3995);
+	Chi2.setParameter("M_a2(1320)",1.3136);
+	Chi2.setParameter("G_a2(1320)",0.11089);
+	Chi2.setParameter("M_a2(1700)",1.6704);
+	Chi2.setParameter("G_a2(1700)",0.41407);
+	Chi2.setParameter("cohBKG(2++)1+_f2_pi_P__b",-0.77708);
+	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__b",0.66388);
+	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c0",-1.6812);
+	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c1",0.51046);
+	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c2",2.5439);
+	Chi2.setParameter("cohBKG(2++)2+_rho_pi_D__b",-0.89233);
+	Chi2.setParameter("M_pi2(1670)",1.6521);
+	Chi2.setParameter("G_pi2(1670)",0.30451);
+	Chi2.setParameter("M_pi2(1880)",1.8335);
+	Chi2.setParameter("G_pi2(1880)",0.32157);
+	Chi2.setParameter("cohBKG(2-+)0+_f2_pi_D__b",2.4491);
+	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__b",2.0204);
+	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c0",-3.7016);
+	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c1",3.1433);
+	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c2",-2.9780);
+	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__b",-1.3158);
+	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c0",0.90445);
+	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c1",-0.18399E-01);
+	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c2",2.0252);
+	Chi2.setParameter("cohBKG(2-+)1+_f2_pi_S__b",-0.92364);
+	Chi2.setParameter("M_a4(2040)",1.9256);
+	Chi2.setParameter("G_a4(2040)",0.37209);
+	Chi2.setParameter("cohBKG(4++)1+_f2_pi_F__b",-0.18977);
+	Chi2.setParameter("cohBKG(4++)1+_rho_pi_G__b",-4.3411);
+///////////////////////////////////////////////////////////////////////
 	std::cout<< "nPar:"<<nPar<<"; nCpl:"<<nCpl<<"; nBra:"<<nBra<<" => nTot"<<nTot<<std::endl;
+	Chi2.conjugate();
 	Chi2.initCouplings();
-	for (int i=2*nCpl;i<nTot;i++){
-		std::cout <<"RelPar('"<<Chi2.getParName(i)<<"'):"<<std::endl;
-		Chi2.relPar(i);
-		std::cout<<Chi2.fit()<<std::endl;
-	};
-	print_vector(Chi2.getParameters());
+//	print_vector(Chi2.getParameters());
+//	double params[] = {1.81988, -0.229943, -0.0343541, 0.0464157, 4.31334, -0.983237, 0.950292, 1.52604, -0.0643314, -0.00859031, 2.26957, 3.2863, -0.00546014, -1.74236, 0.0579026, 0.0278303, 0.00940545, -3.57669, 1.60124, 0.539217, -0.0642674, 0.071058, 2.91766, 1.21671, 1.11402, 1.19171, -0.0984826, 0.032705, 1.52764, 2.26325, -0.130045, -1.5829, 0.129276, 0.0503977, 0.355805, -2.25992, -1.49828, -0.228209, 0.0703438, -0.118671, -1.58558, -0.910921, 0.26134, 1.38004, -0.133652, -0.0366967, -0.560112, 1.3098, -0.397219, -1.12278, 0.137679, -0.0117936, 0.71057, -0.948951, 0.68773, 0.12494, -0.00048537, 0.148865, -0.869344, 1.1914, 0.342267, -0.0890986, -0.00652847, 0.0934829, -1.37469, 0.349854, 1.2794, 0.40958, 2.0108, 0.32212, 1.4795, -4.3912, 12.77, -23.516, 1.4093, 0.13925, -5.8146, 2.5961, 1.8005, 0.21337, -3.3995, 1.3136, 0.11089, 1.6704, 0.41407, -0.77708, 0.66388, -1.6812, 0.51046, 2.5439, -0.89233, 1.6521, 0.30451, 1.8335, 0.32157, 2.4491, 2.0204, -3.7016, 3.1433, -2.978, -1.3158, 0.90445, -0.018399, 2.0252, -0.92364, 1.9256, 0.37209, -0.18977, -4.3411, 0.971296, -0.0156574, 0.553231, -0.0670585, -14.887, 2.90523, 74.3742, -66.2957, 1488.96, -332.36, -2217.17, -379.766, 170.662, -4.95668, -38.181, -3.65873, 2108.61, -2305.16, -3112.86, 2864.46, 110.065, -89.4736, -44.9311, -5.12716, 324.587, 89.0057, 148.085, 2.1899, 11137.9, -2873.9, 1019.34, -186.899};
+
+	Chi2.open_output("../compare/chi2_f.dat");
+	std::cout<<"chi2: "<<Chi2()<<std::endl;
+	Chi2.close_output();
+//	for (int i=2*nCpl;i<nTot;i++){
+//		std::cout <<"RelPar('"<<Chi2.getParName(i)<<"'):"<<std::endl;
+//		Chi2.relPar(i);
+//		std::cout<<Chi2.fit()<<std::endl;
+//	};
+//	print_vector(Chi2.getParameters());
 	return 0;
 };
 

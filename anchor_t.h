@@ -46,6 +46,7 @@ class anchor_t : public chi2_2d {
 		void loadData(int tbin, const char* dataFile);
 		void loadComa(int tbin, const char* comaFile);
 		void nullify();
+		void conjugate();
 		
 		void add_func(int i, bool ist_t_dep = false);
 		void setConst(int i,double con);
@@ -57,7 +58,6 @@ class anchor_t : public chi2_2d {
 		std::vector<std::vector<double> > getPlots(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
 
-		void setVerbose(bool in);
 		AandB get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
 		std::vector<std::complex<double> > getMinimumCpl(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
 		std::vector<std::complex<double> > getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
@@ -78,7 +78,6 @@ class anchor_t : public chi2_2d {
 		void setEvalTbin(int i, bool flag);
 		void set_is_ampl(bool is_ampl);
 	protected:
-		bool _verbose;
 		bool _is_ampl; // Enable Amplitunde fitting, needs to be tested.
 		int _nBins; // Number of bins
 		int _minBin; // Minimum bin used by any wave

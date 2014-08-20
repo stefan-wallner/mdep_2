@@ -2,6 +2,8 @@
 #define CHI2_LOLOLO
 #include<vector>
 #include<complex>
+#include<fstream>
+#include<iostream>
 
 class chi2{
 	public:
@@ -60,9 +62,13 @@ class chi2{
 		std::vector<std::complex<double> > amps_class(double m, std::vector<double> &par);
 		std::vector<std::complex<double> > cpls(std::vector<double> &par);
 		std::vector<double> pars(std::vector<double> &par);
+
+		void open_output(std::string filename ="chi2.dat");
+		void close_output();
+
 	protected:
 
-		int _nWaves; 					//  Number of waves
+		int _nWaves; 					// Number of waves
 		int _nFuncs; 					// Number of functions
 
 		int _maxNpars;					// maximum Number of parameters a BW function has
@@ -92,6 +98,10 @@ class chi2{
 		std::vector<std::string> _funcNames;
 		std::vector<std::string> _parNames;
 		std::vector<std::string> _constNames;
+
+		// Analysis stuff
+		bool _write_out;				// Flag to switch on the text_output
+		std::ofstream *_outStream;			// Stream for the text output
 
 
 

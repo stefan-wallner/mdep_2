@@ -11,7 +11,7 @@
 
 #include"invert33.h"
 
-anchor_t::anchor_t(): chi2_2d(), _verbose(false),_is_ampl(false){};
+anchor_t::anchor_t(): chi2_2d(), _is_ampl(false){};
 
 template<typename xdouble>
 xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Evaluates chi2 w/o branchings
@@ -26,6 +26,9 @@ xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xd
 			chi2+=EvalTbin(tbin,actCpl,par);
 	//		std::cout<<tbin<<":E:"<<EvalTbin(tbin,actCpl,par)<<std::endl;
 		};
+	};
+	if (_write_out){
+		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
 	};
 	return chi2;
 };
@@ -47,7 +50,11 @@ xdouble anchor_t::EvalBranch(std::vector<std::complex<xdouble> >&branch, std::ve
 			};
 		};
 	};
-	return EvalCP(cplin,par);
+	xdouble chi2 = EvalCP(cplin,par);
+	if (_write_out){
+		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
+	};
+	return chi2;
 };
 template double anchor_t::EvalBranch(std::vector<std::complex<double> >&branch, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
@@ -64,6 +71,9 @@ double anchor_t::EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector
 			chi2+=EvalAutoCplTbin(tbin,actCpl,par);
 	//		std::cout << tbin<<":A:"<< EvalAutoCplTbin(tbin,actCpl,par)<<std::endl;
 		};
+	};
+	if (_write_out){
+		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
 	};
 	return chi2;
 };
@@ -92,6 +102,9 @@ double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::
 			chi2+=EvalTbin(tbin,best_cpl_std,par);
 		};
 	};
+	if (_write_out){
+		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
+	};
 	return chi2;
 };
 
@@ -102,9 +115,6 @@ xdouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<xdouble> > &cpl,st
 	for (int bin=_minBin; bin<_maxBin; bin++){
 		chi2+=EvalBin(tbin,bin,cpl,par);
 //		std::cout << bin<<"   "<< EvalBin(tbin,bin,cpl,par) <<std::endl;
-		if(_verbose){      
-			std::cout << "────────────────────────────────────────────────" <<std::endl;
-		};
 	};
 	return chi2;
 };
@@ -123,19 +133,31 @@ xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&c
 	for (int i=0;i<2*_nWaves-1;i++){
 		int iWave = (i+1)/2;
 		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
-			if(_verbose){
-				std::cout <<"i: "<<i<<" j: "<<i<<" bin: "<<bin<< " mass: "<<mass<<" chi2+: "<<2.*deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<std::endl;
-			};
 //			std::cout<<"le_addite:D"<<pow(deltas[i],2.)*_coma[tbin][bin][i][i]<<std::endl;
+			if (_write_out){
+				*_outStream <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
+				*_outStream <<"  delta1(imb, ipi, isectd) delta1(imb, ipj, isectd)     "<<deltas[i]<<"        "<<deltas[i]<<std::endl;
+				*_outStream <<"   cov_key(imb, ipi, ipj,  isectd) =     "<<_coma[tbin][bin][i][i]<<std::endl;
+				*_outStream <<"  Ci^2 before      "<<chi2<<"      +     "<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<"       =    ";
+			};
 			chi2+= deltas[i]*deltas[i]*_coma[tbin][bin][i][i];
+			if(_write_out){
+				*_outStream <<chi2<<std::endl;
+			};
 			for (int j=0;j<i;j++){
 				int jWave = (j+1)/2;
 				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
-					if (_verbose){
-						std::cout <<"i: "<<i<<" j: "<<j<<" bin: "<<bin<< " mass: "<<mass<<" chi2+: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
-					};
 //					std::cout<<"le_addite: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
-					chi2+=2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]; // Factor 2. because _coma[][][][] is symmetric
+					if (_write_out){
+						*_outStream <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<j+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
+						*_outStream <<"  delta1(imb, ipi, isectd) delta1(imb, ipj, isectd)     "<<deltas[j]<<"        "<<deltas[i]<<std::endl;
+						*_outStream <<"   cov_key(imb, ipi, ipj,  isectd) =     "<<_coma[tbin][bin][j][i]<<std::endl;
+						*_outStream <<"  Ci^2 before      "<<chi2<<"      +     "<<2.*deltas[j]*deltas[i]*_coma[tbin][bin][i][j]<<"       =    ";
+					};
+					chi2+=2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]; // Factor 2. because _coma[t][m][i][j] is symmetric under i<->j
+					if(_write_out){
+						*_outStream <<chi2<<std::endl;
+					};
 				};	
 			};
 		};
@@ -153,18 +175,21 @@ std::vector<xdouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<
 	if(_is_ampl){
 		divider = std::complex<xdouble>(pow(std::norm(ampls[0]),.5),0.);
 	};
-	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0];
-	if(_verbose){
-		std::cout<<"anc: "<<std::norm(ampls[0])<<" - "<<_data[tbin][bin][0]<<std::endl;
+	if(_write_out){
+		*_outStream << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           1  isectd=           "<<tbin+1<<std::endl;
+		*_outStream << " Re1 data    "<<_data[tbin][bin][0]<<"     - theory   "<<std::norm(ampls[0]/divider)<<"       =    "<<std::norm(ampls[0]/divider) - _data[tbin][bin][0]<<std::endl;
 	};
+	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0];
 	for (int i = 1; i<_nWaves;i++){
 		std::complex<xdouble> inter = ampls[0]*std::conj(ampls[i])/divider;
-		if(_verbose){
-			std::cout<<"real"<<i<<": "<<real(inter)<<" - "<<_data[tbin][bin][2*i-1]<<std::endl;
-			std::cout<<"imag"<<i<<": "<<imag(inter)<<" - "<<_data[tbin][bin][2*i]<<std::endl;
-		};
 		del[2*i-1]=real(inter) - _data[tbin][bin][2*i-1]; // real part
 		del[2*i]=imag(inter) - _data[tbin][bin][2*i];    // imag part
+		if(_write_out){
+			*_outStream << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<2*i<<"  isectd=           "<<tbin+1<<std::endl;
+			*_outStream << " Re data    "<<_data[tbin][bin][2*i-1]<<"     - theory   "<<real(inter)<<"       =    "<<real(inter) - _data[tbin][bin][2*i-1]<<std::endl;
+			*_outStream << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<2*i+1<<"  isectd=           "<<tbin+1<<std::endl;
+			*_outStream << " Im data    "<<_data[tbin][bin][2*i]<<"     - theory   "<<imag(inter)<<"       =    "<<imag(inter) - _data[tbin][bin][2*i]<<std::endl;
+		};
 	};
 	return del;
 };
@@ -394,9 +419,6 @@ void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2
 	update_n_branch();
 };
 
-void anchor_t::setVerbose(bool in){
-	_verbose = in;
-};
 /*
 		┌───────────────────────────────────────┐
 		│	Es folgt eine Indexschlacht	│
@@ -814,5 +836,19 @@ std::vector<std::complex<double> > anchor_t::get_branchings(std::vector<std::com
 		};
 	};
 	return brchs;
+};
+
+void anchor_t::conjugate(){
+	for (int i=2;i<2*(_nWaves);i+=2){
+		for (int tbin=0;tbin<_nTbin;tbin++){
+			for(int bin=0;bin<_nBins;bin++){
+				_data[tbin][bin][i]*=-1;
+				for (int j=0;j<2*_nWaves-1;j++){
+					_coma[tbin][bin][i][j]*=-1;
+					_coma[tbin][bin][j][i]*=-1;
+				};
+			};
+		};
+	};
 };
 

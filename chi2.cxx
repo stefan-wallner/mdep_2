@@ -32,7 +32,7 @@ std::vector<std::complex<double> > chi2::amps_class(double m, std::vector<double
 
 
 
-chi2::chi2():_nWaves(0),_nFuncs(0),_globalPs(0),_maxNpars(0){};
+chi2::chi2():_nWaves(0),_nFuncs(0),_globalPs(0),_maxNpars(0),_write_out(false){};
 
 template<typename xdouble>
 std::vector<std::complex<xdouble> > chi2::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Builds the amplitudes for each wave from functions with shape parameters par and cpl at m3pi = m 
@@ -624,4 +624,15 @@ std::vector<double> chi2::pars(std::vector<double> &par){ // gets the shape para
 void chi2::updateNftw(){ // Updates the number of function-to-wave couplings
 	_nFtw = _funcs_to_waves.size();
 };
+
+void chi2::open_output(std::string name){
+	_outStream = new ofstream;
+	_outStream->open(name.c_str());
+	_write_out = true;
+};
+void chi2::close_output(){
+	_outStream->close();
+	_write_out = false;
+};
+
 
