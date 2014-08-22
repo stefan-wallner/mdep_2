@@ -89,89 +89,89 @@ t_binning:
 - 0.724294
 - 1.0
 waves:
-- mmax: 2.34
-  mmin: 0.88
+- mmax: 2.3
+  mmin: 0.9
   name: 1-(1++)0+ rho pi S
   parametrizations:
   - a1(1260)
   - a1(1930)
   - tdepBKG(1++)0+_rho_pi_S
-- mmax: 1.62
-  mmin: 1.28
+- mmax: 1.6
+  mmin: 1.3
   name: 1-(1++)0+ f0(980) pi P
   parametrizations:
   - a1(1420)
   - cohBKG(1++)0+_f0(980)_pi_P
-- mmax: 2.12
-  mmin: 0.88
+- mmax: 2.1
+  mmin: 0.9
   name: 1-(1++)0+ rho pi D
   parametrizations:
   - a1(1260)
   - a1(1930)
   - cohBKG(1++)0+_rho_pi_D
-- mmax: 2.34
-  mmin: 1.18
+- mmax: 2.3
+  mmin: 1.2
   name: 1-(0-+)0+ f0(980) pi S
   parametrizations:
   - pi(1800)
   - cohBKG(0-+)0+_f0(980)_pi_S
-- mmax: 2.02
-  mmin: 0.98
+- mmax: 2.0
+  mmin: 1.0
   name: 1-(2++)1+ f2 pi P
   parametrizations:
   - a2(1320)
   - a2(1700)
   - cohBKG(2++)1+_f2_pi_P
-- mmax: 2.02
-  mmin: 0.88
+- mmax: 2.0
+  mmin: 0.9
   name: 1-(2++)1+ rho pi D
   parametrizations:
   - a2(1320)
   - a2(1700)
   - tdepBKG(2++)1+_rho_pi_D
-- mmax: 2.02
-  mmin: 0.98
+- mmax: 2.0
+  mmin: 1.0
   name: 1-(2++)2+ rho pi D
   parametrizations:
   - a2(1320)
   - a2(1700)
   - cohBKG(2++)2+_rho_pi_D
-- mmax: 2.34
-  mmin: 1.58
+- mmax: 2.3
+  mmin: 1.6
   name: 1-(2-+)0+ f2 pi D
   parametrizations:
   - pi2(1670)
   - pi2(1880)
   - cohBKG(2-+)0+_f2_pi_D
-- mmax: 2.34
-  mmin: 1.38
+- mmax: 2.3
+  mmin: 1.4
   name: 1-(2-+)0+ f2 pi S
   parametrizations:
   - pi2(1670)
   - pi2(1880)
   - tdepBKG(2-+)0+_f2_pi_S
-- mmax: 2.12
-  mmin: 1.18
+- mmax: 2.1
+  mmin: 1.2
   name: 1-(2-+)0+ rho pi F
   parametrizations:
   - pi2(1670)
   - pi2(1880)
   - tdepBKG(2-+)0+_rho_pi_F
-- mmax: 2.34
-  mmin: 1.38
+- mmax: 2.3
+  mmin: 1.4
   name: 1-(2-+)1+ f2 pi S
   parametrizations:
   - pi2(1670)
   - pi2(1880)
   - cohBKG(2-+)1+_f2_pi_S
-- mmax: 2.34
-  mmin: 1.38
+- mmax: 2.3
+  mmin: 1.4
   name: 1-(4++)1+ f2 pi F
   parametrizations:
   - a4(2040)
   - cohBKG(4++)1+_f2_pi_F
-- mmax: 2.34
-  mmin: 1.23
+- mmax: 2.3
+  mmin: 1.25
   name: 1-(4++)1+ rho pi G
   parametrizations:
   - a4(2040)

@@ -4,11 +4,9 @@
 #include<string>
 #include<iostream>
 #include<fstream>
-
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
-
 #include"invert33.h"
 
 minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};
@@ -16,9 +14,11 @@ minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunc
 std::vector<std::string> minimize::getParNames(){// Self explanatory
 	return _parNames;
 };
+
 std::vector<bool> minimize::getReleased(){// Self explanatory
 	return _released;
 };
+
 std::vector<double> minimize::getParameters(){// Self explanatory
 	return _parameters;
 };
@@ -33,6 +33,7 @@ void minimize::setParameter(std::string name, double par){// Self explanatory
 		setParameter(number,par);
 	};
 };
+
 void minimize::setStepSize(std::string name, double par){// Self explanatory
 	int number = getParNumber(name);
 	if (-1==number){
@@ -106,7 +107,7 @@ void minimize::setParLimits(int par, double upper, double lower){
 
 void minimize::setStepSize(int i, double step){
 	if (_step_sizes.size() < _nTot){
-		_step_sizes = std::vector<double>(_nTot,_minStepSize); 
+		_step_sizes = std::vector<double>(_nTot,_minStepSize);
 		reload_par_definitions();
 	};
 	_step_sizes[i] = step;
@@ -120,7 +121,6 @@ void minimize::setStepSizes(std::vector<double> steps){ // Self explanatory
 	}else{
 		std::cerr<<"Error: Input steps.size() too small"<<std::endl;
 	};
-
 };
 
 void minimize::fixPar(int i){ // fix parameter by number
@@ -177,7 +177,6 @@ double minimize::operator()(){ // Evaluate Chi2 with the _parameters (Call the o
 	return (*this)(pars);
 };
 
-
 double minimize::operator()(const double* xx){ // Call of the operator
 	std::vector<std::complex<double> > cpl(_nCpl);
 	std::vector<double> par(_nPar);
@@ -195,7 +194,7 @@ double minimize::operator()(const double* xx){ // Call of the operator
 		bra[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
 		count_xx+=2;
 	};
-//	std::cout<<par[0]<<std::endl;
+	// std::cout<<par[0]<<std::endl;
 	double chi2;
 	if (_useBranch){ // Evaluate
 		chi2 = EvalAutoCplBranch(bra,cpl,par);
@@ -203,23 +202,21 @@ double minimize::operator()(const double* xx){ // Call of the operator
 		chi2 = EvalAutoCpl(cpl,par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
 	};
 	_count++;
-
-/*	if (chi2 != chi2){ // Check for NaN
-			std::cout<<"NaN paramters are:"<<std::endl;
-			std::cout<<"bra:"<<std::endl;
-			print_vector(bra);
-			std::cout<<"cpl:"<<std::endl;
-			print_vector(cpl);
-			std::cout<<"par:"<<std::endl;
-			print_vector(par);
-			std::cout << xx << std::endl;
-			throw;
+	/* if (chi2 != chi2){ // Check for NaN
+	std::cout<<"NaN paramters are:"<<std::endl;
+	std::cout<<"bra:"<<std::endl;
+	print_vector(bra);
+	std::cout<<"cpl:"<<std::endl;
+	print_vector(cpl);
+	std::cout<<"par:"<<std::endl;
+	print_vector(par);
+	std::cout << xx << std::endl;
+	throw;
 	};*/
-
 	if (0==_count%_nOut){ // Write every _nOut evaluation
 		std::cout<<"#"<<_count<<": "<<chi2<<std::endl;
 	};
-	return  chi2;
+	return chi2;
 };
 
 bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fitter (Has to be done at least once)
@@ -243,7 +240,7 @@ bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fi
 	_min->SetMaxFunctionCalls(_maxFunctionCalls);
 	_min->SetMaxIterations(_maxIterations);
 	_min->SetTolerance(_tolerance);
-//	_f=ROOT::Math::Functor(fcn_pointer,_nTot);
+	// _f=ROOT::Math::Functor(fcn_pointer,_nTot);
 	_f=ROOT::Math::Functor((*this),_nTot);
 	_min->SetFunction(_f);
 	_init = true;
@@ -289,7 +286,7 @@ void minimize::update_definitions(){ // Updates definitions
 	};
 };
 
-double minimize::fit(){ // Actual call for fitter. At the moment the instance is copied and fitted, this might be improved... 
+double minimize::fit(){ // Actual call for fitter. At the moment the instance is copied and fitted, this might be improved...
 	print_vector(_released);
 	_f=ROOT::Math::Functor((*this),_nTot);
 	if(_init){
@@ -323,15 +320,16 @@ void minimize::printStatus(){ // Prints the internal status
 void minimize::setRandRange(double range){
 	_randRange=range;
 };
+
 void minimize::setRandomCpl(){// Randomize couplings within _randRange
 	for(int i=0; i<2*_nCpl;i++){
 		if (_released[i]){
 			_parameters[i] = 2*((double)rand()/RAND_MAX-0.5)*_randRange;
 		};
-
 	};
 	reload_par_definitions();
 };
+
 void minimize::setRandomBra(){ // Randomize branchings within _randRange
 	for (int i=0;i<2*_nBra;i++){
 		if (_released[2*_nCpl+_nPar+i]){
@@ -377,12 +375,12 @@ void minimize::initCouplings(){ // Finds 'good' values for couplings and branchi
 	_useBranch=true;
 	if (_nBra>0){
 		std::vector<std::complex<double> > bra = get_branchings(couplings,par);
-//		branchCouplingsToOne(); // Set all coubled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
+		// branchCouplingsToOne(); // Set all coubled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
 		for (unsigned int i=0;i<bra.size();i++){ // Set found branchings
-			setParameter(2*_nCpl+_nPar+2*i  ,bra[i].real());
+			setParameter(2*_nCpl+_nPar+2*i ,bra[i].real());
 			setParameter(2*_nCpl+_nPar+2*i+1,bra[i].imag());
 		};
-		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par)<<"  ('EvalAutoCplBranch(...)')"<<std::endl; 
+		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par)<<" ('EvalAutoCplBranch(...)')"<<std::endl;
 		for (int i =0;i<2*_nCpl;i++){ // Fix couplings
 			fixPar(i);
 		};
@@ -421,9 +419,9 @@ void minimize::writePlots(int tbin,std::string filename){ // Does not work with 
 	std::ofstream outfile;
 	outfile.open(filename.c_str());
 	for (int i=0;i<plots[0].size()/3;i++){
-		outfile<<(_binning[i]+_binning[i+1])/2<<"   ";
+		outfile<<(_binning[i]+_binning[i+1])/2<<" ";
 		for (int j=0;j<plots.size();j++){
-			outfile<<plots[j][3*i]<<"   "<<plots[j][3*i+1]<<"   "<<pow(plots[j][3*i+2],-.5)<<"   ";
+			outfile<<plots[j][3*i]<<" "<<plots[j][3*i+1]<<" "<<pow(plots[j][3*i+2],-.5)<<" ";
 		};
 		outfile<<"\n";
 	};
@@ -440,12 +438,10 @@ void minimize::branchCouplingsToOne(){ // Set the anchor coupligs to one, that a
 			int nCpl = _n_cpls[i];
 			if (nCpl <= _nBrCplAnc){
 				for (int tbin =0;tbin<_nTbin;tbin++){
-					_parameters[2*_nBrCplAnc*tbin+2*nCpl  ]=1.;
+					_parameters[2*_nBrCplAnc*tbin+2*nCpl ]=1.;
 					_parameters[2*_nBrCplAnc*tbin+2*nCpl+1]=0.;
 				};
 			};
 		};
 	};
 };
-
-

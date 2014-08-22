@@ -11,7 +11,7 @@
 
 #include"invert33.h"
 
-anchor_t::anchor_t(): chi2_2d(), _is_ampl(false){};
+anchor_t::anchor_t(): chi2_2d(), _is_ampl(false),_binning(std::vector<double>(2)){};
 
 template<typename xdouble>
 xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Evaluates chi2 w/o branchings
@@ -238,25 +238,7 @@ void anchor_t::setBinning(std::vector<double> binning){ // sets the binning in m
 	_mMax = binning[_nBins];
 	int minBin = 0;
 	int maxBin = _nBins-1;
-	double ancMin = _lowerLims[0];
-	double ancMax = _upperLims[0];
-	bool upToSet = true;
-	bool lowToSet= true;
-	for (int bin =0; bin<_nBins;bin++){
-		double bug = binning[bin];	//  Binobergrenze
-		double bog = binning[bin+1];	//  BinUntergrenze
-		double bc = (bog+bug)/2;
-		if (bc >= ancMin and lowToSet){
-			minBin = bin;
-			lowToSet=false;
-		};
-		if (bog > ancMax and upToSet){
-			maxBin = bin-1;
-			upToSet=false;
-		};
-	};
-	_minBin = minBin;
-	_maxBin = maxBin;
+	update_min_max_bin();
 };
 
 std::string anchor_t::className(){
@@ -423,6 +405,10 @@ void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2
 		┌───────────────────────────────────────┐
 		│	Es folgt eine Indexschlacht	│
 		└───────────────────────────────────────┘
+*/
+/*
+		PROBABLY SIMPLIFY THIS, SINCE IT IS POSSIBLE TO TURN A INTO A TRIABGULAR MATRIX
+		THEN THE INVERSION IS ANALYTOCALLY CODABLE (WITHOUT EIGEN) AND THE DERIVATIVE IS POSSIBLE
 */
 AandB anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par){// Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
@@ -851,4 +837,24 @@ void anchor_t::conjugate(){
 		};
 	};
 };
+void anchor_t::setWaveLimits(int i, double lower, double upper){ // Simple setter
+	chi2::setWaveLimits(i,lower,upper);
+	update_min_max_bin();
+};
 
+void anchor_t::update_min_max_bin(){
+	_minBin = 0;
+	_maxBin = _binning.size();
+	double ancMin = _lowerLims[0];
+	double ancMax = _upperLims[0];
+	for (unsigned int i=0;i<_binning.size()-1;i++){
+		double up = _binning[i+1];
+		double low= _binning[i];
+		if (ancMin >= low and ancMin <up){
+			_minBin = i;
+		};
+		if (ancMax > low and ancMax <=up){
+			_maxBin = i+1;
+		};
+	};
+};

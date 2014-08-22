@@ -52,6 +52,7 @@ class anchor_t : public chi2_2d {
 		void setConst(int i,double con);
 		void add_func_to_wave(int wave, int func);
 		void couple_funcs(int i, int j);
+		void setWaveLimits(int i, double lower, double upper);
 
 		std::string className();
 
@@ -71,6 +72,7 @@ class anchor_t : public chi2_2d {
 
 		void update_n_cpls();
 		void update_n_branch();
+		void update_min_max_bin();
 
 		void printStatus();
 		std::vector<int> getFirstBranch();
