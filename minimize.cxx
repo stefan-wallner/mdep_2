@@ -1,12 +1,16 @@
 #include "minimize.h"
+
 #include<vector>
 #include<complex>
 #include<string>
 #include<iostream>
 #include<fstream>
+#include <cstdlib>
+
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
+
 #include"invert33.h"
 
 minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};

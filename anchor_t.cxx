@@ -5,13 +5,19 @@
 #include<iostream>
 #include<string>
 
-#include<Eigen/Dense>
+#include"cholesky.h"
 
 #include <adolc/adolc.h>  
 
 #include"invert33.h"
 
 anchor_t::anchor_t(): chi2_2d(), _is_ampl(false),_binning(std::vector<double>(2)){};
+
+#ifdef ADOL_ON 
+std::complex<adouble> operator*(std::complex<adouble> a,double d){// Define std::complex<adouble> * double 
+	return std::complex<adouble>(a.real()*d,a.imag()*d);
+};
+#endif//ADOL_ON
 
 template<typename xdouble>
 xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Evaluates chi2 w/o branchings
@@ -58,10 +64,11 @@ xdouble anchor_t::EvalBranch(std::vector<std::complex<xdouble> >&branch, std::ve
 };
 template double anchor_t::EvalBranch(std::vector<std::complex<double> >&branch, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
-double anchor_t::EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector<double> &par){ // gets Chi2 with automatic non anchor couplings (no branchings)
-	double chi2 = 0.;
+template<typename xdouble>
+xdouble anchor_t::EvalAutoCpl(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // gets Chi2 with automatic non anchor couplings (no branchings)
+	xdouble chi2 = 0.;
 	int nNon = _borders_waves[0];
-	std::vector<std::complex<double> > actCpl = std::vector<std::complex<double> >(nNon);
+	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(nNon);
 	for (int tbin=0;tbin<_nTbin;tbin++){
 		if(_eval_tbin[tbin]){
 			updateTprime(tbin);
@@ -77,21 +84,23 @@ double anchor_t::EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector
 	};
 	return chi2;
 };
+template double anchor_t::EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector<double> &par);
 
-double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::vector<std::complex<double> >&cpl, std::vector<double> &par){  // Gets Chi2 for automatically calculated couplings with branchings (the BEST)
-	double chi2=0.;
+template<typename xdouble>
+xdouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std::vector<std::complex<xdouble> >&cpl, std::vector<xdouble> &par){  // Gets Chi2 for automatically calculated couplings with branchings (the BEST)
+	xdouble chi2=0.;
 //	std::cout<<"par[1]: "<<par[1]<<std::endl;
 	int nNon = _nBrCplAnc;
-	std::vector<std::complex<double> > actCpl = std::vector<std::complex<double> >(nNon);
+	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(nNon);
 	for(int tbin=0;tbin<_nTbin;tbin++){
 		if (_eval_tbin[tbin]){
 			updateTprime(tbin);
 			for(int i=0;i<nNon;i++){
 				actCpl[i] = cpl[i+tbin*nNon];
 			};
-			std::vector<std::complex<double> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par);
+			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par);
 		//	print_vector(bestcpl);
-			std::vector<std::complex<double> > best_cpl_std = std::vector<std::complex<double> >(_nFtw);
+			std::vector<std::complex<xdouble> > best_cpl_std = std::vector<std::complex<xdouble> >(_nFtw);
 			for (int i=0;i<_nFtw;i++){
 				if(-1==_n_branch[i]){
 					best_cpl_std[i] = bestcpl[_n_cpls[i]];
@@ -107,6 +116,7 @@ double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::
 	};
 	return chi2;
 };
+template double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::vector<std::complex<double> >&cpl, std::vector<double> &par);
 
 template<typename xdouble>
 xdouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // gets the chi2 for a single t' bin
@@ -120,10 +130,12 @@ xdouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<xdouble> > &cpl,st
 };
 template double anchor_t::EvalTbin(int tbin, std::vector<std::complex<double> > &cpl,std::vector<double> &par);
 
-double anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par){ // Gets the chi2 for a certain t' bin, with automatically calculated couplings
-	std::vector<std::complex<double> > mincpl = getMinimumCpl(tbin,cpl,par);
+template<typename xdouble>
+xdouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par){ // Gets the chi2 for a certain t' bin, with automatically calculated couplings
+	std::vector<std::complex<xdouble> > mincpl = getMinimumCpl(tbin,cpl,par);
 	return EvalTbin(tbin,mincpl,par);
 };
+template double anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
 template<typename xdouble>
 xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&cpl,std::vector<xdouble> &par){ // Gets the Chi2 for a single t' and m3pi bin
@@ -229,6 +241,14 @@ template adouble anchor_t::EvalBranch(std::vector<std::complex<adouble> >&branch
 template adouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par);
 template adouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<adouble> >&cpl,std::vector<adouble> &par);
 template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par);
+
+template adouble anchor_t::EvalAutoCpl(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par);
+template adouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<adouble> >&bra, std::vector<std::complex<adouble> >&cpl, std::vector<adouble> &par);
+template adouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par);
+
+template AandB<adouble> anchor_t::get_AB(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<adouble> > &branch, std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
 #endif//ADOL_ON
 
 void anchor_t::setBinning(std::vector<double> binning){ // sets the binning in m3pi
@@ -410,34 +430,34 @@ void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2
 		PROBABLY SIMPLIFY THIS, SINCE IT IS POSSIBLE TO TURN A INTO A TRIABGULAR MATRIX
 		THEN THE INVERSION IS ANALYTOCALLY CODABLE (WITHOUT EIGEN) AND THE DERIVATIVE IS POSSIBLE
 */
-AandB anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par){// Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C
+template<typename xdouble>
+AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){// Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
 	int nNon = _nFtw - nCplAnc;
-	AandB AB(2*nNon);
-	std::vector<double> lines = std::vector<double>(2*_nWaves-2,0.);
+	AandB<xdouble> AB(2*nNon);
+	std::vector<xdouble> lines = std::vector<xdouble>(2*_nWaves-2,0.);
 	for(int bin=_minBin;bin<_maxBin;bin++){
 		double m = (_binning[bin]+_binning[bin+1])/2;
-		std::vector<std::complex<double> > func = funcs(m,par);
-
+		std::vector<std::complex<xdouble> > func = funcs(m,par);
 
 		std::vector<double> phase = phase_space(m);
-		std::complex<double> ampAnc = std::complex<double>(0.,0.);
+		std::complex<xdouble> ampAnc = std::complex<double>(0.,0.);
 		for(int i=0;i<nCplAnc;i++){
 			ampAnc+= anchor_cpl[i]*func[_funcs_to_waves[i]]*phase[0];
 		};
 		if(_is_ampl){ // Divide ampAnc by |ampAnc| to get the amplitude with phase 0. // Need to be tested
 			ampAnc/=pow(std::norm(ampAnc),.5);
 		};
-		double RR = ampAnc.real();
-		double II = ampAnc.imag();
+		xdouble RR = ampAnc.real();
+		xdouble II = ampAnc.imag();
 		for (int i =0;i<2*_nWaves-2;i++){
-			double val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
+			xdouble val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
 			for (int j=1;j<2*_nWaves-1;j++){
 				val+=-_data[tbin][bin][j]*_coma[tbin][bin][i+1][j];
 			};
 			lines[i]=val;			
 		};
-		double intAnc = RR*RR+II*II;
+		xdouble intAnc = RR*RR+II*II;
 		int wave1 = 1;	// Start with 1, leave anchor wave out
 		int up1 = _borders_waves[1];
 		for (unsigned int nf1 = nCplAnc;nf1<_nFtw;nf1++){
@@ -450,16 +470,16 @@ AandB anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, 
 			int wave2=1;
 			int up2=_borders_waves[1];
 
-			std::complex<double> AB1 = ampAnc * conj(func[f1]) * phase[wave1];
+			std::complex<xdouble> AB1 = ampAnc * conj(func[f1]) * phase[wave1];
 
-			double r1 = func[f1].real()*phase[wave1];
-			double i1 = func[f1].imag()*phase[wave1];
+			xdouble r1 = func[f1].real()*phase[wave1];
+			xdouble i1 = func[f1].imag()*phase[wave1];
 			//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
 
-			double RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
-			double RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
-			double IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
-			double II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
+			xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
+			xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
+			xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
+			xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
 
 			AB.B[2*ind1  ] += AB1.real() * lines[2*wave1-2] * 2;
 			AB.B[2*ind1  ] += AB1.imag() * lines[2*wave1-1] * 2;
@@ -476,53 +496,56 @@ AandB anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, 
 				int ind2=nf2-nCplAnc;
 
 
-				std::complex<double> AB2 = ampAnc * conj(func[f2]) * phase[wave2];
+				std::complex<xdouble> AB2 = ampAnc * conj(func[f2]) * phase[wave2];
 
-				double r2 = func[f2].real()*phase[wave2];
-				double i2 = func[f2].imag()*phase[wave2];
+				xdouble r2 = func[f2].real()*phase[wave2];
+				xdouble i2 = func[f2].imag()*phase[wave2];
 				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-				double RR2 = RR*r2+II*i2;
-				double RI2 =-RR*i2-II*r2;
-				double IR2 = II*r2-RR*i2;
-				double II2 = II*i2-RR*r2;
+				xdouble RR2 = RR*r2+II*i2;
+				xdouble RI2 =-RR*i2-II*r2;
+				xdouble IR2 = II*r2-RR*i2;
+				xdouble II2 = II*i2-RR*r2;
 //				std::cout<<"_coma[tbin][bin][2*wave1-1][2*wave2-1]: "<<_coma[tbin][bin][2*wave1-1][2*wave2-1]<<std::endl;
 //				std::cout<< "AB1.real(): "<<AB1.real()<<std::endl;
 //				std::cout<< "AB2.real(): "<<AB2.real()<<std::endl;
 
-				AB.A(2*ind1  ,2*ind2  )+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
-				AB.A(2*ind1  ,2*ind2  )+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
-				AB.A(2*ind1  ,2*ind2  )+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
-				AB.A(2*ind1  ,2*ind2  )+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
+				AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
+				AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
+				AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
+				AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
 
-				AB.A(2*ind1  ,2*ind2+1)+=-AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
-				AB.A(2*ind1  ,2*ind2+1)+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
-				AB.A(2*ind1  ,2*ind2+1)+=-AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
-				AB.A(2*ind1  ,2*ind2+1)+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
+				AB.A[2*ind1  ][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
+				AB.A[2*ind1  ][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
+				AB.A[2*ind1  ][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
+				AB.A[2*ind1  ][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
 
-				AB.A(2*ind1+1,2*ind2  )+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
-				AB.A(2*ind1+1,2*ind2  )+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
-				AB.A(2*ind1+1,2*ind2  )+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
-				AB.A(2*ind1+1,2*ind2  )+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
+				AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
+				AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
+				AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
+				AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
 
-				AB.A(2*ind1+1,2*ind2+1)+= AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
-				AB.A(2*ind1+1,2*ind2+1)+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
-				AB.A(2*ind1+1,2*ind2+1)+=-AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
-				AB.A(2*ind1+1,2*ind2+1)+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
+				AB.A[2*ind1+1][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
+				AB.A[2*ind1+1][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
+				AB.A[2*ind1+1][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
+				AB.A[2*ind1+1][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
 			};
 		};
 	};
 	return AB;
 };
+template AandB<double> anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
 
-std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par){	// Gets the bes couplings without branchings
+template<typename xdouble>
+std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){	// Gets the bes couplings without branchings
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
 	int nNon = _nFtw - nCplAnc;
-	std::vector<std::complex<double> > cpl = std::vector<std::complex<double> >(_nFtw);
+	std::vector<std::complex<xdouble> > cpl = std::vector<std::complex<xdouble> >(_nFtw);
 	for (int i=0; i<nCplAnc; i++){
 		cpl[i] = anchor_cpl[i];
 	};
-	AandB AB = get_AB(tbin,anchor_cpl,par);
-	Eigen::VectorXd D =  AB.A.ldlt().solve(AB.B); // (*)
+	AandB<xdouble> AB = get_AB(tbin,anchor_cpl,par);
+
+	std::vector<xdouble> D = cholesky::cholesky_solve(AB.A,AB.B);
 
 	for (int i=0;i<nNon;i++){
 		// Short explanation:
@@ -536,19 +559,21 @@ std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,std::vector<
 		// │D = -2*C								│
 		// │=> C solves (**)							│
 		// └────────────────────────────────────────────────────────────────────┘
-		cpl[nCplAnc+i]=std::complex<double>(-D(2*i)/2.,-D(2*i+1)/2.); 
+		cpl[nCplAnc+i]=std::complex<xdouble>(-D[2*i]/2.,-D[2*i+1]/2.); 
 	};
 	return cpl;
 };
+template std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
 
-std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par){ // Calculated all non anchor couplings (no need for fitting)
+template<typename xdouble>
+std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<xdouble> > &branch, std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){ // Calculated all non anchor couplings (no need for fitting)
 	if (0==_nBranch){ // Do not do the complicated stuff, when no branchings are used
 		return getMinimumCpl(tbin,anchor_cpl,par);
 	}else{
 		int nCplAnc = _borders_waves[0];
 		int nNon = _nFtw - nCplAnc;
-		std::vector<std::complex<double> > cplAncBr = std::vector<std::complex<double> >(nCplAnc);
-		std::vector<std::complex<double> > ccppll(_nBrCpl);
+		std::vector<std::complex<xdouble> > cplAncBr = std::vector<std::complex<xdouble> >(nCplAnc);
+		std::vector<std::complex<xdouble> > ccppll(_nBrCpl);
 		for (int i=0;i<_nBrCplAnc;i++){
 			ccppll[i] = anchor_cpl[i];
 		};
@@ -561,8 +586,8 @@ std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vec
 				cplAncBr[i] = anchor_cpl[ncpl_act] * branch[nbranch_act];
 			};
 		};
-		AandB AB = get_AB(tbin,cplAncBr,par);
-		AandB ABprime(2*(_nBrCpl - _nBrCplAnc));
+		AandB<xdouble> AB = get_AB(tbin,cplAncBr,par);
+		AandB<xdouble> ABprime(2*(_nBrCpl - _nBrCplAnc));
 		for (int i =0;i<nNon;i++){ // Reshuffle the coefficients 
 			int i_tot = i+nCplAnc;
 			int i_cpl_tot = _n_cpls[i_tot];
@@ -571,11 +596,11 @@ std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vec
 	//		std::cout<<"────────────────────────────────────────────────"<<std::endl;
 	//		std::cout<<i<<" "<<i_tot<<" "<<i_cpl_tot<<" "<<i_cpl<<" "<<i_br<<std::endl;		
 			if (-1 == i_br){ // If the funcion is uncoupled, just take the old coefficients
-				ABprime.B(2*i_cpl  )+= AB.B(2*i  );
-				ABprime.B(2*i_cpl+1)+= AB.B(2*i+1);
+				ABprime.B[2*i_cpl  ]+= AB.B[2*i  ];
+				ABprime.B[2*i_cpl+1]+= AB.B[2*i+1];
 			}else if(i_cpl>-1){ // If the function is not coupled to the anchor wave, add it to the corresponding coupling
-				ABprime.B(2*i_cpl  )+= AB.B(2*i  )*branch[i_br].real()   +   AB.B(2*i+1)*branch[i_br].imag();
-				ABprime.B(2*i_cpl+1)+=-AB.B(2*i  )*branch[i_br].imag()   +   AB.B(2*i+1)*branch[i_br].real();
+				ABprime.B[2*i_cpl  ]+= AB.B[2*i  ]*branch[i_br].real()   +   AB.B[2*i+1]*branch[i_br].imag();
+				ABprime.B[2*i_cpl+1]+=-AB.B[2*i  ]*branch[i_br].imag()   +   AB.B[2*i+1]*branch[i_br].real();
 			};
 			for (int j=0; j<nNon;j++){
 				int j_tot = j+nCplAnc;
@@ -583,79 +608,81 @@ std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vec
 				int j_cpl = j_cpl_tot -_nBrCplAnc;
 				int j_br  = _n_branch[j_tot];
 				if ((-1 == i_br or i_cpl>-1)and(-1 == j_br or j_cpl>-1)){
-					std::complex<double> ifak(1.,0.);
-					std::complex<double> jfak(1.,0.);
+					std::complex<xdouble> ifak(1.,0.);
+					std::complex<xdouble> jfak(1.,0.);
 					if (i_br >-1){
 						ifak = branch[i_br];
 					};
 					if (j_br >-1){
 						jfak = branch[j_br];
 					};
-					ABprime.A(2*i_cpl  ,2*j_cpl  )+=	 AB.A(2*i  ,2*j  )*ifak.real()*jfak.real() +
-										 AB.A(2*i  ,2*j+1)*ifak.real()*jfak.imag() +
-										 AB.A(2*i+1,2*j  )*ifak.imag()*jfak.real() +
-										 AB.A(2*i+1,2*j+1)*ifak.imag()*jfak.imag() ;
-					ABprime.A(2*i_cpl  ,2*j_cpl+1)+=	-AB.A(2*i  ,2*j  )*ifak.real()*jfak.imag() +
-										 AB.A(2*i  ,2*j+1)*ifak.real()*jfak.real() +
-										-AB.A(2*i+1,2*j  )*ifak.imag()*jfak.imag() +
-										 AB.A(2*i+1,2*j+1)*ifak.imag()*jfak.real() ;
-					ABprime.A(2*i_cpl+1,2*j_cpl  )+=	-AB.A(2*i  ,2*j  )*ifak.imag()*jfak.real() +
-										-AB.A(2*i  ,2*j+1)*ifak.imag()*jfak.imag() +
-										 AB.A(2*i+1,2*j  )*ifak.real()*jfak.real() +
-										 AB.A(2*i+1,2*j+1)*ifak.real()*jfak.imag() ;
-					ABprime.A(2*i_cpl+1,2*j_cpl+1)+=	 AB.A(2*i  ,2*j  )*ifak.imag()*jfak.imag() +
-										-AB.A(2*i  ,2*j+1)*ifak.imag()*jfak.real() +
-										-AB.A(2*i+1,2*j  )*ifak.real()*jfak.imag() +
-										 AB.A(2*i+1,2*j+1)*ifak.real()*jfak.real() ;
+					ABprime.A[2*i_cpl  ][2*j_cpl  ]+=	 AB.A[2*i  ][2*j  ]*ifak.real()*jfak.real() +
+										 AB.A[2*i  ][2*j+1]*ifak.real()*jfak.imag() +
+										 AB.A[2*i+1][2*j  ]*ifak.imag()*jfak.real() +
+										 AB.A[2*i+1][2*j+1]*ifak.imag()*jfak.imag() ;
+					ABprime.A[2*i_cpl  ][2*j_cpl+1]+=	-AB.A[2*i  ][2*j  ]*ifak.real()*jfak.imag() +
+										 AB.A[2*i  ][2*j+1]*ifak.real()*jfak.real() +
+										-AB.A[2*i+1][2*j  ]*ifak.imag()*jfak.imag() +
+										 AB.A[2*i+1][2*j+1]*ifak.imag()*jfak.real() ;
+					ABprime.A[2*i_cpl+1][2*j_cpl  ]+=	-AB.A[2*i  ][2*j  ]*ifak.imag()*jfak.real() +
+										-AB.A[2*i  ][2*j+1]*ifak.imag()*jfak.imag() +
+										 AB.A[2*i+1][2*j  ]*ifak.real()*jfak.real() +
+										 AB.A[2*i+1][2*j+1]*ifak.real()*jfak.imag() ;
+					ABprime.A[2*i_cpl+1][2*j_cpl+1]+=	 AB.A[2*i  ][2*j  ]*ifak.imag()*jfak.imag() +
+										-AB.A[2*i  ][2*j+1]*ifak.imag()*jfak.real() +
+										-AB.A[2*i+1][2*j  ]*ifak.real()*jfak.imag() +
+										 AB.A[2*i+1][2*j+1]*ifak.real()*jfak.real() ;
 	//				std::cout<<ifak<<jfak<<std::endl;
 				}else if(-1 == i_br or i_cpl>-1){			
-					std::complex<double> ifak(1.,0.);
+					std::complex<xdouble> ifak(1.,0.);
 					if (i_br>-1){
 						ifak = branch[i_br];
 					};
-					std::complex<double> cpl_j = branch[j_br]*anchor_cpl[j_cpl_tot];
-					ABprime.B(2*i_cpl  )+=   AB.A(2*i  ,2*j  )*ifak.real()*cpl_j.real() +
-								 AB.A(2*i  ,2*j+1)*ifak.real()*cpl_j.imag() +
-								 AB.A(2*i+1,2*j  )*ifak.imag()*cpl_j.real() +
-								 AB.A(2*i+1,2*j+1)*ifak.imag()*cpl_j.imag() ;
-					ABprime.B(2*i_cpl+1)+=	-AB.A(2*i  ,2*j  )*ifak.imag()*cpl_j.real() +
-								-AB.A(2*i  ,2*j+1)*ifak.imag()*cpl_j.imag() +
-								 AB.A(2*i+1,2*j  )*ifak.real()*cpl_j.real() +
-								 AB.A(2*i+1,2*j+1)*ifak.real()*cpl_j.imag() ;
+					std::complex<xdouble> cpl_j = branch[j_br]*anchor_cpl[j_cpl_tot];
+					ABprime.B[2*i_cpl  ]+=   AB.A[2*i  ][2*j  ]*ifak.real()*cpl_j.real() +
+								 AB.A[2*i  ][2*j+1]*ifak.real()*cpl_j.imag() +
+								 AB.A[2*i+1][2*j  ]*ifak.imag()*cpl_j.real() +
+								 AB.A[2*i+1][2*j+1]*ifak.imag()*cpl_j.imag() ;
+					ABprime.B[2*i_cpl+1]+=	-AB.A[2*i  ][2*j  ]*ifak.imag()*cpl_j.real() +
+								-AB.A[2*i  ][2*j+1]*ifak.imag()*cpl_j.imag() +
+								 AB.A[2*i+1][2*j  ]*ifak.real()*cpl_j.real() +
+								 AB.A[2*i+1][2*j+1]*ifak.real()*cpl_j.imag() ;
 	//				std::cout<<"Nirrr"<<std::endl;
 				}else if(-1 == j_br or j_cpl>-1){	
-					std::complex<double> jfak(1.,0.);
+					std::complex<xdouble> jfak(1.,0.);
 					if (j_br>-1){
 						jfak = branch[j_br];
 					};
-					std::complex<double> cpl_i = branch[i_br]*anchor_cpl[i_cpl_tot];
-					ABprime.B(2*j_cpl  )+=	 AB.A(2*i  ,2*j  )*cpl_i.real()*jfak.real() +
-								 AB.A(2*i  ,2*j+1)*cpl_i.real()*jfak.imag() +
-								 AB.A(2*i+1,2*j  )*cpl_i.imag()*jfak.real() +
-								 AB.A(2*i+1,2*j+1)*cpl_i.imag()*jfak.imag() ;
-					ABprime.B(2*j_cpl+1)+=	-AB.A(2*i  ,2*j  )*cpl_i.real()*jfak.imag() +
-								 AB.A(2*i  ,2*j+1)*cpl_i.real()*jfak.real() +
-								-AB.A(2*i+1,2*j  )*cpl_i.imag()*jfak.imag() +
-								 AB.A(2*i+1,2*j+1)*cpl_i.imag()*jfak.real() ;
+					std::complex<xdouble> cpl_i = branch[i_br]*anchor_cpl[i_cpl_tot];
+					ABprime.B[2*j_cpl  ]+=	 AB.A[2*i  ][2*j  ]*cpl_i.real()*jfak.real() +
+								 AB.A[2*i  ][2*j+1]*cpl_i.real()*jfak.imag() +
+								 AB.A[2*i+1][2*j  ]*cpl_i.imag()*jfak.real() +
+								 AB.A[2*i+1][2*j+1]*cpl_i.imag()*jfak.imag() ;
+					ABprime.B[2*j_cpl+1]+=	-AB.A[2*i  ][2*j  ]*cpl_i.real()*jfak.imag() +
+								 AB.A[2*i  ][2*j+1]*cpl_i.real()*jfak.real() +
+								-AB.A[2*i+1][2*j  ]*cpl_i.imag()*jfak.imag() +
+								 AB.A[2*i+1][2*j+1]*cpl_i.imag()*jfak.real() ;
 	//				std::cout<<"Njrrr"<<std::endl;
 				};// If both functions are coupled to the anchor wave, they just add to the constant C, (Chi2 = x^TAx + B^Tx +C) and do not change the position of the minimum.
 			};
 		};
 	//	std::vector<double> les_as;
 	//	for (int i=0;i<2*(_nBrCpl - _nBrCplAnc);i++){
-	//		les_as.push_back(ABprime.A(i,i));
+	//		les_as.push_back(ABprime.A[i][i]);
 	//	};
 	//	print_vector(les_as);
 
-		Eigen::VectorXd D =  ABprime.A.ldlt().solve(ABprime.B); 
+		std::vector<xdouble> D = cholesky::cholesky_solve(ABprime.A,ABprime.B);
+
 		for (int i=_nBrCplAnc;i<_nBrCpl;i++){
 			int irel = i-_nBrCplAnc;
-			ccppll[i] = std::complex<double>(-D(2*irel)/2,-D(2*irel+1)/2);
+			ccppll[i] = std::complex<xdouble>(-D[2*irel]/2,-D[2*irel+1]/2);
 		};
 	//	std::cout<<"made it through"<<std::endl;
 		return ccppll;
 	};
 };
+template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
 
 void anchor_t::updateTprime(int tbin){ // Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t' 
 	double tt = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;

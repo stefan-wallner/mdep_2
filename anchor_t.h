@@ -17,9 +17,14 @@ class anchor_t : public chi2_2d {
 		template<typename xdouble>
 		xdouble EvalBranch(std::vector<std::complex<xdouble> >&branch, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
 
-		double EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector<double> &par);
-		double EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::vector<std::complex<double> >&cpl, std::vector<double> &par);
-		double EvalAutoCplTbin(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
+		template<typename xdouble>
+		xdouble EvalAutoCpl(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par);
+
+		template<typename xdouble>
+		xdouble EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std::vector<std::complex<xdouble> >&cpl, std::vector<xdouble> &par);
+
+		template<typename xdouble> 
+		xdouble EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
 
 		template<typename xdouble>
 		xdouble EvalTbin(int tbin,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par);
@@ -58,10 +63,15 @@ class anchor_t : public chi2_2d {
 
 		std::vector<std::vector<double> > getPlots(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
+		template<typename xdouble>
+		AandB<xdouble> get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
 
-		AandB get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
-		std::vector<std::complex<double> > getMinimumCpl(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
-		std::vector<std::complex<double> > getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
+		template<typename xdouble>
+		std::vector<std::complex<xdouble> > getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
+
+		template<typename xdouble>
+		std::vector<std::complex<xdouble> > getMinimumCplBra(int tbin, std::vector<std::complex<xdouble> > &branch, std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
+
 		void updateTprime(int tbin);
 
 		int get_bin(double mass);
