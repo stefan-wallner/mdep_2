@@ -32,9 +32,9 @@ class anchor_t : public chi2_2d {
 		template<typename xdouble>
 		xdouble EvalBin(int tbin, int bin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
 
-
 		template<typename xdouble>
 		std::vector<xdouble> delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+
 
 		int getNtot();
 		int getNtotAnc();

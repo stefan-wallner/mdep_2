@@ -13,7 +13,13 @@ class minimize : public anchor_t{
 		minimize();
 
 		double operator()(const double* xx);
+		double operator()(std::vector<double> &xx);
 		double operator()();
+
+#ifdef ADOL_ON 
+		std::vector<double> Diff(std::vector<double> &xx);
+		std::vector<double> Diff(const double* xx);
+#endif//ADOL_ON
 
 		std::vector<std::string> getParNames();
 		std::vector<bool> getReleased();
@@ -49,6 +55,7 @@ class minimize : public anchor_t{
 	protected:
 		bool _init; // true, if the minimizer is already initialized
 		bool _useBranch; // Switches the usage of branchings on/off (only in the operator() method
+		bool _init_tape;
 
 		int _nOut; // Print output after _nOut iterations
 		int _nTot; // Total number of parameters

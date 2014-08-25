@@ -10,10 +10,11 @@
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
-
+#include "adolc/adolc.h"
+  
 #include"invert33.h"
 
-minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};
+minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true),_init_tape(false){};
 
 std::vector<std::string> minimize::getParNames(){// Self explanatory
 	return _parNames;
@@ -174,11 +175,11 @@ void minimize::reload_par_definitions(int mara_peter){ // Update the parameter d
 };
 
 double minimize::operator()(){ // Evaluate Chi2 with the _parameters (Call the oter operator)
-	double pars[2*_nCpl+_nPar+2*_nBra];
-	for (int i=0;i<2*_nCpl+_nPar+2*_nBra;i++){
-		pars[i]=_parameters[i];
-	};
-	return (*this)(pars);
+	return (*this)(&_parameters[0]);
+};
+
+double minimize::operator()(std::vector<double> &xx){
+	return (*this)(&xx[0]);
 };
 
 double minimize::operator()(const double* xx){ // Call of the operator
@@ -222,6 +223,61 @@ double minimize::operator()(const double* xx){ // Call of the operator
 	};
 	return chi2;
 };
+
+#ifdef ADOL_ON 
+std::vector<double> minimize::Diff(std::vector<double> &xx){
+	return Diff(&xx[0]);
+};
+std::vector<double> minimize::Diff(const double* xx){
+	int nTape = 0;
+	double x[_nTot];
+	for (int i=0;i<_nTot;i++){
+		x[i] = xx[i];
+	};
+
+	if (not _init_tape){
+		trace_on(nTape);
+		adouble ax[_nTot];
+		std::vector<adouble>aCpl_r(2*_nCpl);
+		std::vector<adouble>aPar(_nPar);
+		std::vector<adouble>aBra_r(2*_nBra);
+		int count=0;
+		for (int i=0;i<2*_nCpl;i++){
+			aCpl_r[i] <<= x[count];
+			count++;
+		};
+		for (int i=0; i<_nPar;i++){
+			aPar[i] <<= x[count];
+			count++;
+		};
+		for (int i=0;i<2*_nBra;i++){
+			aBra_r[i] <<= x[count];
+			count++;
+		};
+		std::vector<std::complex<adouble> > aCpl_c(_nCpl);
+		std::vector<std::complex<adouble> > aBra_c(_nBra);
+		for (int i=0;i<_nCpl;i++){
+			aCpl_c[i] = std::complex<adouble>(aCpl_r[2*i],aCpl_r[2*i+1]);
+		};
+		for (int i=0;i<_nBra;i++){
+			aBra_c[i] = std::complex<adouble>(aBra_r[2*i],aBra_r[2*i+1]);
+		};
+		double Chi2;
+		adouble aChi2;
+		aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar);
+		aChi2 >>= Chi2;
+		trace_off();
+		_init_tape=true;
+	};
+	double grad[_nTot];
+	gradient(nTape,_nTot,x,grad);
+	vector<double> gradient;
+	for (int i=0;i<_nTot;i++){
+		gradient.push_back(grad[i]);
+	};
+	return gradient;
+};
+#endif//ADOL_ON
 
 bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fitter (Has to be done at least once)
 	if (_parameters.size()<_nTot){

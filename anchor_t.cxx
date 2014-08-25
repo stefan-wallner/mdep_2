@@ -7,7 +7,7 @@
 
 #include"cholesky.h"
 
-#include <adolc/adolc.h>  
+#include "adolc/adolc.h"
 
 #include"invert33.h"
 
