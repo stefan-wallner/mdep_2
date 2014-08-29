@@ -14,7 +14,7 @@
   
 #include"invert33.h"
 
-minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true),_init_tape(false){};
+minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};
 
 std::vector<std::string> minimize::getParNames(){// Self explanatory
 	return _parNames;
@@ -224,6 +224,10 @@ double minimize::operator()(const double* xx){ // Call of the operator
 	return chi2;
 };
 
+std::string minimize::className(){
+	return "minimize";
+};
+
 #ifdef ADOL_ON 
 std::vector<double> minimize::Diff(std::vector<double> &xx){
 	return Diff(&xx[0]);
@@ -235,40 +239,37 @@ std::vector<double> minimize::Diff(const double* xx){
 		x[i] = xx[i];
 	};
 
-	if (not _init_tape){
-		trace_on(nTape);
-		adouble ax[_nTot];
-		std::vector<adouble>aCpl_r(2*_nCpl);
-		std::vector<adouble>aPar(_nPar);
-		std::vector<adouble>aBra_r(2*_nBra);
-		int count=0;
-		for (int i=0;i<2*_nCpl;i++){
-			aCpl_r[i] <<= x[count];
-			count++;
-		};
-		for (int i=0; i<_nPar;i++){
-			aPar[i] <<= x[count];
-			count++;
-		};
-		for (int i=0;i<2*_nBra;i++){
-			aBra_r[i] <<= x[count];
-			count++;
-		};
-		std::vector<std::complex<adouble> > aCpl_c(_nCpl);
-		std::vector<std::complex<adouble> > aBra_c(_nBra);
-		for (int i=0;i<_nCpl;i++){
-			aCpl_c[i] = std::complex<adouble>(aCpl_r[2*i],aCpl_r[2*i+1]);
-		};
-		for (int i=0;i<_nBra;i++){
-			aBra_c[i] = std::complex<adouble>(aBra_r[2*i],aBra_r[2*i+1]);
-		};
-		double Chi2;
-		adouble aChi2;
-		aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar);
-		aChi2 >>= Chi2;
-		trace_off();
-		_init_tape=true;
+	trace_on(nTape);
+	adouble ax[_nTot];
+	std::vector<adouble>aCpl_r(2*_nCpl);
+	std::vector<adouble>aPar(_nPar);
+	std::vector<adouble>aBra_r(2*_nBra);
+	int count=0;
+	for (int i=0;i<2*_nCpl;i++){
+		aCpl_r[i] <<= x[count];
+		count++;
 	};
+	for (int i=0; i<_nPar;i++){
+		aPar[i] <<= x[count];
+		count++;
+	};
+	for (int i=0;i<2*_nBra;i++){
+		aBra_r[i] <<= x[count];
+		count++;
+	};
+	std::vector<std::complex<adouble> > aCpl_c(_nCpl);
+	std::vector<std::complex<adouble> > aBra_c(_nBra);
+	for (int i=0;i<_nCpl;i++){
+		aCpl_c[i] = std::complex<adouble>(aCpl_r[2*i],aCpl_r[2*i+1]);
+	};
+	for (int i=0;i<_nBra;i++){
+		aBra_c[i] = std::complex<adouble>(aBra_r[2*i],aBra_r[2*i+1]);
+	};
+	double Chi2;
+	adouble aChi2;
+	aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar);
+	aChi2 >>= Chi2;
+	trace_off();
 	double grad[_nTot];
 	gradient(nTape,_nTot,x,grad);
 	vector<double> gradient;
@@ -365,16 +366,34 @@ double minimize::fit(){ // Actual call for fitter. At the moment the instance is
 
 void minimize::printStatus(){ // Prints the internal status
 	anchor_t::printStatus();
-	std::cout<<std::endl<<"_parNames:"<<std::endl;
-	print_vector(_parNames);
+	std::cout<<std::endl<<"_init: "<<_init<<std::endl;
+	std::cout<<std::endl<<"_useBranch: "<<_useBranch<<std::endl;
+	std::cout<<std::endl<<"_nOut: "<<_nOut<<std::endl;
+	std::cout<<std::endl<<"_nTot: "<<_nTot<<std::endl;
+	std::cout<<std::endl<<"_nPar: "<<_nPar<<std::endl;
+	std::cout<<std::endl<<"_nCpl: "<<_nCpl<<std::endl;
+	std::cout<<std::endl<<"_nBra: "<<_nBra<<std::endl;
+	std::cout<<std::endl<<"_count: "<<_count<<std::endl;
+	std::cout<<std::endl<<"_maxFunctionCalls: "<<_maxFunctionCalls<<std::endl;
+	std::cout<<std::endl<<"_maxIterations: "<<_maxIterations<<std::endl;
+	std::cout<<std::endl<<"_tolerance: "<<_tolerance<<std::endl;
+	std::cout<<std::endl<<"_randRange: "<<_randRange<<std::endl;
+	std::cout<<std::endl<<"_best_par"<<std::endl;
+	print_vector(_best_par);
+	std::cout<<std::endl<<"_minStepSize: "<<_minStepSize<<std::endl;
+
 	std::cout<<std::endl<<"_parameters:"<<std::endl;
 	print_vector(_parameters);
-	std::cout<<std::endl<<"_released:"<<std::endl;
-	print_vector(_released);
 	std::cout<<std::endl<<"_upper_parameter_limits:"<<std::endl;
 	print_vector(_upper_parameter_limits);
 	std::cout<<std::endl<<"_lower_parameter_limits:"<<std::endl;
 	print_vector(_lower_parameter_limits);	
+	std::cout<<std::endl<<"_step_sizes"<<std::endl;
+	print_vector(_step_sizes);
+	std::cout<<std::endl<<"_released:"<<std::endl;
+	print_vector(_released);
+	std::cout<<std::endl<<"_parNames:"<<std::endl;
+	print_vector(_parNames);
 };
 
 void minimize::setRandRange(double range){

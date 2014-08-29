@@ -1,19 +1,19 @@
 #include<string>
 #include<iostream>
-#include<map>
 
 
 #include "minimize.h"
 #include"../chi_squared/breitWigners.h"
 #include "yaml-cpp/yaml.h"
+#include "currentDateTime.h"
 
 #include"invert33.h"
 
 double MIN_STEP_SIZE = 0.00001;
 
 const char* wave_definitions = "../wave_specifications.yaml";
-//const char* parametrizations = "../parametrizations_13_waves.yaml";
-const char* parametrizations = "../parametrizations.yaml";//Commented version with 6 waves works
+const char* parametrizations = "../parametrizations_13_waves.yaml";
+//const char* parametrizations = "../parametrizations.yaml";//Commented version with 6 waves works
 
 minimize init_chi2(std::string card){
 	YAML::Node param  = YAML::LoadFile(parametrizations);	
@@ -244,110 +244,60 @@ minimize init_chi2(std::string card){
 };
 
 int main(int argc, char* argv[]){
-
-
-	minimize Chi2 = init_chi2("../6w_11t.yaml"); //Commented version with 6 waves works
-//	minimize Chi2 = init_chi2("../13w_11t.yaml");
+	std::cout<<"--------start------"<<std::endl;
+	std::cout<<currentDateTime()<<std::endl;
+	std::cout<<"-------------------"<<std::endl;
+//	minimize Chi2 = init_chi2("../6w_11t.yaml"); //Commented version with 6 waves works
+	minimize Chi2 = init_chi2("../13w_11t_testload.yaml");
 	int nPar = Chi2.getNpar();
 	int nCpl = Chi2.getNanc();
 	int nBra = Chi2.getNbra();
 	int nTot = Chi2.getNtotAnc();
 
-	Chi2.printParameters();
-//////////////////////////////////////////////////////////
-/*
-	Chi2.setParameter("M_a1(1260)",1.2794);
-	Chi2.setParameter("G_a1(1260)",0.40958);
-	Chi2.setParameter("M_a1(1930)",2.0108);
-	Chi2.setParameter("G_a1(1930)",0.32212);
-	Chi2.setParameter("M_a1(1420)",1.4093);
-	Chi2.setParameter("G_a1(1420)",0.13925);
-	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__b",1.4795);
-	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c0",-4.3912);
-	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c1",12.770);
-	Chi2.setParameter("tdepBKG(1++)0+_rho_pi_S__c2",-23.516);
-	Chi2.setParameter("cohBKG(1++)0+_f0(980)_pi_P__b",-5.8146);
-	Chi2.setParameter("cohBKG(1++)0+_rho_pi_D__b",2.5961);
-	Chi2.setParameter("M_pi(1800)",1.8005);
-	Chi2.setParameter("G_pi(1800)",0.21337);
-	Chi2.setParameter("cohBKG(0-+)0+_f0(980)_pi_S__b",-3.3995);
-	Chi2.setParameter("M_a2(1320)",1.3136);
-	Chi2.setParameter("G_a2(1320)",0.11089);
-	Chi2.setParameter("M_a2(1700)",1.6704);
-	Chi2.setParameter("G_a2(1700)",0.41407);
-	Chi2.setParameter("cohBKG(2++)1+_f2_pi_P__b",-0.77708);
-	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__b",0.66388);
-	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c0",-1.6812);
-	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c1",0.51046);
-	Chi2.setParameter("tdepBKG(2++)1+_rho_pi_D__c2",2.5439);
-	Chi2.setParameter("cohBKG(2++)2+_rho_pi_D__b",-0.89233);
-	Chi2.setParameter("M_pi2(1670)",1.6521);
-	Chi2.setParameter("G_pi2(1670)",0.30451);
-	Chi2.setParameter("M_pi2(1880)",1.8335);
-	Chi2.setParameter("G_pi2(1880)",0.32157);
-	Chi2.setParameter("cohBKG(2-+)0+_f2_pi_D__b",2.4491);
-	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__b",2.0204);
-	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c0",-3.7016);
-	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c1",3.1433);
-	Chi2.setParameter("tdepBKG(2-+)0+_f2_pi_S__c2",-2.9780);
-	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__b",-1.3158);
-	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c0",0.90445);
-	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c1",-0.18399E-01);
-	Chi2.setParameter("tdepBKG(2-+)0+_rho_pi_F__c2",2.0252);
-	Chi2.setParameter("cohBKG(2-+)1+_f2_pi_S__b",-0.92364);
-	Chi2.setParameter("M_a4(2040)",1.9256);
-	Chi2.setParameter("G_a4(2040)",0.37209);
-	Chi2.setParameter("cohBKG(4++)1+_f2_pi_F__b",-0.18977);
-	Chi2.setParameter("cohBKG(4++)1+_rho_pi_G__b",-4.3411);
-*///////////////////////////////////////////////////////////////////////
-	std::cout<< "nPar:"<<nPar<<"; nCpl:"<<nCpl<<"; nBra:"<<nBra<<" => nTot:"<<nTot<<std::endl;
+	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<" => nTot: "<<nTot<<std::endl;
 
-//	Chi2.conjugate();
+	Chi2.conjugate();
 //	Chi2.initCouplings();
 	print_vector(Chi2.getParameters());
 	
 
-//	double params[] = {1.41204, -1.06975, -0.00748951, 0.0380807, 3.3125, -2.89382, -1.54082, 0.803489, 0.00969979, -0.0418916, -3.49037, 1.92446, -0.365443, -1.64996, 0.0421912, 0.00731507, -0.702389, -3.52486, 1.56651, 0.473571, -0.0379001, 0.0522614, 2.9242, 1.18575, -1.37183, 0.801453, -0.0181871, -0.0704837, -2.56476, 0.971844, 1.52324, -0.234316, -0.0175631, 0.0918839, 2.27319, 0.236614, -1.429, -0.3788, 0.0478653, -0.0855039, -1.44503, -1.0808, 0.280363, 1.33411, -0.0942537, -0.0137978, -0.556254, 1.30749, -0.366226, -1.09952, 0.0941395, -0.01343, 0.7383, -0.913639, -0.0014982, -0.679641, 0.0971191, -0.0280913, 1.31206, 0.661233, -0.265434, 0.216036, -0.0225412, -0.0581884, 1.10534, -0.86583, 1.2794, 0.40958, 2.0108, 0.32212, 1.4795, -4.3912, 12.77, -23.516, 1.4093, 0.13925, -5.8146, 2.5961, 1.8005, 0.21337, -3.3995, 1.3136, 0.11089, 1.6704, 0.41407, -0.77708, 0.66388, -1.6812, 0.51046, 2.5439, -0.89233, 1.6521, 0.30451, 1.8335, 0.32157, 2.4491, 2.0204, -3.7016, 3.1433, -2.978, -1.3158, 0.90445, -0.018399, 2.0252, -0.92364, 1.9256, 0.37209, -0.18977, -4.3411, 1.001, 0.00132763, 0.829259, 0.0181491, -15.3911, 2.69214, 119.216, -83.8281, 1460.37, -348.682, -412.197, 6.58593, 167.65, -7.31843, -7.05273, 0.651271, 1546.29, -2450.71, -2127.02, 3600.22, 87.4355, -98.3871, -43.6377, 7.59307, 310.204, 32.4695, 139.365, -40.1092, 9670.56, -4562.28, 909.894, -355.194};
+	double params[] = {1.41204, -1.06975, -0.00748951, 0.0380807, 3.3125, -2.89382, -1.54082, 0.803489, 0.00969979, -0.0418916, -3.49037, 1.92446, -0.365443, -1.64996, 0.0421912, 0.00731507, -0.702389, -3.52486, 1.56651, 0.473571, -0.0379001, 0.0522614, 2.9242, 1.18575, -1.37183, 0.801453, -0.0181871, -0.0704837, -2.56476, 0.971844, 1.52324, -0.234316, -0.0175631, 0.0918839, 2.27319, 0.236614, -1.429, -0.3788, 0.0478653, -0.0855039, -1.44503, -1.0808, 0.280363, 1.33411, -0.0942537, -0.0137978, -0.556254, 1.30749, -0.366226, -1.09952, 0.0941395, -0.01343, 0.7383, -0.913639, -0.0014982, -0.679641, 0.0971191, -0.0280913, 1.31206, 0.661233, -0.265434, 0.216036, -0.0225412, -0.0581884, 1.10534, -0.86583, 1.2794, 0.40958, 2.0108, 0.32212, 1.4795, -4.3912, 12.77, -23.516, 1.4093, 0.13925, -5.8146, 2.5961, 1.8005, 0.21337, -3.3995, 1.3136, 0.11089, 1.6704, 0.41407, -0.77708, 0.66388, -1.6812, 0.51046, 2.5439, -0.89233, 1.6521, 0.30451, 1.8335, 0.32157, 2.4491, 2.0204, -3.7016, 3.1433, -2.978, -1.3158, 0.90445, -0.018399, 2.0252, -0.92364, 1.9256, 0.37209, -0.18977, -4.3411, 1.001, 0.00132763, 0.829259, 0.0181491, -15.3911, 2.69214, 119.216, -83.8281, 1460.37, -348.682, -412.197, 6.58593, 167.65, -7.31843, -7.05273, 0.651271, 1546.29, -2450.71, -2127.02, 3600.22, 87.4355, -98.3871, -43.6377, 7.59307, 310.204, 32.4695, 139.365, -40.1092, 9670.56, -4562.28, 909.894, -355.194};
 
-	double params[]= {-1.49424, -0.924861, -0.0181612, -0.189022, -1.3358, -1.13166, 0.76177, -1.5897, 0.187619, -0.00137822, 0.889578, -1.27784, -1.01002, -1.42064, 0.133609, -0.162744, -0.602601, -1.23756, -0.214553, -1.70142, 0.16878, -0.0429491, 0.0998105, -1.19873, 1.27512, 1.02055, -0.134599, 0.146486, 0.631117, 0.904701, 1.53328, -0.415381, 0.0130783, 0.175784, 0.920449, 0.0927567, -0.145079, -1.4941, 0.141101, 0.0272601, 0.327602, -0.692173, -1.27715, 0.601185, -0.00587701, -0.135047, -0.528042, -0.201947, 1.22878, 0.00796203, -0.0715626, 0.115512, 0.0883526, 0.459102, -0.7288, 0.215666, 0.0184327, -0.131588, 0.135748, -0.514689, -0.0168343, -0.220234, 0.0984328, 0.0388127, 0.180805, 0.240914, 1.2683, 0.3726, 1.916, 0.236, 0.2185, -1.9842, 1.5785, -2.1808, 1.81, 0.2, -4.5, 1.418, 0.136, -4.94, 1.313, 0.11, 1.881, 0.442, 0.937, -0.476, 0, 0, 1.654, 0.273, 1.968, 0.209, 2.91, -4.12, 11.5, 0, 1.952, 0.363, -1.0434};
-	Chi2.Diff(params);
-	params[0]+=1.;
-	std::cout<<"Tape is done"<<std::endl;
+	for (int i=0;i<nTot;i++){
+		Chi2.setParameter(i,params[i]);
+	};
+
+
 	std::vector<double> parr(nTot);
 	for (int i=0;i<nTot;i++){
 		parr[i] = params[i];
 	};
+
+	std::cout<<"chi2(): "<<Chi2()<<std::endl;
 	std::cout<<"chi2(const double*): "<<Chi2(params)<<std::endl;
 	std::cout<<"chi2(std::vector<double>): "<<Chi2(parr)<<std::endl;
-	std::vector<double> grad_a = Chi2.Diff(params);
-	std::vector<double> grad_v = Chi2.Diff(parr);
-	std::vector<double> grad_n(nTot,0.);
-	double chibef = Chi2(parr);
-	double epsilon = 0.000000001;
-//	for (int i=0;i<nTot;i++){
-//		std::vector<double> delpar = parr;
-//		delpar[i]+=epsilon;
-//		double delchi = Chi2(delpar);
-//		grad_n[i] = (delchi-chibef)/epsilon;
-//	};
+	std::cout<<"should be: 46000.3, if everything works (6waves)"<<std::endl;
+	std::cout<<"should be: 86023.5 , if everything works (13waves_testload)"<<std::endl;
 
-	std::vector<std::string> names = Chi2.getParNames();
+	std::cout<<"--------init-------"<<std::endl;
+	std::cout<<currentDateTime()<<std::endl;
+	std::cout<<"-------------------"<<std::endl;
 
-	for (int i=0;i<nTot;i++){
-		std::cout<<names[i]<<"\t"<<grad_a[i]<<"\t"<<grad_v[i]<<"\t"<<grad_n[i]<<std::endl;
+	Chi2.initCouplings();
+	std::cout<<"--------fit--------"<<std::endl;
+	std::cout<<currentDateTime()<<std::endl;
+	std::cout<<"-------------------"<<std::endl;
+
+	for (int i=2*nCpl;i<nTot;i++){
+		std::cout <<"RelPar('"<<Chi2.getParName(i)<<"'):"<<std::endl;
+		Chi2.relPar(i);
 	};
-
-
-//	Chi2.open_output("../compare/chi2_f.dat");
-
-//	Chi2.close_output();
-//	for (int i=2*nCpl;i<nTot;i++){
-//		std::cout <<"RelPar('"<<Chi2.getParName(i)<<"'):"<<std::endl;
-//		Chi2.relPar(i);
-//		std::cout<<Chi2.fit()<<std::endl;
-//	};
-//	print_vector(Chi2.getParameters());
-//	Chi2.printStatus();
+	std::cout<<Chi2.fit()<<std::endl;
+	Chi2.printStatus();
+	print_vector(Chi2.getParameters());
+	std::cout<<"--------stop-------"<<std::endl;
+	std::cout<<currentDateTime()<<std::endl;
+	std::cout<<"-------------------"<<std::endl;
 	return 0;
 };
 

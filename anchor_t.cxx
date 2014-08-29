@@ -11,7 +11,9 @@
 
 #include"invert33.h"
 
-anchor_t::anchor_t(): chi2_2d(), _is_ampl(false),_binning(std::vector<double>(2)){};
+anchor_t::anchor_t(): chi2_2d(), _is_ampl(false),_nBranch(0),_nTbin(0),_binning(std::vector<double>(2)){
+	setTbinning(std::vector<double>(2,0.));
+};
 
 #ifdef ADOL_ON 
 std::complex<adouble> operator*(std::complex<adouble> a,double d){// Define std::complex<adouble> * double 
@@ -20,7 +22,7 @@ std::complex<adouble> operator*(std::complex<adouble> a,double d){// Define std:
 #endif//ADOL_ON
 
 template<typename xdouble>
-xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Evaluates chi2 w/o branchings
+xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par){ // Evaluates chi2 w/o branchings
 	xdouble chi2 = 0.;
 	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(_nFtw);
 	for (int tbin=0;tbin<_nTbin;tbin++){
@@ -29,8 +31,9 @@ xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xd
 			for (int i=0;i<_nFtw;i++){
 				actCpl[i] = cpl[i+tbin*_nFtw];
 			};
-			chi2+=EvalTbin(tbin,actCpl,par);
+			chi2+=EvalTbin(tbin,actCpl,par,iso_par);
 	//		std::cout<<tbin<<":E:"<<EvalTbin(tbin,actCpl,par)<<std::endl;
+//			std::cout<<chi2<<std::endl;
 		};
 	};
 	if (_write_out){
@@ -38,7 +41,7 @@ xdouble anchor_t::EvalCP(std::vector<std::complex<xdouble> > &cpl,std::vector<xd
 	};
 	return chi2;
 };
-template double anchor_t::EvalCP(std::vector<std::complex<double> > &cpl,std::vector<double> &par);
+template double anchor_t::EvalCP(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
 
 
 template<typename xdouble>
@@ -56,7 +59,8 @@ xdouble anchor_t::EvalBranch(std::vector<std::complex<xdouble> >&branch, std::ve
 			};
 		};
 	};
-	xdouble chi2 = EvalCP(cplin,par);
+	std::vector<xdouble> iso_par;
+	xdouble chi2 = EvalCP(cplin,par, iso_par);
 	if (_write_out){
 		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
 	};
@@ -92,6 +96,7 @@ xdouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std
 //	std::cout<<"par[1]: "<<par[1]<<std::endl;
 	int nNon = _nBrCplAnc;
 	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(nNon);
+	std::vector<xdouble> iso_par;
 	for(int tbin=0;tbin<_nTbin;tbin++){
 		if (_eval_tbin[tbin]){
 			updateTprime(tbin);
@@ -108,7 +113,7 @@ xdouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std
 					best_cpl_std[i] = bestcpl[_n_cpls[i]] * bra[_n_branch[i]]; 
 				};
 			};
-			chi2+=EvalTbin(tbin,best_cpl_std,par);
+			chi2+=EvalTbin(tbin,best_cpl_std,par,iso_par);
 		};
 	};
 	if (_write_out){
@@ -119,31 +124,35 @@ xdouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std
 template double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::vector<std::complex<double> >&cpl, std::vector<double> &par);
 
 template<typename xdouble>
-xdouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // gets the chi2 for a single t' bin
+xdouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par){ // gets the chi2 for a single t' bin
 	updateTprime(tbin);
 	xdouble chi2 = 0.;
+	std::vector<std::vector<std::complex<xdouble> > > iso_eval = iso_funcs(iso_par);
 	for (int bin=_minBin; bin<_maxBin; bin++){
-		chi2+=EvalBin(tbin,bin,cpl,par);
+		chi2+=EvalBin(tbin,bin,cpl,par,iso_eval);
+//		std::cout<<"bin #"<<bin<<" chi2++"<<EvalBin(tbin,bin,cpl,par,iso_eval)<<std::endl;
 //		std::cout << bin<<"   "<< EvalBin(tbin,bin,cpl,par) <<std::endl;
 	};
 	return chi2;
 };
-template double anchor_t::EvalTbin(int tbin, std::vector<std::complex<double> > &cpl,std::vector<double> &par);
+template double anchor_t::EvalTbin(int tbin, std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
 
 template<typename xdouble>
 xdouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par){ // Gets the chi2 for a certain t' bin, with automatically calculated couplings
 	std::vector<std::complex<xdouble> > mincpl = getMinimumCpl(tbin,cpl,par);
-	return EvalTbin(tbin,mincpl,par);
+	std::vector<xdouble> iso_par;
+	return EvalTbin(tbin,mincpl,par,iso_par);
 };
 template double anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
 
 template<typename xdouble>
-xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&cpl,std::vector<xdouble> &par){ // Gets the Chi2 for a single t' and m3pi bin
+xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&cpl, std::vector<xdouble> &par,std::vector<std::vector<std::complex<xdouble> > > &iso_eval){ // Gets the Chi2 for a single t' and m3pi bin
 	double mass = (_binning[bin] + _binning[bin+1])/2; // Eval at bin center.
-	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl,par);
+	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl,par,iso_eval);
 	xdouble chi2 = 0.;
-	for (int i=0;i<2*_nWaves-1;i++){
-		int iWave = (i+1)/2;
+//	print_vector(deltas);
+	for (int i=0;i<2*_nPoints-1;i++){
+		int iWave = _point_to_wave[(i+1)/2];
 		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
 //			std::cout<<"le_addite:D"<<pow(deltas[i],2.)*_coma[tbin][bin][i][i]<<std::endl;
 			if (_write_out){
@@ -153,11 +162,12 @@ xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&c
 				*_outStream <<"  Ci^2 before      "<<chi2<<"      +     "<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<"       =    ";
 			};
 			chi2+= deltas[i]*deltas[i]*_coma[tbin][bin][i][i];
+//			std::cout<<deltas[i]<<"*"<<deltas[i]<<"*"<<_coma[tbin][bin][i][i]<<"="<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<std::endl;
 			if(_write_out){
 				*_outStream <<chi2<<std::endl;
 			};
 			for (int j=0;j<i;j++){
-				int jWave = (j+1)/2;
+				int jWave = _point_to_wave[(j+1)/2];
 				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
 //					std::cout<<"le_addite: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
 					if (_write_out){
@@ -167,6 +177,7 @@ xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&c
 						*_outStream <<"  Ci^2 before      "<<chi2<<"      +     "<<2.*deltas[j]*deltas[i]*_coma[tbin][bin][i][j]<<"       =    ";
 					};
 					chi2+=2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]; // Factor 2. because _coma[t][m][i][j] is symmetric under i<->j
+//					std::cout<<deltas[i]<<"*"<<deltas[j]<<"*"<<_coma[tbin][bin][i][j]<<"="<<deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
 					if(_write_out){
 						*_outStream <<chi2<<std::endl;
 					};
@@ -176,13 +187,12 @@ xdouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<xdouble> >&c
 	};
 	return chi2;
 };
-template double anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<double> >&cpl,std::vector<double> &par);
+template double anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<double> >&cpl,std::vector<double> &par,std::vector<std::vector<std::complex<double> > > &iso_eval);
 
 template<typename xdouble>
-std::vector<xdouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par){ // Returns f(m,...) - data[...] for each SDM entry in the fit
-	std::vector<std::vector<std::complex<xdouble> > > iso_eval;
+std::vector<xdouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &iso_eval){ // Returns f(m,...) - data[...] for each SDM entry in the fit
 	std::vector<std::complex<xdouble> > ampls = amps(mass, cpl, par, iso_eval);
-	std::vector<xdouble> del = std::vector<xdouble> (2*_nWaves-1);
+	std::vector<xdouble> del = std::vector<xdouble> (2*_nPoints-1);
 	std::complex<xdouble> divider = std::complex<xdouble>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
 	if(_is_ampl){
 		divider = std::complex<xdouble>(pow(std::norm(ampls[0]),.5),0.);
@@ -192,7 +202,7 @@ std::vector<xdouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<
 		*_outStream << " Re1 data    "<<_data[tbin][bin][0]<<"     - theory   "<<std::norm(ampls[0]/divider)<<"       =    "<<std::norm(ampls[0]/divider) - _data[tbin][bin][0]<<std::endl;
 	};
 	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0];
-	for (int i = 1; i<_nWaves;i++){
+	for (int i = 1; i<_nPoints;i++){
 		std::complex<xdouble> inter = ampls[0]*std::conj(ampls[i])/divider;
 		del[2*i-1]=real(inter) - _data[tbin][bin][2*i-1]; // real part
 		del[2*i]=imag(inter) - _data[tbin][bin][2*i];    // imag part
@@ -205,13 +215,13 @@ std::vector<xdouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<
 	};
 	return del;
 };
-template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
+template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::vector<std::complex<double> > > &iso_eval);
 
 std::vector<std::vector<double> > anchor_t::getPlots(int tbin, std::vector<std::complex<double> >&cpl, std::vector<double> &par){ ///// DOES NOT WORK !!!!!
 	updateTprime(tbin);
-	std::vector<std::vector<double> > plots = std::vector<std::vector<double> >(2*_nWaves -1); // Store everything for one data set in one vector, with the structure [fit, data, error, fit, data, error, fit, ... ]
+	std::vector<std::vector<double> > plots = std::vector<std::vector<double> >(2*_nPoints -1); // Store everything for one data set in one vector, with the structure [fit, data, error, fit, data, error, fit, ... ]
+	std::vector<std::vector<std::complex<double> > > iso_eval; // If isobars were used
 	for(int bin=0;bin<_nBins;bin++){
-		std::vector<std::vector<std::complex<double> > > iso_eval; // If isobars were used
 		double mass = (_binning[bin]+_binning[bin+1])/2.;
 		std::vector<std::complex<double> > ampls = amps(mass, cpl ,par,iso_eval);
 		std::complex<double> divider = std::complex<double>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
@@ -221,7 +231,7 @@ std::vector<std::vector<double> > anchor_t::getPlots(int tbin, std::vector<std::
 		plots[0].push_back(std::norm(ampls[0]/divider));
 		plots[0].push_back(_data[tbin][bin][0]);
 		plots[0].push_back(_coma[tbin][bin][0][0]); // Use simple diagonal errors here.
-		for (int wave=1;wave<_nWaves;wave++){
+		for (int wave=1;wave<_nPoints;wave++){
 			std::complex<double> inter = ampls[0]*std::conj(ampls[wave])/divider;
 			plots[2*wave-1].push_back(real(inter));
 			plots[2*wave-1].push_back(_data[tbin][bin][2*wave-1]);
@@ -236,17 +246,18 @@ std::vector<std::vector<double> > anchor_t::getPlots(int tbin, std::vector<std::
 };
 
 #ifdef ADOL_ON // Enable adouble operations, if the auto diff package is loaded
-template adouble anchor_t::EvalCP(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par);
+template adouble anchor_t::EvalCP(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
 template adouble anchor_t::EvalBranch(std::vector<std::complex<adouble> >&branch, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par);
-template adouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par);
-template adouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<adouble> >&cpl,std::vector<adouble> &par);
-template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par);
+template adouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
+template adouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<adouble> >&cpl,std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &iso_cpl);
+template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &iso_eval);
 
 template adouble anchor_t::EvalAutoCpl(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par);
 template adouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<adouble> >&bra, std::vector<std::complex<adouble> >&cpl, std::vector<adouble> &par);
 template adouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par);
 
 template AandB<adouble> anchor_t::get_AB(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
+template AandB<adouble> anchor_t::get_AB_iso(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &isopar);
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<adouble> > &branch, std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
 #endif//ADOL_ON
@@ -284,6 +295,44 @@ int anchor_t::get_bin(double mass){ // gets the mass bin for a certain m3Pi
 	std::cerr<<"Error: anchor_t.cxx: get_bin(): Mass not in range"<<std::endl;
 	return 0;
 };
+
+bool anchor_t::set_data(int tbin, int bin,std::vector<double> data){ // Set data points manually
+	if (_data.size() != _nTbin){
+		_data = std::vector<std::vector<std::vector<double> > >(_nTbin);
+	};
+	if (_data[tbin].size() != _nBins){
+		_data[tbin] = std::vector<std::vector<double> >(_nBins);
+	};
+	_data[tbin][bin] = data;
+	if (data.size() == 2*_nPoints -1){
+		return true;
+	};
+	return false;
+};
+
+bool anchor_t::set_coma(int tbin, int bin, std::vector<std::vector<double> > coma){
+//	print_matrix(coma);
+	if(_coma.size() != _nTbin){
+		_coma = std::vector<std::vector<std::vector<std::vector<double> > > >(_nTbin);
+	};
+	if(_coma[tbin].size() != _nBins){
+		_coma[tbin] = std::vector<std::vector<std::vector<double> > >(_nBins);
+	};
+	_coma[tbin][bin] = coma;
+	if (coma.size() == 2*_nPoints-1){
+		int nerr = 0;
+		for (unsigned int i=0;i<coma.size();i++){
+			if (coma[i].size() != coma.size()){
+				std::cout<<"Warning: Set coma is not quadratic."<<std::endl;
+				return false;
+			};
+		};	
+		return true;
+	};
+	return false;
+};
+
+
 std::vector<double> anchor_t::get_data(int tbin,int bin){ // returns the data for a t' bin
 	return _data[tbin][bin];
 };
@@ -295,7 +344,7 @@ void anchor_t::loadData(int tbin, const char* dataFile){ // Loads the data for a
 	_data[tbin] = std::vector<std::vector<double> >();
 	std::fstream data(dataFile,std::ios_base::in);
 	double val;
-	unsigned int nDat = 2*_nWaves-1;
+	unsigned int nDat = 2*_nPoints-1;
 	std::vector<double> data_bin;
 	while(data >> val){
 		data_bin.push_back(val);
@@ -315,7 +364,7 @@ void anchor_t::loadComa(int tbin, const char* comaFile){ // Loads the (inverted)
 	_coma[tbin]=std::vector<std::vector<std::vector<double> > >();
 	std::fstream data(comaFile,std::ios_base::in);
 	double val;
-	unsigned int nDat = 2*_nWaves-1;
+	unsigned int nDat = 2*_nPoints-1;
 	std::vector<std::vector<double> > coma_bin;
 	std::vector<double> coma_line;
 	while(data>>val){
@@ -343,7 +392,7 @@ void anchor_t::setEvalTbin(int i, bool flag){ // Switches single t' bins on/off
 void anchor_t::nullify(){ // Sets all data to 0.
 	for (int tbin = 0; tbin < _nTbin;tbin++){
 		for (int bin =0; bin<_nBins;bin++){
-			int nDat = 2*_nWaves-1;
+			int nDat = 2*_nPoints-1;
 			for (int i=0;i<nDat;i++){
 				_data[tbin][bin][i]=0.;	
 			};	
@@ -368,6 +417,15 @@ void anchor_t::setConst(int i,double con){ // Sets a constant
 };
 void anchor_t::add_func_to_wave(int wave, int func){ // Adds a function paramtetrization to a wave amplitude
 	chi2_2d::add_func_to_wave(wave,func);
+	handle_branchings(wave,func);
+};
+
+void anchor_t::add_funcs_to_wave(int wave, int func, int iso){ // Adds a function paramtetrization to a wave amplitude
+	chi2_2d::add_funcs_to_wave(wave,func,iso);
+	handle_branchings(wave,func);
+};
+
+void anchor_t::handle_branchings(int wave, int func){ // Handles the branchings after a function/wave coupling was added
 	int border = _borders_waves[wave]-1;
 	std::vector<int> coupled;
 	std::vector<int> n_branch;
@@ -389,6 +447,7 @@ void anchor_t::add_func_to_wave(int wave, int func){ // Adds a function paramtet
 	update_n_cpls();
 	update_n_branch();
 };
+
 void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2(t)} -> {B1*C(t), B2*C(t)} 
 	if (i1 == i2){
 		std::cerr<<"Error: Trying to couple two times the same functions"<<std::endl;
@@ -426,22 +485,19 @@ void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2
 		│	Es folgt eine Indexschlacht	│
 		└───────────────────────────────────────┘
 */
-/*
-		PROBABLY SIMPLIFY THIS, SINCE IT IS POSSIBLE TO TURN A INTO A TRIABGULAR MATRIX
-		THEN THE INVERSION IS ANALYTOCALLY CODABLE (WITHOUT EIGEN) AND THE DERIVATIVE IS POSSIBLE
-*/
+// Maybe this is obsolete, since the thing subborting the de-isobarred case should do the same and not be significantly slower. Nevertheless, keep it at the moment
 template<typename xdouble>
-AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){// Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C
+AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){// Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C  
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
 	int nNon = _nFtw - nCplAnc;
 	AandB<xdouble> AB(2*nNon);
-	std::vector<xdouble> lines = std::vector<xdouble>(2*_nWaves-2,0.);
+	std::vector<xdouble> lines = std::vector<xdouble>(2*_nWaves-2,0.);  
 	for(int bin=_minBin;bin<_maxBin;bin++){
 		double m = (_binning[bin]+_binning[bin+1])/2;
 		std::vector<std::complex<xdouble> > func = funcs(m,par);
 
 		std::vector<double> phase = phase_space(m);
-		std::complex<xdouble> ampAnc = std::complex<double>(0.,0.);
+		std::complex<xdouble> ampAnc = std::complex<xdouble>(0.,0.);
 		for(int i=0;i<nCplAnc;i++){
 			ampAnc+= anchor_cpl[i]*func[_funcs_to_waves[i]]*phase[0];
 		};
@@ -450,22 +506,22 @@ AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &an
 		};
 		xdouble RR = ampAnc.real();
 		xdouble II = ampAnc.imag();
-		for (int i =0;i<2*_nWaves-2;i++){
+		for (int i =0;i<2*_nWaves-2;i++){ 
 			xdouble val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
-			for (int j=1;j<2*_nWaves-1;j++){
+			for (int j=1;j<2*_nWaves-1;j++){ 
 				val+=-_data[tbin][bin][j]*_coma[tbin][bin][i+1][j];
 			};
 			lines[i]=val;			
 		};
 		xdouble intAnc = RR*RR+II*II;
-		int wave1 = 1;	// Start with 1, leave anchor wave out
+		int wave1 = 1;	// Start with 1, leave anchor wave out	
 		int up1 = _borders_waves[1];
 		for (unsigned int nf1 = nCplAnc;nf1<_nFtw;nf1++){
 			if (nf1==up1){
 				wave1+=1;
 				up1 = _borders_waves[wave1];
 			};
-			int f1 = _funcs_to_waves[nf1];
+			int f1 = _funcs_to_waves[nf1];	
 			int ind1=nf1-nCplAnc;
 			int wave2=1;
 			int up2=_borders_waves[1];
@@ -483,7 +539,7 @@ AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &an
 
 			AB.B[2*ind1  ] += AB1.real() * lines[2*wave1-2] * 2;
 			AB.B[2*ind1  ] += AB1.imag() * lines[2*wave1-1] * 2;
-
+		
 			AB.B[2*ind1+1] +=-AB1.real() * lines[2*wave1-1] * 2;
 			AB.B[2*ind1+1] += AB1.imag() * lines[2*wave1-2] * 2;
 
@@ -493,8 +549,8 @@ AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &an
 					up2 = _borders_waves[wave2];
 				};
 				int f2 = _funcs_to_waves[nf2];
-				int ind2=nf2-nCplAnc;
-
+				int ind2=nf2-nCplAnc;		
+								
 
 				std::complex<xdouble> AB2 = ampAnc * conj(func[f2]) * phase[wave2];
 
@@ -534,6 +590,165 @@ AandB<xdouble> anchor_t::get_AB(int tbin,std::vector<std::complex<xdouble> > &an
 	return AB;
 };
 template AandB<double> anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
+
+template<typename xdouble>
+AandB<xdouble> anchor_t::get_AB_iso(int tbin, std::vector<std::complex<xdouble> > &anchor_cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par){
+	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave		
+	std::vector<std::vector<std::complex<xdouble> > > iso_eval  =  iso_funcs(iso_par);					//// ><>< Maybe just give pointer to already evaluated functions to save time???
+	int nNon = _nFtw - nCplAnc;
+	AandB<xdouble> AB(2*nNon);
+	std::vector<xdouble> lines = std::vector<xdouble>(2*_nPoints-2,0.); 							//// >>>>  _nPoints
+	for(int bin=_minBin;bin<_maxBin;bin++){
+		double m = (_binning[bin]+_binning[bin+1])/2;
+		std::vector<std::complex<xdouble> > func = funcs(m,par);
+
+		std::vector<double> phase = phase_space(m);
+		std::complex<xdouble> ampAnc = std::complex<xdouble>(0.,0.);
+		for(int i=0;i<nCplAnc;i++){
+			ampAnc+= anchor_cpl[i]*func[_funcs_to_waves[i]]*phase[0];
+		};
+		if(_is_ampl){ // Divide ampAnc by |ampAnc| to get the amplitude with phase 0. // Need to be tested
+			ampAnc/=pow(std::norm(ampAnc),.5);
+		};
+		xdouble RR = ampAnc.real();
+		xdouble II = ampAnc.imag();
+		for (int i =0;i<2*_nPoints-2;i++){ 										//// >>>>  _nPoints 
+			xdouble val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
+			for (int j=1;j<2*_nPoints-1;j++){ 									//// >>>>  _nPoints 
+				val+=-_data[tbin][bin][j]*_coma[tbin][bin][i+1][j];
+			};
+			lines[i]=val;			
+		};
+		xdouble intAnc = RR*RR+II*II;
+		int wave1 = 1;	// Start with 1, leave anchor wave out								//// |||| For de-isobarred, this stays, because anchor wave must be isobarred
+		int up1 = _borders_waves[1];
+		for (unsigned int nf1 = nCplAnc;nf1<_nFtw;nf1++){
+			if (nf1==up1){
+				wave1+=1;
+				up1 = _borders_waves[wave1];
+			};
+			int f1 = _funcs_to_waves[nf1];
+			int iso_f1 = _iso_to_waves[nf1];									//// >>>> Int f isobar 1
+			int iso_nBin1 = abs(_wave_binning_pts[wave1]);
+			int ind1=nf1-nCplAnc;
+			int wave_start1 = _point_borders_wave[wave1-1];								//// >>>> To calculate the _data and _coma indices
+
+			xdouble r1;
+			xdouble i1;
+
+
+			for (int i_iso_1=0;i_iso_1<iso_nBin1;i_iso_1++){								//// >>>> Here loop ofer isobar bins, if necessary (i_iso_1)(_wave_binning_pts[wave1)
+				std::complex<xdouble> AB1;
+				if (iso_f1 == -1){
+					AB1 = ampAnc * conj(func[f1]) * phase[wave1];
+					r1 = func[f1].real()*phase[wave1];
+					i1 = func[f1].imag()*phase[wave1];
+				}else{
+					AB1 = ampAnc * conj(func[f1]*iso_eval[iso_f1][i_iso_1]) * phase[wave1];				//// >>>> Here take isobar function evaluation
+					r1 = (func[f1]*iso_eval[iso_f1][i_iso_1]).real()* phase[wave1];					//// >>>> Here take isobar function evaluation
+					i1 = (func[f1]*iso_eval[iso_f1][i_iso_1]).imag()* phase[wave1];					//// >>>> Here take isobar function evaluation
+				};
+
+				int point1 = wave_start1 + i_iso_1;	// Position of data and coma points
+				int wave2=1;
+				int up2=_borders_waves[1];
+				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
+
+				xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
+				xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
+				xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
+				xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
+
+				AB.B[2*ind1  ] += AB1.real() * lines[2*point1-2] * 2;							//// >>>> now is Point
+				AB.B[2*ind1  ] += AB1.imag() * lines[2*point1-1] * 2;							//// >>>> now is Point
+		
+				AB.B[2*ind1+1] +=-AB1.real() * lines[2*point1-1] * 2;							//// >>>> now is Point
+				AB.B[2*ind1+1] += AB1.imag() * lines[2*point1-2] * 2;							//// >>>> now is Point
+
+				for (unsigned int nf2= nCplAnc;nf2<_nFtw;nf2++){
+					if(nf2==up2){
+						wave2+=1;
+						up2 = _borders_waves[wave2];
+					};
+					int f2 = _funcs_to_waves[nf2];
+					int iso_f2 = _iso_to_waves[nf2];								//// >>>> Int f isobar 2
+					int iso_nBin2 = abs(_wave_binning_pts[wave2]);
+					int wave_start2 = _point_borders_wave[wave2-1];							//// >>>> To calculate the _data and _coma indices
+					int ind2=nf2-nCplAnc;										//// |||| ind still applies!!!
+					for (int i_iso_2=0;i_iso_2<iso_nBin2;i_iso_2++){						//// >>>> loop over second isobar bins (i_iso_2) (_wave_binning_pts[wave2)
+
+						int point2 = wave_start2+i_iso_2;
+						std::complex<xdouble> AB2;
+						xdouble r2;
+						xdouble i2;
+				if (iso_f2 == -1){
+					AB2 = ampAnc * conj(func[f2]) * phase[wave2];
+					r2 = func[f2].real()*phase[wave2];
+					i2 = func[f2].imag()*phase[wave2];
+				}else{
+					AB2 = ampAnc * conj(func[f2]*iso_eval[iso_f2][i_iso_2]) * phase[wave2];				//// >>>> Here take isobar function evaluation
+					r2 = (func[f2]*iso_eval[iso_f2][i_iso_2]).real()* phase[wave2];					//// >>>> Here take isobar function evaluation
+					i2 = (func[f2]*iso_eval[iso_f2][i_iso_2]).imag()* phase[wave2];					//// >>>> Here take isobar function evaluation
+				};
+						//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
+						xdouble RR2 = RR*r2+II*i2;
+						xdouble RI2 =-RR*i2-II*r2;
+						xdouble IR2 = II*r2-RR*i2;
+						xdouble II2 = II*i2-RR*r2;
+		//				std::cout<<"_coma[tbin][bin][2*wave1-1][2*wave2-1]: "<<_coma[tbin][bin][2*wave1-1][2*wave2-1]<<std::endl;
+		//				std::cout<< "AB1.real(): "<<AB1.real()<<std::endl;
+		//				std::cout<< "AB2.real(): "<<AB2.real()<<std::endl;
+
+						AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*point1-1][2*point2-1] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*point1-1][2*point2  ] * AB2.imag();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*point1  ][2*point2-1] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*point1  ][2*point2  ] * AB2.imag();	//// >>>> are points1/2 now
+
+						AB.A[2*ind1  ][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*point1-1][2*point2  ] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*point1-1][2*point2-1] * AB2.imag();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*point1  ][2*point2  ] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1  ][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*point1  ][2*point2-1] * AB2.imag();	//// >>>> are points1/2 now
+
+						AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*point1  ][2*point2-1] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*point1  ][2*point2  ] * AB2.imag();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*point1-1][2*point2-1] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*point1-1][2*point2  ] * AB2.imag();	//// >>>> are points1/2 now
+
+						AB.A[2*ind1+1][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*point1  ][2*point2  ] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*point1  ][2*point2-1] * AB2.imag();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*point1-1][2*point2  ] * AB2.real();	//// >>>> are points1/2 now
+						AB.A[2*ind1+1][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*point1-1][2*point2-1] * AB2.imag();	//// >>>> are points1/2 now
+
+						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+						std::cout << AB1.real() <<" "<< _coma[tbin][bin][2*point1-1][2*point2-1] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.real() <<" "<< _coma[tbin][bin][2*point1-1][2*point2  ] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1  ][2*point2-1] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1  ][2*point2  ] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+
+						std::cout <<-AB1.real() <<" "<< _coma[tbin][bin][2*point1-1][2*point2  ] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.real() <<" "<< _coma[tbin][bin][2*point1-1][2*point2-1] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+						std::cout <<-AB1.imag() <<" "<< _coma[tbin][bin][2*point1  ][2*point2  ] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1  ][2*point2-1] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+
+						std::cout <<-AB1.real() <<" "<< _coma[tbin][bin][2*point1  ][2*point2-1] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout <<-AB1.real() <<" "<< _coma[tbin][bin][2*point1  ][2*point2  ] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1-1][2*point2-1] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1-1][2*point2  ] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+
+						std::cout << AB1.real() <<" "<< _coma[tbin][bin][2*point1  ][2*point2  ] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout <<-AB1.real() <<" "<< _coma[tbin][bin][2*point1  ][2*point2-1] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+						std::cout <<-AB1.imag() <<" "<< _coma[tbin][bin][2*point1-1][2*point2  ] <<" "<< AB2.real() <<std::endl;	//// >>>> are points1/2 now
+						std::cout << AB1.imag() <<" "<< _coma[tbin][bin][2*point1-1][2*point2-1] <<" "<< AB2.imag() <<std::endl;	//// >>>> are points1/2 now
+*/
+					};
+				};
+			};
+		};
+	};
+	return AB;
+};
+template AandB<double> anchor_t::get_AB_iso(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &isopar);
 
 template<typename xdouble>
 std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par){	// Gets the bes couplings without branchings
@@ -739,23 +954,31 @@ void anchor_t::update_n_branch(){ // Updates the branchings
 
 void anchor_t::printStatus(){ // Prints the internal status
 	chi2_2d::printStatus();
+	std::cout<<std::endl<< "_is_ampl: "<<_is_ampl<<std::endl;
+	std::cout<<std::endl<< "_nBins: "<<_nBins<<std::endl;
+	std::cout<<std::endl<< "_minBin: "<<_minBin<<std::endl;
+	std::cout<<std::endl<< "_maxBin: "<<_maxBin<<std::endl;
+	std::cout<<std::endl<< "_nTbin: "<<_nTbin<<std::endl;
+	std::cout<<std::endl<< "_mMin: "<<_mMin<<std::endl;
+	std::cout<<std::endl<< "_mMax: "<<_mMax<<std::endl;
+	std::cout<<std::endl<<"_const_is_t:"<<std::endl;
+	print_vector(_const_is_t);
+	std::cout<<std::endl<<"_t_binning:"<<std::endl;
+	print_vector(_t_binning);
+	std::cout<<std::endl<<"_binning:"<<std::endl;
+	print_vector(_binning);
+	std::cout<<std::endl<<"Omit printing of _data and _coma"<<std::endl;
 	std::cout<<std::endl<< "_nBranch: "<<_nBranch<<std::endl;
 	std::cout<<std::endl<< "_nBrCpl: "<<_nBrCpl<<std::endl;
 	std::cout<<std::endl<< "_nBrCplAnc: "<<_nBrCplAnc<<std::endl;
 	std::cout<<std::endl<< "_coupled:"<<std::endl;
 	print_vector(_coupled);
-	std::cout<<std::endl<< "_n_cpls:"<<std::endl;	
-	print_vector(_n_cpls);
 	std::cout<<std::endl<< "_n_branch:"<<std::endl;
 	print_vector(_n_branch);
-	std::cout<<std::endl<< "_funcs_to_waves:"<<std::endl;
-	print_vector(_funcs_to_waves);
-	std::cout<<std::endl<<"_binning:"<<std::endl;
-	print_vector(_binning);
-	std::cout<<std::endl<<"_t_binning:"<<std::endl;
-	print_vector(_t_binning);
-	std::cout<<std::endl<<"_const_is_t:"<<std::endl;
-	print_vector(_const_is_t);
+	std::cout<<std::endl<< "_n_cpls:"<<std::endl;	
+	print_vector(_n_cpls);
+	std::cout<<std::endl<< "_eval_tbin"<<std::endl;
+	print_vector(_eval_tbin);	
 };
 
 int anchor_t::getNtot(){ // total number pf parameters (including non achor couplings)
@@ -786,6 +1009,9 @@ int anchor_t::getNiso(){ // returns the number of parameters for isobars
 		return 0;
 	};
 	return _iso_borders_par[siz-1];
+};
+int anchor_t::getNbins(){
+	return _nBins;
 };
 
 int anchor_t::getNtBin(){ // Gives the number of t' bins
@@ -852,11 +1078,11 @@ std::vector<std::complex<double> > anchor_t::get_branchings(std::vector<std::com
 };
 
 void anchor_t::conjugate(){
-	for (int i=2;i<2*(_nWaves);i+=2){
+	for (int i=2;i<2*(_nPoints);i+=2){
 		for (int tbin=0;tbin<_nTbin;tbin++){
 			for(int bin=0;bin<_nBins;bin++){
 				_data[tbin][bin][i]*=-1;
-				for (int j=0;j<2*_nWaves-1;j++){
+				for (int j=0;j<2*_nPoints-1;j++){
 					_coma[tbin][bin][i][j]*=-1;
 					_coma[tbin][bin][j][i]*=-1;
 				};
@@ -871,9 +1097,21 @@ void anchor_t::setWaveLimits(int i, double lower, double upper){ // Simple sette
 
 void anchor_t::update_min_max_bin(){
 	_minBin = 0;
+//	std::cout<<"Call update_min_max_bin()"<<std::endl;
 	_maxBin = _binning.size();
+	if (_lowerLims.size() == 0 or _upperLims.size() == 0){
+		std::cout<< "Warning: Wave limits not set, omitting internal setting of _minBin and _maxBin"<<std::endl;
+		std::cout<< "Warning: Setting _minBin = 0; _maxBin = _binning.size() = "<<_binning.size()<<std::endl;
+		_minBin =0;
+		_maxBin =_binning.size();
+		return;
+	};
 	double ancMin = _lowerLims[0];
 	double ancMax = _upperLims[0];
+//	std::cout<<ancMin<<"-"<<ancMax<<std::endl;
+	if (_binning.size() == 0){
+		std::cout<< "Warning: No binning set, cannot determine _minBin, _maxBin" <<std::endl;
+	};
 	for (unsigned int i=0;i<_binning.size()-1;i++){
 		double up = _binning[i+1];
 		double low= _binning[i];
@@ -884,4 +1122,6 @@ void anchor_t::update_min_max_bin(){
 			_maxBin = i+1;
 		};
 	};
+//	std::cout<<"_minBin: "<<_minBin<<std::endl;
+//	std::cout<<"_maxBin: "<<_maxBin<<std::endl;
 };

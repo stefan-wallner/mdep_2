@@ -35,12 +35,16 @@ add_library(minimize SHARED minimize.cxx)
 add_executable(minimizers minimizers_6waves.cc)
 add_executable(fitmd.exe fitmd.cc)
 
+add_executable(de_isobarring test_de-isobar.cc)
+
 #link own libraries
 target_link_libraries(minimize anchor_t)
 target_link_libraries(anchor_t chi2_2d)
 target_link_libraries(chi2_2d chi2)
 target_link_libraries(minimizers minimize)
 target_link_libraries(fitmd.exe minimize)
+
+target_link_libraries(de_isobarring anchor_t)
 
 #link ROOT
 target_link_libraries(minimize /nfs/mnemosyne/sys/slc6/sw/root/x86-64/5.34.20/root/lib/libMathCore.so.5.34 )

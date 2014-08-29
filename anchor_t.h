@@ -12,7 +12,7 @@ class anchor_t : public chi2_2d {
 		anchor_t();
 		
 		template<typename xdouble>
-		xdouble EvalCP(std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+		xdouble EvalCP(std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par );
 
 		template<typename xdouble>
 		xdouble EvalBranch(std::vector<std::complex<xdouble> >&branch, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
@@ -27,13 +27,13 @@ class anchor_t : public chi2_2d {
 		xdouble EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
 
 		template<typename xdouble>
-		xdouble EvalTbin(int tbin,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par);
+		xdouble EvalTbin(int tbin,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble>
-		xdouble EvalBin(int tbin, int bin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+		xdouble EvalBin(int tbin, int bin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &iso_eval);
 
 		template<typename xdouble>
-		std::vector<xdouble> delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+		std::vector<xdouble> delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &iso_eval);
 
 
 		int getNtot();
@@ -45,6 +45,7 @@ class anchor_t : public chi2_2d {
 		int getNiso();
 
 		int getNtBin();
+		int getNbins();
 
 		void setBinning(std::vector<double> binning);
 		void setTbinning(std::vector<double> binning);
@@ -56,8 +57,10 @@ class anchor_t : public chi2_2d {
 		void add_func(int i, bool ist_t_dep = false);
 		void setConst(int i,double con);
 		void add_func_to_wave(int wave, int func);
+		void add_funcs_to_wave(int wave, int func, int iso);
 		void couple_funcs(int i, int j);
 		void setWaveLimits(int i, double lower, double upper);
+		void handle_branchings(int wave, int func);
 
 		std::string className();
 
@@ -65,6 +68,9 @@ class anchor_t : public chi2_2d {
 
 		template<typename xdouble>
 		AandB<xdouble> get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
+
+		template<typename xdouble>
+		AandB<xdouble> get_AB_iso(int tbin, std::vector<std::complex<xdouble> > &anchor_cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par); // For de-isobarred
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
@@ -77,6 +83,9 @@ class anchor_t : public chi2_2d {
 		int get_bin(double mass);
 		std::vector<double> get_data(int tbin, int bin);
 		std::vector<std::vector<double> > get_coma(int tbin, int bin);
+		bool set_data(int tbin, int bin, std::vector<double> data);
+		bool set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
+
 
 		std::vector<std::complex<double> > get_branchings(std::vector<std::complex<double> > cpl,std::vector<double> par);
 
@@ -89,6 +98,7 @@ class anchor_t : public chi2_2d {
 
 		void setEvalTbin(int i, bool flag);
 		void set_is_ampl(bool is_ampl);
+
 	protected:
 		bool _is_ampl; // Enable Amplitunde fitting, needs to be tested.
 		int _nBins; // Number of bins

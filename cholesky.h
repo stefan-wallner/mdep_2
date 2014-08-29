@@ -8,7 +8,7 @@
 
 namespace cholesky{
 	template<typename xdouble>
-	void print_vector(std::vector<xdouble> x){
+	void print_vector(std::vector<xdouble> &x){
 		int dim = x.size();
 		for (int i=0;i<dim;i++){
 			std::cout<<x[i]<<"\t";
@@ -17,7 +17,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble>
-	void print_matrix(std::vector<std::vector<xdouble> > A){
+	void print_matrix(std::vector<std::vector<xdouble> > &A){
 		int dim = A.size();
 		for (int i =0;i<dim;i++){
 			for (int j=0;j<dim;j++){
@@ -29,7 +29,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // C = A*B // c_{ij} = sum_k a_{ik}b_{kj}
-	std::vector<std::vector<xdouble> > dot(std::vector<std::vector<xdouble> > A, std::vector<std::vector<xdouble> > B){
+	std::vector<std::vector<xdouble> > dot(std::vector<std::vector<xdouble> > &A, std::vector<std::vector<xdouble> > &B){
 		int dim = A.size();
 		std::vector<std::vector<xdouble> > C(dim,std::vector<xdouble>(dim,0.));
 		for (int i=0;i<dim;i++){
@@ -43,7 +43,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // y = A*x // y_i = sum_j A_{ij}x_j
-	std::vector<xdouble> dot(std::vector<std::vector<xdouble> > A, std::vector<xdouble> x){
+	std::vector<xdouble> dot(std::vector<std::vector<xdouble> > &A, std::vector<xdouble> &x){
 		int dim = x.size();
 		std::vector<xdouble> y = std::vector<xdouble>(dim,0.);
 		for (int i =0;i<dim;i++){
@@ -55,7 +55,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // T = A^T
-	std::vector<std::vector<xdouble> > transpose(std::vector<std::vector<xdouble> > A){
+	std::vector<std::vector<xdouble> > transpose(std::vector<std::vector<xdouble> > &A){
 		int dim = A.size();
 		std::vector<std::vector<xdouble> > T(dim,std::vector<xdouble>(dim));
 		for (int i=0;i<dim;i++){
@@ -66,8 +66,8 @@ namespace cholesky{
 		return T;
 	};
 
-	template<typename xdouble> // A = G*G^T
-	std::vector<std::vector<xdouble> > cholesky_decompose(std::vector<std::vector<xdouble> > A){
+	template<typename xdouble> // A = G*G^T // This destroys A!!!
+	std::vector<std::vector<xdouble> > cholesky_decompose(std::vector<std::vector<xdouble> > &A){
 		int dim = A.size();
 		std::vector<std::vector<xdouble> > G(dim,std::vector<xdouble>(dim,0.));
 		for (int j=0;j<dim;j++){
@@ -83,7 +83,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // Solves A*x = b, assuming A is an upper triangular matrix
-	std::vector<xdouble> upper_diag_solve(std::vector<std::vector<xdouble> > A, std::vector<xdouble> b){
+	std::vector<xdouble> upper_diag_solve(std::vector<std::vector<xdouble> > &A, std::vector<xdouble> &b){
 		int dim = b.size();
 		std::vector<xdouble> x(dim);
 		for (int i=dim-1;i >=0;i--){
@@ -97,7 +97,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // Solves A*x = b, assuming A is an lower triangular matrix
-	std::vector<xdouble> lower_diag_solve(std::vector<std::vector<xdouble> > A, std::vector<xdouble> b){
+	std::vector<xdouble> lower_diag_solve(std::vector<std::vector<xdouble> > &A, std::vector<xdouble> &b){
 		int dim = b.size();
 		std::vector<xdouble> x(dim);
 		for (int i=0;i<dim;i++){
@@ -110,8 +110,8 @@ namespace cholesky{
 		return x;
 	};
 
-	template<typename xdouble> // Solves A*x=B assuming A is symmetrix and positive definite
-	std::vector<xdouble> cholesky_solve(std::vector<std::vector<xdouble> > A, std::vector<xdouble> b){
+	template<typename xdouble> // Solves A*x=B assuming A is symmetrix and positive definite // This destroys A!!!
+	std::vector<xdouble> cholesky_solve(std::vector<std::vector<xdouble> > &A, std::vector<xdouble> &b){
 		if (not is_symmetric(A)){
 			std::cout<<"Try to fool me, bro?"<<std::endl;
 		};
@@ -123,7 +123,7 @@ namespace cholesky{
 	};
 
 	template<typename xdouble> // Checks if A is symmetric
-	bool is_symmetric(std::vector<std::vector<xdouble> > A){
+	bool is_symmetric(std::vector<std::vector<xdouble> > &A){
 		int dim = A.size();
 		for (int i=0;i<dim;i++){
 			for (int j=0;i<i;j++){

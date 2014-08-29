@@ -23,7 +23,7 @@ void print_vector(std::vector<T> in){
 };
 
 
-chi2_2d::chi2_2d():chi2(),_nPoints(0),_nIso(0),_maxNparsIso(0),_maxBinIso(0){};
+chi2_2d::chi2_2d():chi2(),_nPoints(0),_nIso(0),_maxNparsIso(0),_maxBinIso(0),_has_isobars(false){};
 
 template<typename xdouble>
 std::vector<std::complex<xdouble> > chi2_2d::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &funcEvals2pi){ // the amplitude for each wave and mass bin
@@ -155,11 +155,13 @@ void chi2_2d::add_funcs_to_wave(int wave, int func, int func2){ // Adds a functi
 		if (i==border-1){
 			new_relations.push_back(func);
 			new_relations_iso.push_back(func2);
+			_has_isobars=true;
 		};
 	};
 	if (new_relations.size() ==0){
 		new_relations.push_back(func);
 		new_relations_iso.push_back(func2);
+		_has_isobars=true; // Set falg to indicate isobar parametrization
 	};
 	_funcs_to_waves=new_relations;
 	_iso_to_waves=new_relations_iso;
@@ -174,8 +176,9 @@ void chi2_2d::add_funcs_to_wave(int wave, int func, int func2){ // Adds a functi
 
 void chi2_2d::printStatus(){ // Prints the internal status
 	chi2::printStatus();
-	std::cout<<std::endl<<"_nIso: "<<_nIso<<std::endl;
 	std::cout<<std::endl<<"_nPoints: "<<_nPoints<<std::endl;
+	std::cout<<std::endl<<"_has_isobars: "<<_has_isobars<<std::endl;
+	std::cout<<std::endl<<"_nIso: "<<_nIso<<std::endl;
 	std::cout<<std::endl<<"_maxNparsIso: "<<_maxNparsIso<<"; _maxBinIso: "<<_maxBinIso<<std::endl;
 	std::cout<<std::endl<<"_isos"<<std::endl;
 	print_vector(_isos);
@@ -195,10 +198,18 @@ void chi2_2d::printStatus(){ // Prints the internal status
 	print_vector(_iso_binning_pts);
 	std::cout<<std::endl<<"_wave_binning_pts"<<std::endl;
 	print_vector(_wave_binning_pts);
+	std::cout<<std::endl<<"_point_to_wave"<<std::endl;
+	print_vector(_point_to_wave);
 	std::cout<<std::endl<<"_iso_n_binning"<<std::endl;
 	print_vector(_iso_n_binning);
 	std::cout<<std::endl<<"_wave_n_binning"<<std::endl;
 	print_vector(_wave_n_binning);
+	std::cout<<std::endl<<"_iso_binnings"<<std::endl;
+	for (unsigned int i=0;i<_iso_binnings.size();i++){
+		print_vector(_iso_binnings[i]);
+	};
+	std::cout<<std::endl<<"_point_borders_wave"<<std::endl;
+	print_vector(_point_borders_wave);
 	std::cout<<std::endl<<"_iso_funcNames"<<std::endl;
 	print_vector(_iso_funcNames);
 	std::cout<<std::endl<<"_iso_parNames"<<std::endl;
@@ -243,11 +254,19 @@ int chi2_2d::getNpoints(){ // Getter
 
 void chi2_2d::updateNpoints(){ // Updates the number of employed points
 	int nnn = 0;
+	std::vector<int> point_to_wave;
+	_point_borders_wave=std::vector<int>(0);
 	for (int wave=0;wave<_nWaves;wave++){
-		nnn+=abs(_wave_binning_pts[wave]);
+		int plus = abs(_wave_binning_pts[wave]);
+		nnn+=plus;
+		_point_borders_wave.push_back(nnn);
+		for (int i=0;i<plus;i++){
+			point_to_wave.push_back(wave);
+		};
 //		std::cout << "le incrise: "<<abs(_wave_binning_pts[wave])<<std::endl;
 	};
 	_nPoints = nnn;
+	_point_to_wave = point_to_wave;
 };
 
 void chi2_2d::add_isobar_binning(std::vector<double> binning){ // Adds a new isobar binning

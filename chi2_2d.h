@@ -63,6 +63,7 @@ class chi2_2d : public chi2{
 	protected:
 
 		int _nPoints; 					// Number of amplitudes in the end (+1 for each wave, +1 for each isobar step)
+		bool _has_isobars;				// true, if de-isobarred waves are in the fit
 
 		int _nIso; 					// Number of isobars
 		int _maxNparsIso; 				// Maximum number of parameters for one isobar
@@ -76,9 +77,12 @@ class chi2_2d : public chi2{
 		std::vector<double> _iso_const; 		// Give the isobar constants
 		std::vector<int> _iso_binning_pts; 		// Number of isobar bins for each wave (no isobar -> -1)
 		std::vector<int> _wave_binning_pts; 		// Number of bins for the isobars
+		std::vector<int> _point_to_wave;		// Tells, which points belong to which wave
 		std::vector<int> _iso_n_binning; 		// Tells, which isobar binning to use for the waves
 		std::vector<int> _wave_n_binning; 		// Tells, which isobar binning for the single isobars
 		std::vector<std::vector<double> > _iso_binnings;// Gives different isobar binnings
+		std::vector<int> _point_borders_wave;		// Tells, where the isobar points for a single wave start
+
 
 		// Names
 		std::vector<std::string> _iso_funcNames;

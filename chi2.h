@@ -66,6 +66,8 @@ class chi2{
 		void open_output(std::string filename ="chi2.dat");
 		void close_output();
 
+		int getNftw();
+
 	protected:
 
 		int _nWaves; 					// Number of waves

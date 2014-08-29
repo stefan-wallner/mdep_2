@@ -32,7 +32,7 @@ std::vector<std::complex<double> > chi2::amps_class(double m, std::vector<double
 
 
 
-chi2::chi2():_nWaves(0),_nFuncs(0),_globalPs(0),_maxNpars(0),_write_out(false){};
+chi2::chi2():_nWaves(0),_nFuncs(0),_globalPs(0),_maxNpars(0),_nPar(0),_nFtw(0),_write_out(false){};
 
 template<typename xdouble>
 std::vector<std::complex<xdouble> > chi2::amps(double m,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par){ // Builds the amplitudes for each wave from functions with shape parameters par and cpl at m3pi = m 
@@ -454,6 +454,12 @@ void chi2::printStatus(){ // Prints the internal status
 	std::cout << std::endl;
 	std::cout << "_nFuncs: " << _nFuncs<<std::endl;
 	std::cout << std::endl;
+	std::cout<<"_maxNpars: "<<_maxNpars<<std::endl;
+	std::cout<<std::endl;
+	std::cout<<"_nPar: "<<_nPar<<std::endl;
+	std::cout<<std::endl;
+	std::cout<<"_nFtw (number of funtions to waves): "<<_nFtw<<std::endl;
+	std::cout<<std::endl;
 	std::cout << "_funcs"<<std::endl;
 	print_vector(_funcs);
 	std::cout << std::endl;
@@ -472,6 +478,9 @@ void chi2::printStatus(){ // Prints the internal status
 	std::cout << "_L" << std::endl;
 	print_vector(_L);
 	std::cout << std::endl;
+	std::cout<<"_L_func"<<std::endl;
+	print_vector(_L_func);
+	std::cout<<std::endl;
 	std::cout << "_upperLims" << std::endl;
 	print_vector(_upperLims);
 	std::cout << std::endl;
@@ -486,7 +495,10 @@ void chi2::printStatus(){ // Prints the internal status
 	std::cout << std::endl;
 	std::cout << "_const" << std::endl;
 	print_vector(_const);
-	std::cout << std::endl;
+	std::cout << std::endl;	
+	std::cout<<"_interface"<<std::endl;
+	print_vector(_interface);
+	std::cout<<std::endl;
 	std::cout<<"_globalPs: "<<_globalPs<<std::endl;
 	std::cout << std::endl;
 	std::cout << "_wavePs" << std::endl;
@@ -504,8 +516,8 @@ void chi2::printStatus(){ // Prints the internal status
 	std::cout << "_constNames" << std::endl;
 	print_vector(_constNames);
 	std::cout << std::endl;
-	std::cout << "_interface" <<std::endl;
-	print_vector(_interface);
+	std::cout<<"_write_out: "<<_write_out<<std::endl;
+	std::cout<<std::endl;
 };
 
 void chi2::printParameters(){ // Prints the paramters in a 'nice' way
@@ -633,6 +645,10 @@ void chi2::open_output(std::string name){
 void chi2::close_output(){
 	_outStream->close();
 	_write_out = false;
+};
+
+int chi2::getNftw(){
+	return _nFtw;
 };
 
 
