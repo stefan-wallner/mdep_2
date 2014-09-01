@@ -11,9 +11,7 @@
 
 #include"invert33.h"
 
-anchor_t::anchor_t(): chi2_2d(), _is_ampl(false),_nBranch(0),_nTbin(0),_binning(std::vector<double>(2)){
-	setTbinning(std::vector<double>(2,0.));
-};
+anchor_t::anchor_t(): waveset(),_is_ampl(false){};
 
 #ifdef ADOL_ON 
 std::complex<adouble> operator*(std::complex<adouble> a,double d){// Define std::complex<adouble> * double 
@@ -259,39 +257,13 @@ template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,st
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<adouble> > &branch, std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
 #endif//ADOL_ON
 
-void anchor_t::setBinning(std::vector<double> binning){ // sets the binning in m3pi
-	_binning = binning;
-	_nBins = binning.size()-1;
-	_mMin = binning[0];
-	_mMax = binning[_nBins];
-	int minBin = 0;
-	int maxBin = _nBins-1;
-	update_min_max_bin();
-};
 
 std::string anchor_t::className(){
 	return "anchor_t";
 };
 
-void anchor_t::setTbinning(std::vector<double> binning){ // sets the binning in t'
-	_t_binning = binning;
-	_nTbin = binning.size() - 1;
-	_data = std::vector<std::vector<std::vector<double> > >(_nTbin);
-	_coma = std::vector<std::vector<std::vector<std::vector<double> > > >(_nTbin);
-	if (_eval_tbin.size() != _nTbin){
-		_eval_tbin = std::vector<bool>(_nTbin,true);
-	};
-};
 
-int anchor_t::get_bin(double mass){ // gets the mass bin for a certain m3Pi
-	for(int i=0;i<_nBins;i++){
-		if (_binning[i] <= mass and _binning[i+1]>mass){
-			return i;
-		};
-	};
-	std::cerr<<"Error: anchor_t.cxx: get_bin(): Mass not in range"<<std::endl;
-	return 0;
-};
+
 
 bool anchor_t::set_data(int tbin, int bin,std::vector<double> data){ // Set data points manually
 	if (_data.size() != _nTbin){
@@ -357,6 +329,14 @@ void anchor_t::loadData(int tbin, const char* dataFile){ // Loads the data for a
 	};
 };
 
+int anchor_t::getNanc(){ 
+	return _nBrCplAnc * _nTbin;
+};
+
+int anchor_t::getNtotAnc(){ 
+	return 2*getNanc() + getNpar() + 2*getNbra() + getNiso();
+};
+
 void anchor_t::loadComa(int tbin, const char* comaFile){ // Loads the (inverted) covariance matrix for a t' bin from 'comaFile'
 	_coma[tbin]=std::vector<std::vector<std::vector<double> > >();
 	std::fstream data(comaFile,std::ios_base::in);
@@ -382,9 +362,6 @@ void anchor_t::loadComa(int tbin, const char* comaFile){ // Loads the (inverted)
 	};	
 };
 
-void anchor_t::setEvalTbin(int i, bool flag){ // Switches single t' bins on/off 
-	_eval_tbin[i] = flag;
-};
 
 void anchor_t::nullify(){ // Sets all data to 0.
 	for (int tbin = 0; tbin < _nTbin;tbin++){
@@ -397,85 +374,11 @@ void anchor_t::nullify(){ // Sets all data to 0.
 	};
 };
 
-void anchor_t::add_func(int i, bool is_t_dep){ // Adds a function
-	chi2_2d::add_func(i);
-	if (is_t_dep){
-		_const_is_t.push_back(_borders_const[_borders_const.size()-1]-1);
-	};
+void anchor_t::update_n_cpls(){
+	waveset::update_n_cpls();
+	_nBrCplAnc = _n_cpls[_borders_waves[0]-1]+1;
 };
 
-void anchor_t::setConst(int i,double con){ // Sets a constant
-	chi2_2d::setConst(i,con);
-	for (unsigned int j=0;j<_const_is_t.size();j++){
-		if (i == _const_is_t[j]){
-			std::cout<<"Warning: Trying to set _const["<<i<<"] which is t' and will be overwritten"<<std::endl;
-		};
-	};
-};
-void anchor_t::add_func_to_wave(int wave, int func){ // Adds a function paramtetrization to a wave amplitude
-	chi2_2d::add_func_to_wave(wave,func);
-	handle_branchings(wave,func);
-};
-
-void anchor_t::add_funcs_to_wave(int wave, int func, int iso){ // Adds a function paramtetrization to a wave amplitude
-	chi2_2d::add_funcs_to_wave(wave,func,iso);
-	handle_branchings(wave,func);
-};
-
-void anchor_t::handle_branchings(int wave, int func){ // Handles the branchings after a function/wave coupling was added
-	int border = _borders_waves[wave]-1;
-	std::vector<int> coupled;
-	std::vector<int> n_branch;
-	unsigned int nRel = _coupled.size();
-	for (unsigned int i=0; i<nRel;i++){
-		coupled.push_back(_coupled[i]);
-		n_branch.push_back(_n_branch[i]);
-		if (i==border-1){
-			n_branch.push_back(-1);
-			coupled.push_back(-1);
-		};
-	};
-	if (coupled.size() ==0){
-		n_branch.push_back(-1);
-		coupled.push_back(-1);
-	};
-	_coupled=coupled;
-	_n_branch = n_branch;
-	update_n_cpls();
-	update_n_branch();
-};
-
-void anchor_t::couple_funcs(int i1,int i2){ // Couples two functions: {C1(t), C2(t)} -> {B1*C(t), B2*C(t)} 
-	if (i1 == i2){
-		std::cerr<<"Error: Trying to couple two times the same functions"<<std::endl;
-		return;
-	};
-	int branch1 = _coupled[i1];
-	int branch2 = _coupled[i2];
-	if (branch1 == branch2 and branch1 != -1){
-		return;
-	};
-	if (branch1 == -1 and branch2 == -1){
-		int last_branch = -1;
-		int nCpl = _coupled.size();
-		for (int i = 0;i<nCpl;i++){
-			if (_coupled[i] > last_branch){
-				last_branch = _coupled[i];
-			};
-		};
-		last_branch++;
-		_coupled[i1] = last_branch;
-		_coupled[i2] = last_branch;
-	}else if(branch1 == -1){
-		_coupled[i1] = branch2;
-	}else if(branch2 == -1){
-		_coupled[i2] = branch1;
-	}else{
-		std::cerr<<"function["<<i1<<"] and function["<<i2<<"] are already in different branchings"<<std::endl;
-	};
-	update_n_cpls();
-	update_n_branch();
-};
 
 /*
 		┌───────────────────────────────────────┐
@@ -906,61 +809,9 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(int tbin, std::ve
 };
 template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
 
-void anchor_t::updateTprime(int tbin){ // Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t' 
-	double tt = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
-//	std::cout<<"set t to: "<<tt<<std::endl;
-	for (unsigned int i = 0;i<_const_is_t.size();i++){
-		_const[_const_is_t[i]] = tt;
-	};
-};
-
-void anchor_t::update_n_cpls(){ // updates the number of couplings
-	std::vector<int> new_cpl;
-	int max_cpl = 0;
-	std::vector<int> brs;
-	std::vector<int> their_cpls;
-	for (int i=i;i<_coupled.size();i++){
-		if (_coupled[i] ==-1){
-			new_cpl.push_back(max_cpl);
-			max_cpl++;
-		}else{
-			bool already = false;
-			for (int j=0;j<brs.size();j++){
-				if(brs[j] == _coupled[i]){
-					new_cpl.push_back(their_cpls[j]);
-					already = true;
-					break;
-				};
-			};
-			if (not already){
-				new_cpl.push_back(max_cpl);
-				brs.push_back(_coupled[i]);
-				their_cpls.push_back(max_cpl);
-				max_cpl++;
-			};
-		};
-	};
-	_nBrCpl = max_cpl;
-	_nBrCplAnc = new_cpl[_borders_waves[0]-1]+1;
-	_n_cpls = new_cpl;
-};
-void anchor_t::update_n_branch(){ // Updates the branchings
-	std::vector<int> n_branch;
-	int act_branch = 0;
-	for (int i=0;i<_coupled.size();i++){
-		if (_coupled[i] == -1){
-			n_branch.push_back(-1);
-		}else{
-			n_branch.push_back(act_branch);
-			act_branch++;
-		};	
-	};
-	_n_branch = n_branch;
-	_nBranch = act_branch;
-};
 
 void anchor_t::printStatus(){ // Prints the internal status
-	chi2_2d::printStatus();
+	waveset::printStatus();
 	std::cout<<std::endl<< "_is_ampl: "<<_is_ampl<<std::endl;
 	std::cout<<std::endl<< "_nBins: "<<_nBins<<std::endl;
 	std::cout<<std::endl<< "_minBin: "<<_minBin<<std::endl;
@@ -988,61 +839,8 @@ void anchor_t::printStatus(){ // Prints the internal status
 	print_vector(_eval_tbin);	
 };
 
-int anchor_t::getNtot(){ // total number pf parameters (including non achor couplings)
-	return 2*getNcpl() + getNpar() + 2*getNbra() + getNiso();
-};
-int anchor_t::getNtotAnc(){ // total number of parameters
-	return 2*getNanc() + getNpar() + 2*getNbra() + getNiso();
-};
-int anchor_t::getNcpl(){ // number of total couplings 
-	return _nBrCpl * _nTbin;
-};
-int anchor_t::getNanc(){ // number of total couplings in the anchor wave
-	return _nBrCplAnc * _nTbin;
-};
 
-int anchor_t::getNpar(){ // returns the number of parameters (without branchings or couplings)
-	if (0==_borders_par.size()){
-		return 0;
-	};
-	return _borders_par[_borders_par.size() -1];
-};
-int anchor_t::getNbra(){ // Number of sets coupled by branchings
-	return _nBranch;
-};
-int anchor_t::getNiso(){ // returns the number of parameters for isobars
-	int siz = _iso_borders_par.size();
-	if (0==siz){
-		return 0;
-	};
-	return _iso_borders_par[siz-1];
-};
-int anchor_t::getNbins(){
-	return _nBins;
-};
 
-int anchor_t::getNtBin(){ // Gives the number of t' bins
-	return _nTbin;
-};
-
-std::vector<int> anchor_t::getFirstBranch(){// Get the first function for each set 
-	std::vector<int> firstBranch;
-	int maxBranch = -1;
-	for (int i=0;i<_coupled.size();i++){
-		if (_coupled[i] > maxBranch){
-			maxBranch = _n_branch[i];
-		};
-	};
-	for (int i=0;i<maxBranch+1;i++){
-		for (int j=0;j<_coupled.size();j++){
-			if (_coupled[j] == i){
-				firstBranch.push_back(_n_branch[j]);
-				break;
-			};
-		};
-	};
-	return firstBranch;
-};
 
 void anchor_t::set_is_ampl(bool is_ampl){ // Set the mode to amplitude fitting, instead of anchor wave
 	_is_ampl = is_ampl;
@@ -1084,6 +882,9 @@ std::vector<std::complex<double> > anchor_t::get_branchings(std::vector<std::com
 	return brchs;
 };
 
+////////////////////////////// WILL STAY!!!!!!!!!!!!!!!!!!!!!!
+
+
 void anchor_t::conjugate(){
 	for (int i=2;i<2*(_nPoints);i+=2){
 		for (int tbin=0;tbin<_nTbin;tbin++){
@@ -1097,38 +898,19 @@ void anchor_t::conjugate(){
 		};
 	};
 };
-void anchor_t::setWaveLimits(int i, double lower, double upper){ // Simple setter
-	chi2::setWaveLimits(i,lower,upper);
-	update_min_max_bin();
-};
 
-void anchor_t::update_min_max_bin(){
-	_minBin = 0;
-//	std::cout<<"Call update_min_max_bin()"<<std::endl;
-	_maxBin = _binning.size();
-	if (_lowerLims.size() == 0 or _upperLims.size() == 0){
-		std::cout<< "Warning: Wave limits not set, omitting internal setting of _minBin and _maxBin"<<std::endl;
-		std::cout<< "Warning: Setting _minBin = 0; _maxBin = _binning.size() = "<<_binning.size()<<std::endl;
-		_minBin =0;
-		_maxBin =_binning.size();
-		return;
-	};
-	double ancMin = _lowerLims[0];
-	double ancMax = _upperLims[0];
-//	std::cout<<ancMin<<"-"<<ancMax<<std::endl;
-	if (_binning.size() == 0){
-		std::cout<< "Warning: No binning set, cannot determine _minBin, _maxBin" <<std::endl;
-	};
-	for (unsigned int i=0;i<_binning.size()-1;i++){
-		double up = _binning[i+1];
-		double low= _binning[i];
-		if (ancMin >= low and ancMin <up){
-			_minBin = i;
+void anchor_t::setTbinning(std::vector<double> binning){ /// Has to stay, gives right size for _data and _coma
+	waveset::setTbinning(binning);
+	if (_data.size() != _nTbin){
+		if (_data.size() != 0){
+			std::cout<<"Warning: _data.size() != _nTbin, but nonzero. Previous set _data[][][] will be lost."<<std::endl;
 		};
-		if (ancMax > low and ancMax <=up){
-			_maxBin = i+1;
-		};
+		_data = std::vector<std::vector<std::vector<double> > >(_nTbin);
 	};
-//	std::cout<<"_minBin: "<<_minBin<<std::endl;
-//	std::cout<<"_maxBin: "<<_maxBin<<std::endl;
+	if (_coma.size() != _nTbin){
+		if (_coma.size() != 0){
+			std::cout<<"Warning: _coma.size() != _nTbin, bun nonzero. Previous set _coma[][][][] will be lost."<<std::endl;
+		};
+		_coma = std::vector<std::vector<std::vector<std::vector<double> > > >(_nTbin);
+	};
 };

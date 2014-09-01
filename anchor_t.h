@@ -1,16 +1,20 @@
 #ifndef ANCHOR_ROHCNA
 #define ANCHOR_ROHCNA
-#include"chi2_2d.h"
+#include"waveset.h"
 #include<complex>
 #include<vector>
 #include<string>
 #include"AB.h"
 
 
-class anchor_t : public chi2_2d {
+class anchor_t : public waveset {
 	public:
+		std::vector<std::complex<double> > get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
+
+		std::vector<std::vector<double> > getPlots(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
+
 		anchor_t();
-		
+
 		template<typename xdouble>
 		xdouble EvalCP(std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par );
 
@@ -35,37 +39,21 @@ class anchor_t : public chi2_2d {
 		template<typename xdouble>
 		std::vector<xdouble> delta(int tbin, int bin,double mass, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<std::vector<std::complex<xdouble> > > &iso_eval);
 
+		std::vector<double> get_data(int tbin, int bin);
+		std::vector<std::vector<double> > get_coma(int tbin, int bin);
 
-		int getNtot();
-		int getNtotAnc();
-		int getNcpl();
-		int getNanc();
-		int getNpar();
-		int getNbra();
-		int getNiso();
 
-		int getNtBin();
-		int getNbins();
-
-		void setBinning(std::vector<double> binning);
-		void setTbinning(std::vector<double> binning);
 		void loadData(int tbin, const char* dataFile);
 		void loadComa(int tbin, const char* comaFile);
 		void nullify();
 		void conjugate();
-		
-		void add_func(int i, bool ist_t_dep = false);
-		void setConst(int i,double con);
-		void add_func_to_wave(int wave, int func);
-		void add_funcs_to_wave(int wave, int func, int iso);
-		void couple_funcs(int i, int j);
-		void setWaveLimits(int i, double lower, double upper);
-		void handle_branchings(int wave, int func);
+
+		int getNtotAnc();
+		int getNanc();
 
 		std::string className();
 
-		std::vector<std::vector<double> > getPlots(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par);
-
+		void update_n_cpls();
 		template<typename xdouble>
 		AandB<xdouble> get_AB(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
 
@@ -78,51 +66,17 @@ class anchor_t : public chi2_2d {
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCplBra(int tbin, std::vector<std::complex<xdouble> > &branch, std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
-		void updateTprime(int tbin);
-
-		int get_bin(double mass);
-		std::vector<double> get_data(int tbin, int bin);
-		std::vector<std::vector<double> > get_coma(int tbin, int bin);
 		bool set_data(int tbin, int bin, std::vector<double> data);
 		bool set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
-
-
-		std::vector<std::complex<double> > get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
-
-		void update_n_cpls();
-		void update_n_branch();
-		void update_min_max_bin();
-
 		void printStatus();
-		std::vector<int> getFirstBranch();
-
-		void setEvalTbin(int i, bool flag);
 		void set_is_ampl(bool is_ampl);
+		void setTbinning(std::vector<double> binning);
 
 	protected:
+		int _nBrCplAnc;// Number of couplings with branchings in the anchor wave
 		bool _is_ampl; // Enable Amplitunde fitting, needs to be tested.
-		int _nBins; // Number of bins
-		int _minBin; // Minimum bin used by any wave
-		int _maxBin; // Maximum bin used by any wave
-		int _nTbin;  // number of t' bins
-		double _mMin; // minimum mass (m3pi)
-		double _mMax; // maximum mass (m3pi)
-		std::vector<int> _const_is_t; // List of constants, that are t' actually (will then be set automatically)
-		std::vector<double> _t_binning; // Binning in t'
-		std::vector<double> _binning;   // Binning in m3pi
 		std::vector<std::vector<std::vector<double> > > _data; // data 
 		std::vector<std::vector<std::vector<std::vector<double> > > > _coma; // covariance matrix
-
-		int _nBranch;  // Number of branchings
-		int _nBrCpl;   // Number of couplings with branchings
-		int _nBrCplAnc;// Number of couplings with branchings in the anchor wave
-		std::vector<int> _coupled;  // Encodes coupled functions
-		std::vector<int> _n_branch; // Number of branching for wave/function
-		std::vector<int> _n_cpls;   // Number of coupling for wave/function
-					    // Map of how to treat the nonAnchor couplings in the analytic calculation.
-		std::vector<bool> _eval_tbin; // switch on/off single t' bins
-
-
 };
 
 

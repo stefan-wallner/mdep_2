@@ -20,8 +20,14 @@ waveset::waveset():
 	_nIso(0),
 	_maxNparsIso(0),
 	_maxBinIso(0),
+	_nBranch(0),
+	_nTbin(1),
+	_nBins(1),
 	_write_out(false),
-	_has_isobars(false){};
+	_has_isobars(false), 
+	_binning(std::vector<double>(2)){
+	setTbinning(std::vector<double>(2,0.));
+};
 //########################################################################################################################################################
 ///Gives the amplitudes for all waves and isobar-mass bins
 template<typename xdouble>
@@ -190,7 +196,8 @@ void waveset::add_wave(){
 //########################################################################################################################################################
 ///Adds a function - Sets internal definitions accordingly
 void waveset::add_func(	
-							int 							i){ 	// # of function
+							int 							i, 	// # of function
+							bool							is_t_dep){
 
 	_nFuncs+=1;
 	_funcs.push_back(i);// Add new
@@ -224,6 +231,9 @@ void waveset::add_func(
 	for (int pn=0;pn<nPar-nParNon;pn++){
 		_constNames.push_back("unnamed_constant");
 		_const.push_back(0.);
+	};
+	if (is_t_dep){
+		_const_is_t.push_back(_borders_const[_borders_const.size()-1]-1);
 	};
 };
 //########################################################################################################################################################
@@ -295,6 +305,7 @@ void waveset::add_func_to_wave(
 	updateFuncSpin();
 	updateIsobar();
 	updateNftw();
+	handle_branchings(wave,func);
 };
 //########################################################################################################################################################
 ///Adds a function-isobar pair to a wave
@@ -330,9 +341,46 @@ void waveset::add_funcs_to_wave(
 	updateFuncSpin();
 	updateIsobar();
 	updateNftw();
+	handle_branchings(wave,func);
 };
 //########################################################################################################################################################
-/// Simple setter for the mass limits of the single waves
+///Couples two functions: {C1(t), C2(t)} -> {B1*C(t), B2*C(t)} 
+void waveset::couple_funcs(
+							int 						i1,	// # of wave 1
+							int 						i2){ 	// # of wave 2
+
+	if (i1 == i2){
+		std::cerr<<"Error: Trying to couple two times the same functions"<<std::endl;
+		return;
+	};
+	int branch1 = _coupled[i1];
+	int branch2 = _coupled[i2];
+	if (branch1 == branch2 and branch1 != -1){
+		return;
+	};
+	if (branch1 == -1 and branch2 == -1){
+		int last_branch = -1;
+		int nCpl = _coupled.size();
+		for (int i = 0;i<nCpl;i++){
+			if (_coupled[i] > last_branch){
+				last_branch = _coupled[i];
+			};
+		};
+		last_branch++;
+		_coupled[i1] = last_branch;
+		_coupled[i2] = last_branch;
+	}else if(branch1 == -1){
+		_coupled[i1] = branch2;
+	}else if(branch2 == -1){
+		_coupled[i2] = branch1;
+	}else{
+		std::cerr<<"function["<<i1<<"] and function["<<i2<<"] are already in different branchings"<<std::endl;
+	};
+	update_n_cpls();
+	update_n_branch();
+};
+//########################################################################################################################################################
+///Simple setter for the mass limits of the single waves
 void waveset::setWaveLimits(
 							int 							i, 	// # of wave
 							double 							lower, 
@@ -341,6 +389,7 @@ void waveset::setWaveLimits(
 	_upperLims[i] = upper;
 	_lowerLims[i] = lower;
 	updateFuncLims();
+	update_min_max_bin();
 };
 //########################################################################################################################################################
 ///Simple setter for the wave spins
@@ -392,6 +441,11 @@ void waveset::setConst(
 							double 							con){
 
 	_const[i] = con;
+	for (unsigned int j=0;j<_const_is_t.size();j++){
+		if (i == _const_is_t[j]){
+			std::cout<<"Warning: Trying to set _const["<<i<<"] which is t' and will be overwritten"<<std::endl;
+		};
+	};
 };
 //########################################################################################################################################################
 ///Sets constants in isobar paramterizations
@@ -468,6 +522,37 @@ void waveset::setIsoConstName(
 	_iso_constNames[i]=name;
 };
 //########################################################################################################################################################
+///Sets the binning in m3pi
+void waveset::setBinning(
+							std::vector<double> 					binning){ 
+
+	_binning = binning;
+	_nBins = binning.size()-1;
+	_mMin = binning[0];
+	_mMax = binning[_nBins];
+	int minBin = 0;
+	int maxBin = _nBins-1;
+	update_min_max_bin();
+};
+//########################################################################################################################################################
+///Sets the binning in t'
+void waveset::setTbinning(
+							std::vector<double> 					binning){ 
+
+	_t_binning = binning;
+	_nTbin = binning.size() - 1;
+	if (_eval_tbin.size() != _nTbin){
+		_eval_tbin = std::vector<bool>(_nTbin,true);
+	};
+};
+//########################################################################################################################################################
+///Switches single t' bins on/off 
+void waveset::setEvalTbin(
+							int 							i,	// # of t' bin 
+							bool 							flag){ 
+	_eval_tbin[i] = flag;
+};
+//########################################################################################################################################################
 ///Gets total number of points: sum_{waves} n_{isobar_bins} // If no wave is de-isobarred, returns _nWaves
 int waveset::getNpoints(){ 
 
@@ -478,6 +563,55 @@ int waveset::getNpoints(){
 int waveset::getNftw(){ 
 
 	return _nFtw;
+};
+//########################################################################################################################################################
+///Gives the number of m3Pi bins
+int waveset::getNbins(){
+
+	return _nBins;
+};
+//########################################################################################################################################################
+///Gives the number of t' bins
+int waveset::getNtBin(){ 
+
+	return _nTbin;
+};
+//########################################################################################################################################################
+///Total number of parameters (including non achor couplings)
+int waveset::getNtot(){
+
+	return 2*getNcpl() + getNpar() + 2*getNbra() + getNiso();
+};
+//########################################################################################################################################################
+///Number of total couplings 
+int waveset::getNcpl(){ 
+
+	return _nBrCpl * _nTbin;
+};
+//########################################################################################################################################################
+///Returns the number of parameters (without branchings or couplings)
+int waveset::getNpar(){ 
+
+	if (0==_borders_par.size()){
+		return 0;
+	};
+	return _borders_par[_borders_par.size() -1];
+};
+//########################################################################################################################################################
+///Number of sets coupled by branchings
+int waveset::getNbra(){ 
+
+	return _nBranch;
+};
+//########################################################################################################################################################
+///Returns the number of parameters for isobars
+int waveset::getNiso(){ 
+
+	int siz = _iso_borders_par.size();
+	if (0==siz){
+		return 0;
+	};
+	return _iso_borders_par[siz-1];
 };
 //########################################################################################################################################################
 ///Returns the name of waves
@@ -798,6 +932,40 @@ std::string waveset::getIsoConstName(
 	return _iso_constNames[i];
 };
 //########################################################################################################################################################
+///Gets the mass bin for a certain m3Pi
+int waveset::get_bin(
+							double 							mass){
+ 
+	for(int i=0;i<_nBins;i++){
+		if (_binning[i] <= mass and _binning[i+1]>mass){
+			return i;
+		};
+	};
+	std::cerr<<"Error: waveset.cxx: get_bin(): Mass not in range"<<std::endl;
+	return 0;
+};
+//########################################################################################################################################################
+///Get the first function for each branching-set 
+std::vector<int> waveset::getFirstBranch(){
+
+	std::vector<int> firstBranch;
+	int maxBranch = -1;
+	for (int i=0;i<_coupled.size();i++){
+		if (_coupled[i] > maxBranch){
+			maxBranch = _n_branch[i];
+		};
+	};
+	for (int i=0;i<maxBranch+1;i++){
+		for (int j=0;j<_coupled.size();j++){
+			if (_coupled[j] == i){
+				firstBranch.push_back(_n_branch[j]);
+				break;
+			};
+		};
+	};
+	return firstBranch;
+};
+//########################################################################################################################################################
 ///Updates the number of function-to-wave couplings
 void waveset::updateNftw(){ 
 
@@ -879,6 +1047,126 @@ void waveset::updateIsobar(){
 		};
 	};
 	updateNpoints();
+};
+//########################################################################################################################################################
+///Updates the internal ranges for evaluation
+void waveset::update_min_max_bin(){
+
+	_minBin = 0;
+//	std::cout<<"Call update_min_max_bin()"<<std::endl;
+	_maxBin = _binning.size();
+	if (_lowerLims.size() == 0 or _upperLims.size() == 0){
+		std::cout<< "Warning: Wave limits not set, omitting internal setting of _minBin and _maxBin"<<std::endl;
+		std::cout<< "Warning: Setting _minBin = 0; _maxBin = _binning.size() = "<<_binning.size()<<std::endl;
+		_minBin =0;
+		_maxBin =_binning.size();
+		return;
+	};
+	double ancMin = _lowerLims[0];
+	double ancMax = _upperLims[0];
+//	std::cout<<ancMin<<"-"<<ancMax<<std::endl;
+	if (_binning.size() == 0){
+		std::cout<< "Warning: No binning set, cannot determine _minBin, _maxBin" <<std::endl;
+	};
+	for (unsigned int i=0;i<_binning.size()-1;i++){
+		double up = _binning[i+1];
+		double low= _binning[i];
+		if (ancMin >= low and ancMin <up){
+			_minBin = i;
+		};
+		if (ancMax > low and ancMax <=up){
+			_maxBin = i+1;
+		};
+	};
+//	std::cout<<"_minBin: "<<_minBin<<std::endl;
+//	std::cout<<"_maxBin: "<<_maxBin<<std::endl;
+};
+//########################################################################################################################################################
+///Handles the branchings after a function/wave coupling was added
+void waveset::handle_branchings(
+							int 							wave, 
+							int 							func){ 
+
+	int border = _borders_waves[wave]-1;
+	std::vector<int> coupled;
+	std::vector<int> n_branch;
+	unsigned int nRel = _coupled.size();
+	for (unsigned int i=0; i<nRel;i++){
+		coupled.push_back(_coupled[i]);
+		n_branch.push_back(_n_branch[i]);
+		if (i==border-1){
+			n_branch.push_back(-1);
+			coupled.push_back(-1);
+		};
+	};
+	if (coupled.size() ==0){
+		n_branch.push_back(-1);
+		coupled.push_back(-1);
+	};
+	_coupled=coupled;
+	_n_branch = n_branch;
+	update_n_cpls();
+	update_n_branch();
+};
+//########################################################################################################################################################
+///Updates the number of couplings
+void waveset::update_n_cpls(){ 
+
+	std::vector<int> new_cpl;
+	int max_cpl = 0;
+	std::vector<int> brs;
+	std::vector<int> their_cpls;
+	for (int i=i;i<_coupled.size();i++){
+		if (_coupled[i] ==-1){
+			new_cpl.push_back(max_cpl);
+			max_cpl++;
+		}else{
+			bool already = false;
+			for (int j=0;j<brs.size();j++){
+				if(brs[j] == _coupled[i]){
+					new_cpl.push_back(their_cpls[j]);
+					already = true;
+					break;
+				};
+			};
+			if (not already){
+				new_cpl.push_back(max_cpl);
+				brs.push_back(_coupled[i]);
+				their_cpls.push_back(max_cpl);
+				max_cpl++;
+			};
+		};
+	};
+	_nBrCpl = max_cpl;
+	_n_cpls = new_cpl;
+};
+//########################################################################################################################################################
+///Updates the branchings
+void waveset::update_n_branch(){ 
+
+	std::vector<int> n_branch;
+	int act_branch = 0;
+	for (int i=0;i<_coupled.size();i++){
+		if (_coupled[i] == -1){
+			n_branch.push_back(-1);
+		}else{
+			n_branch.push_back(act_branch);
+			act_branch++;
+		};	
+	};
+	_n_branch = n_branch;
+	_nBranch = act_branch;
+};
+//########################################################################################################################################################
+///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t' 
+void waveset::updateTprime(
+							int 							tbin){ 
+
+	double tt = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
+//	std::cout<<"set t to: "<<tt<<std::endl;
+	for (unsigned int i = 0;i<_const_is_t.size();i++){
+		_const[_const_is_t[i]] = tt;
+	};
 };
 //########################################################################################################################################################
 ///Gives the calss name 'waveset'
@@ -1020,6 +1308,8 @@ void waveset::printStatus(){
 	std::cout<<std::endl<<std::endl<<"FUNCTIONS: "<<std::endl;
 	std::cout << "_funcs_to_waves" << std::endl;
 	print_vector(_funcs_to_waves);
+	std::cout<<std::endl<<"_n_cpls"<<std::endl;
+	print_vector(_n_cpls);
 	std::cout << std::endl;
 	std::cout<<"_nPar: "<<_nPar<<std::endl;
 	std::cout << std::endl;
@@ -1088,6 +1378,8 @@ void waveset::printStatus(){
 	std::cout << "_const" << std::endl;
 	print_vector(_const);
 	std::cout << std::endl;	
+	std::cout<<std::endl<<"_const_is_t"<<std::endl;
+	print_vector(_const_is_t);
 	std::cout<<std::endl<<"_iso_parNames"<<std::endl;
 	print_vector(_iso_parNames);
 	std::cout << std::endl;	
@@ -1108,6 +1400,20 @@ void waveset::printStatus(){
 	std::cout << "_wavePs" << std::endl;
 	print_vector(_wavePs);
 	std::cout << std::endl;
+	std::cout<<std::endl<<std::endl<<"BINNING: "<<std::endl;
+	std::cout<<"_nBins: "<<_nBins<<std::endl<<std::endl<<"_binning"<<std::endl;
+	print_vector(_binning);
+	std::cout<<std::endl<<"_minBin: "<<_minBin<<"; _maxBin: "<<_maxBin<<std::endl;
+	std::cout<<std::endl<<"_mMin: "<<_mMin<<"; _mMax: "<<_mMax<<std::endl;
+	std::cout<<"_nTbin: "<<_nTbin<<std::endl<<std::endl<<"_t_binning"<<std::endl;
+	print_vector(_t_binning);
+	std::cout<<std::endl;
+	print_vector(_eval_tbin);
+	std::cout<<std::endl<<std::endl<<"BRANCHING: "<<std::endl;
+	std::cout<<"_nBranch: "<<_nBranch<<"; _nBrCpl: "<<_nBrCpl<<std::endl<<"_coupled"<<std::endl;
+	print_vector(_coupled);
+	std::cout<<std::endl<<"_n_branch"<<std::endl;
+	print_vector(_n_branch);
 	std::cout<<std::endl<<std::endl<<"INTERNAL: "<<std::endl;
 	std::cout<<"_write_out: "<<_write_out<<std::endl;
 	std::cout<<std::endl;
