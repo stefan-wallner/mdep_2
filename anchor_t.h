@@ -15,16 +15,16 @@ class anchor_t : public chi2_2d {
 		xdouble EvalCP(std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par );
 
 		template<typename xdouble>
-		xdouble EvalBranch(std::vector<std::complex<xdouble> >&branch, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+		xdouble EvalBranch(std::vector<std::complex<xdouble> >&branch, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble>
-		xdouble EvalAutoCpl(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par);
+		xdouble EvalAutoCpl(std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble>
-		xdouble EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std::vector<std::complex<xdouble> >&cpl, std::vector<xdouble> &par);
+		xdouble EvalAutoCplBranch(std::vector<std::complex<xdouble> >&bra, std::vector<std::complex<xdouble> >&cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble> 
-		xdouble EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par);
+		xdouble EvalAutoCplTbin(int tbin, std::vector<std::complex<xdouble> > &cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble>
 		xdouble EvalTbin(int tbin,std::vector<std::complex<xdouble> > &cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
@@ -73,10 +73,10 @@ class anchor_t : public chi2_2d {
 		AandB<xdouble> get_AB_iso(int tbin, std::vector<std::complex<xdouble> > &anchor_cpl,std::vector<xdouble> &par, std::vector<xdouble> &iso_par); // For de-isobarred
 
 		template<typename xdouble>
-		std::vector<std::complex<xdouble> > getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
+		std::vector<std::complex<xdouble> > getMinimumCpl(int tbin,std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		template<typename xdouble>
-		std::vector<std::complex<xdouble> > getMinimumCplBra(int tbin, std::vector<std::complex<xdouble> > &branch, std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par);
+		std::vector<std::complex<xdouble> > getMinimumCplBra(int tbin, std::vector<std::complex<xdouble> > &branch, std::vector<std::complex<xdouble> > &anchor_cpl, std::vector<xdouble> &par, std::vector<xdouble> &iso_par);
 
 		void updateTprime(int tbin);
 
@@ -87,7 +87,7 @@ class anchor_t : public chi2_2d {
 		bool set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
 
 
-		std::vector<std::complex<double> > get_branchings(std::vector<std::complex<double> > cpl,std::vector<double> par);
+		std::vector<std::complex<double> > get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
 
 		void update_n_cpls();
 		void update_n_branch();

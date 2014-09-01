@@ -69,35 +69,38 @@ template std::vector<std::complex<double> > chi2_2d::amps(double m, std::vector<
 
 template<typename xdouble>
 std::vector<std::vector<std::complex<xdouble> > > chi2_2d::iso_funcs(std::vector<xdouble> &par){ // Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
-	std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
-	int upPar=0;
-	int loPar=0;
-	int upConst=0;
-	int loConst=0;
-	std::vector<xdouble> act_par = std::vector<xdouble>(_maxNparsIso);
-	for (int iso=0;iso<_nIso;iso++){
-		loPar = upPar;
-		upPar = _iso_borders_par[iso];
-		loConst = upConst;
-		upConst = _iso_borders_const[iso];
-		int nBins = _iso_binning_pts[iso];
-		int nBinning = _iso_n_binning[iso];
-		int pos=0;
-		int nFunc = _isos[iso];
-		for (int i= loPar;i<upPar;i++){
-			act_par[pos]=par[i];
-			pos++;
+	if (_has_isobars){
+		std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
+		int upPar=0;
+		int loPar=0;
+		int upConst=0;
+		int loConst=0;
+		std::vector<xdouble> act_par = std::vector<xdouble>(_maxNparsIso);
+		for (int iso=0;iso<_nIso;iso++){
+			loPar = upPar;
+			upPar = _iso_borders_par[iso];
+			loConst = upConst;
+			upConst = _iso_borders_const[iso];
+			int nBins = _iso_binning_pts[iso];
+			int nBinning = _iso_n_binning[iso];
+			int pos=0;
+			int nFunc = _isos[iso];
+			for (int i= loPar;i<upPar;i++){
+				act_par[pos]=par[i];
+				pos++;
+			};
+			for (int i=loConst;i<upConst;i++){
+				act_par[pos]=_iso_const[i];
+				pos++;
+			};
+			for(int bin=0;bin<nBins;bin++){
+				double m = (_iso_binnings[nBinning][bin]+_iso_binnings[nBinning][bin+1])/2;
+				f[iso][bin]=bw(m,act_par,nFunc,_L_iso[iso]);
+			};
 		};
-		for (int i=loConst;i<upConst;i++){
-			act_par[pos]=_iso_const[i];
-			pos++;
-		};
-		for(int bin=0;bin<nBins;bin++){
-			double m = (_iso_binnings[nBinning][bin]+_iso_binnings[nBinning][bin+1])/2;
-			f[iso][bin]=bw(m,act_par,nFunc,_L_iso[iso]);
-		};
+		return f;
 	};
-	return f;
+	return std::vector<std::vector<std::complex<xdouble> > >();
 };
 template std::vector<std::vector<std::complex<double> > > chi2_2d::iso_funcs(std::vector<double> &par);
 

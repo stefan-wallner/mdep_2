@@ -122,6 +122,7 @@ int main(){
 		inver[i]*=-.5;
 	};
 	print_vector(inver);
+	print_vector(Chi2.getMinimumCplBra(0,bra,startcpl,par, isopar));
 
 
 

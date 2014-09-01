@@ -202,9 +202,11 @@ double minimize::operator()(const double* xx){ // Call of the operator
 	// std::cout<<par[0]<<std::endl;
 	double chi2;
 	if (_useBranch){ // Evaluate
-		chi2 = EvalAutoCplBranch(bra,cpl,par);
+		std::vector<double> iso_par;//herre
+		chi2 = EvalAutoCplBranch(bra,cpl,par, iso_par);
 	}else{
-		chi2 = EvalAutoCpl(cpl,par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
+		std::vector<double> iso_par;//herre
+		chi2 = EvalAutoCpl(cpl,par,iso_par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
 	};
 	_count++;
 	/* if (chi2 != chi2){ // Check for NaN
@@ -267,7 +269,8 @@ std::vector<double> minimize::Diff(const double* xx){
 	};
 	double Chi2;
 	adouble aChi2;
-	aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar);
+	std::vector<adouble> iso_par; //herre
+	aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar,iso_par);
 	aChi2 >>= Chi2;
 	trace_off();
 	double grad[_nTot];
@@ -450,16 +453,18 @@ void minimize::initCouplings(){ // Finds 'good' values for couplings and branchi
 	for (int i=0;i<_nPar;i++){
 		par[i] = _parameters[2*_nCpl+i];
 	};
-	std::cout << "Total with EvalAutoCpl() (For consistency check): "<< EvalAutoCpl(couplings,par)<<std::endl;
+	std::vector<double> iso_par;//herre
+	std::cout << "Total with EvalAutoCpl() (For consistency check): "<< EvalAutoCpl(couplings,par,iso_par)<<std::endl;
 	_useBranch=true;
 	if (_nBra>0){
-		std::vector<std::complex<double> > bra = get_branchings(couplings,par);
+		std::vector<double> iso_par;//herre
+		std::vector<std::complex<double> > bra = get_branchings(couplings,par,iso_par);
 		// branchCouplingsToOne(); // Set all coubled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
 		for (unsigned int i=0;i<bra.size();i++){ // Set found branchings
 			setParameter(2*_nCpl+_nPar+2*i ,bra[i].real());
 			setParameter(2*_nCpl+_nPar+2*i+1,bra[i].imag());
 		};
-		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par)<<" ('EvalAutoCplBranch(...)')"<<std::endl;
+		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par,iso_par)<<" ('EvalAutoCplBranch(...)')"<<std::endl;
 		for (int i =0;i<2*_nCpl;i++){ // Fix couplings
 			fixPar(i);
 		};
