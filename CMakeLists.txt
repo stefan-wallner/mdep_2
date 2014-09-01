@@ -30,18 +30,18 @@ add_library(chi2_2d SHARED chi2_2d.cxx)
 add_library(anchor_t SHARED anchor_t.cxx)
 add_library(minimize SHARED minimize.cxx)
 
+add_library(waveset SHARED waveset.cxx)
 
 #set execuatbles
-add_executable(minimizers minimizers_6waves.cc)
 add_executable(fitmd.exe fitmd.cc)
 
 add_executable(de_isobarring test_de-isobar.cc)
 
 #link own libraries
 target_link_libraries(minimize anchor_t)
-target_link_libraries(anchor_t chi2_2d)
+#target_link_libraries(anchor_t chi2_2d)
+target_link_libraries(anchor_t waveset)
 target_link_libraries(chi2_2d chi2)
-target_link_libraries(minimizers minimize)
 target_link_libraries(fitmd.exe minimize)
 
 target_link_libraries(de_isobarring anchor_t)
@@ -56,6 +56,7 @@ target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/ya
 if ( use_auto_diff )
   target_link_libraries(chi2 /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(chi2_2d /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
+  target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(anchor_t /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
 endif()
