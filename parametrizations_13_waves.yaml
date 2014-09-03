@@ -280,3 +280,15 @@ cohBKG(4++)1+_rho_pi_G:
    value: 0.139
  - name: mR
    value: 0.770
+
+########################################
+# Isobar:
+########################################
+f0(980):
+ parametrization: 0
+ parameters:
+ - name: M_f0(980)
+   value: 0.980
+ - name: G_f0(980)
+   value: 0.110
+

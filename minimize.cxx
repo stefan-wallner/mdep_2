@@ -5,39 +5,54 @@
 #include<string>
 #include<iostream>
 #include<fstream>
-#include <cstdlib>
+#include<cstdlib>
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 #include "adolc/adolc.h"
-  
+
 #include"invert33.h"
 
-minimize::minimize(): anchor_t(), _init(false), _nOut(1000), _count(0), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001),_randRange(100.),_useBranch(true){};
+minimize::minimize(): anchor_t(), _init(false),_randRange(100.), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001){};
 
-std::vector<std::string> minimize::getParNames(){// Self explanatory
-	return _parNames;
+
+#ifdef USE_YAML
+///Constructror from YAML files
+minimize::minimize(std::string card, std::string waves, std::string parametrizations):
+	anchor_t(card,waves,parametrizations), _init(false),_randRange(100.), _maxFunctionCalls(1000000),_maxIterations(100000),_tolerance(1.),_minStepSize(0.0001){
+	YAML::Node Ycard   = YAML::LoadFile(card);
+	loadFitterDefinitions(Ycard);
+	finish_setUp();
 };
+#endif//USE_YAML
 
 std::vector<bool> minimize::getReleased(){// Self explanatory
 	return _released;
 };
 
-std::vector<double> minimize::getParameters(){// Self explanatory
-	return _parameters;
+
+void minimize::finish_setUp(){
+	std::vector<int> first_branch = getFirstBranch();
+	if (_released.size() != _parameters.size()){
+		std::cout<<"Warning: No paramter status set, releasing couplings, fixing all others."<<std::endl;
+		std::vector<bool> std_rel(_parameters.size(),false);
+		for (int i=0;i<2*_nCpl;i++){
+			std_rel[i]=true;
+		};
+		_released = std_rel;
+	};
+	for (int i=0; i<first_branch.size();i++){
+		setParameter(2*_nCpl+_nPar+2*first_branch[i]  ,1.); // Re(Br)
+		setParameter(2*_nCpl+_nPar+2*first_branch[i]+1,0.); // Im(Br)
+		fixPar(2*_nCpl+_nPar+2*first_branch[i]  );
+		fixPar(2*_nCpl+_nPar+2*first_branch[i]+1);
+	};
+	setRandomCpl();
+	setRandomBra();
+	initialize();
 };
 
-void minimize::setParameter(std::string name, double par){// Self explanatory
-	int number = getParNumber(name);
-	if (-1==number){
-		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
-	}else if (_nTot <= number){
-		std::cerr << "Error: Parameter number too high"<<std::endl;
-	}else{
-		setParameter(number,par);
-	};
-};
 
 void minimize::setStepSize(std::string name, double par){// Self explanatory
 	int number = getParNumber(name);
@@ -72,43 +87,10 @@ void minimize::relPar(std::string name){// Self explanatory
 	};
 };
 
-int minimize::getParNumber(std::string name){ // Gets the number for a given name, if the name does not exist, return -1
-	for (int i=0;i<_parNames.size();i++){
-		if (_parNames[i] == name){
-			return i;
-		};
-	};
-	return -1;
-};
 
-void minimize::setParameter(int i, double par){
-	if(_parameters.size() < _nTot){
-		_parameters = std::vector<double>(_nTot,0.);
-		reload_par_definitions();
-	};
-	_parameters[i] = par;
-	reload_par_definitions(i);
-};
 
-void minimize::setParameters(std::vector<double> pars){
-	if(pars.size()>=_nTot){
-		_parameters = pars;
-		reload_par_definitions();
-	}else{
-		std::cerr<<"Error: Input pars.size() too small"<<std::endl;
-	};
-};
 
-void minimize::setParLimits(int par, double upper, double lower){
-	if(_lower_parameter_limits.size() != _parameters.size()){
-		_lower_parameter_limits=std::vector<double>(_parameters.size(),std::numeric_limits<double>::quiet_NaN());
-	};
-	if(_upper_parameter_limits.size() != _parameters.size()){
-		_upper_parameter_limits=std::vector<double>(_parameters.size(),std::numeric_limits<double>::quiet_NaN());
-	};
-	_upper_parameter_limits[par]=upper;
-	_lower_parameter_limits[par]=lower;
-};
+
 
 void minimize::setStepSize(int i, double step){
 	if (_step_sizes.size() < _nTot){
@@ -133,6 +115,7 @@ void minimize::fixPar(int i){ // fix parameter by number
 		_released[i] = false;
 		reload_par_definitions(i);
 	}else{
+		std::cout<<_nTot<<" "<<_parameters.size()<<" "<<_released.size()<<std::endl;
 		std::cerr<<"Error: _released is not initialized."<<std::endl;
 	};
 };
@@ -142,6 +125,7 @@ void minimize::relPar(int i){ // Release parameter by number
 		_released[i] = true;
 		reload_par_definitions(i);
 	}else{
+		std::cout<<_nTot<<" "<<_parameters.size()<<" "<<_released.size()<<std::endl;
 		std::cerr<<"Error: _released is not initialized."<<std::endl;
 	};
 };
@@ -154,12 +138,12 @@ void minimize::reload_par_definitions(int mara_peter){ // Update the parameter d
 		oLim = mara_peter+1;
 	};
 	if(_lower_parameter_limits.size() != _parameters.size()){
-		_lower_parameter_limits=std::vector<double>(_parameters.size(),std::numeric_limits<double>::quiet_NaN());
+		_lower_parameter_limits=std::vector<double>(_parameters.size(),1.);
 	};
 	if(_upper_parameter_limits.size() != _parameters.size()){
-		_upper_parameter_limits=std::vector<double>(_parameters.size(),std::numeric_limits<double>::quiet_NaN());
+		_upper_parameter_limits=std::vector<double>(_parameters.size(),0.);
 	};
-	if(_init){	
+	if(_init){
 		for(int i=uLim;i<oLim;i++){
 			if(_released[i]){
 				if(_lower_parameter_limits[i] < _upper_parameter_limits[i]){
@@ -174,114 +158,11 @@ void minimize::reload_par_definitions(int mara_peter){ // Update the parameter d
 	};
 };
 
-double minimize::operator()(){ // Evaluate Chi2 with the _parameters (Call the oter operator)
-	return (*this)(&_parameters[0]);
-};
-
-double minimize::operator()(std::vector<double> &xx){
-	return (*this)(&xx[0]);
-};
-
-double minimize::operator()(const double* xx){ // Call of the operator
-	std::vector<std::complex<double> > cpl(_nCpl);
-	std::vector<double> par(_nPar);
-	std::vector<std::complex<double> > bra(_nBra);
-	int count_xx =0;
-	for (int i=0;i<_nCpl;i++){ // Build cpl, par, bra from xx
-		cpl[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
-		count_xx+=2;
-	};
-	for (int i=0;i<_nPar;i++){
-		par[i] = xx[count_xx];
-		count_xx++;
-	};
-	for (int i=0;i<_nBra;i++){
-		bra[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
-		count_xx+=2;
-	};
-	// std::cout<<par[0]<<std::endl;
-	double chi2;
-	if (_useBranch){ // Evaluate
-		std::vector<double> iso_par;//herre
-		chi2 = EvalAutoCplBranch(bra,cpl,par, iso_par);
-	}else{
-		std::vector<double> iso_par;//herre
-		chi2 = EvalAutoCpl(cpl,par,iso_par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
-	};
-	_count++;
-	/* if (chi2 != chi2){ // Check for NaN
-	std::cout<<"NaN paramters are:"<<std::endl;
-	std::cout<<"bra:"<<std::endl;
-	print_vector(bra);
-	std::cout<<"cpl:"<<std::endl;
-	print_vector(cpl);
-	std::cout<<"par:"<<std::endl;
-	print_vector(par);
-	std::cout << xx << std::endl;
-	throw;
-	};*/
-	if (0==_count%_nOut){ // Write every _nOut evaluation
-		std::cout<<"#"<<_count<<": "<<chi2<<std::endl;
-	};
-	return chi2;
-};
 
 std::string minimize::className(){
 	return "minimize";
 };
 
-#ifdef ADOL_ON 
-std::vector<double> minimize::Diff(std::vector<double> &xx){
-	return Diff(&xx[0]);
-};
-std::vector<double> minimize::Diff(const double* xx){
-	int nTape = 0;
-	double x[_nTot];
-	for (int i=0;i<_nTot;i++){
-		x[i] = xx[i];
-	};
-
-	trace_on(nTape);
-	adouble ax[_nTot];
-	std::vector<adouble>aCpl_r(2*_nCpl);
-	std::vector<adouble>aPar(_nPar);
-	std::vector<adouble>aBra_r(2*_nBra);
-	int count=0;
-	for (int i=0;i<2*_nCpl;i++){
-		aCpl_r[i] <<= x[count];
-		count++;
-	};
-	for (int i=0; i<_nPar;i++){
-		aPar[i] <<= x[count];
-		count++;
-	};
-	for (int i=0;i<2*_nBra;i++){
-		aBra_r[i] <<= x[count];
-		count++;
-	};
-	std::vector<std::complex<adouble> > aCpl_c(_nCpl);
-	std::vector<std::complex<adouble> > aBra_c(_nBra);
-	for (int i=0;i<_nCpl;i++){
-		aCpl_c[i] = std::complex<adouble>(aCpl_r[2*i],aCpl_r[2*i+1]);
-	};
-	for (int i=0;i<_nBra;i++){
-		aBra_c[i] = std::complex<adouble>(aBra_r[2*i],aBra_r[2*i+1]);
-	};
-	double Chi2;
-	adouble aChi2;
-	std::vector<adouble> iso_par; //herre
-	aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar,iso_par);
-	aChi2 >>= Chi2;
-	trace_off();
-	double grad[_nTot];
-	gradient(nTape,_nTot,x,grad);
-	vector<double> gradient;
-	for (int i=0;i<_nTot;i++){
-		gradient.push_back(grad[i]);
-	};
-	return gradient;
-};
-#endif//ADOL_ON
 
 bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fitter (Has to be done at least once)
 	if (_parameters.size()<_nTot){
@@ -314,34 +195,19 @@ bool minimize::initialize(std::string s1, std::string s2){ // Initializes the fi
 };
 
 void minimize::update_definitions(){ // Updates definitions
-	_nTot = getNtotAnc();
-	_nPar = getNpar();
-	_nCpl = getNanc();
-	_nBra = getNbra();
-	std::vector<std::string> names;
+	anchor_t::update_definitions();
 	std::vector<bool> rels;
-	std::stringstream str_count;	
 	for (int i=0;i<_nCpl;i++){
-		str_count<<i;
-		names.push_back("reC"+str_count.str());
-		names.push_back("imC"+str_count.str());
-		str_count.str("");
 		rels.push_back(true);
 		rels.push_back(true);
-	};	
+	};
 	for (int i=0;i<_nPar;i++){
-		names.push_back(getParameterName(i));
 		rels.push_back(false);
 	};
 	for (int i=0;i<_nBra;i++){
-		str_count<<i;
-		names.push_back("reB"+str_count.str());
-		names.push_back("imB"+str_count.str());
-		str_count.str("");
 		rels.push_back(false);
 		rels.push_back(false);
 	};
-	_parNames = names;
 	_released = rels;
 	if(_init){
 		_min->SetTolerance(_tolerance);
@@ -370,13 +236,6 @@ double minimize::fit(){ // Actual call for fitter. At the moment the instance is
 void minimize::printStatus(){ // Prints the internal status
 	anchor_t::printStatus();
 	std::cout<<std::endl<<"_init: "<<_init<<std::endl;
-	std::cout<<std::endl<<"_useBranch: "<<_useBranch<<std::endl;
-	std::cout<<std::endl<<"_nOut: "<<_nOut<<std::endl;
-	std::cout<<std::endl<<"_nTot: "<<_nTot<<std::endl;
-	std::cout<<std::endl<<"_nPar: "<<_nPar<<std::endl;
-	std::cout<<std::endl<<"_nCpl: "<<_nCpl<<std::endl;
-	std::cout<<std::endl<<"_nBra: "<<_nBra<<std::endl;
-	std::cout<<std::endl<<"_count: "<<_count<<std::endl;
 	std::cout<<std::endl<<"_maxFunctionCalls: "<<_maxFunctionCalls<<std::endl;
 	std::cout<<std::endl<<"_maxIterations: "<<_maxIterations<<std::endl;
 	std::cout<<std::endl<<"_tolerance: "<<_tolerance<<std::endl;
@@ -384,19 +243,10 @@ void minimize::printStatus(){ // Prints the internal status
 	std::cout<<std::endl<<"_best_par"<<std::endl;
 	print_vector(_best_par);
 	std::cout<<std::endl<<"_minStepSize: "<<_minStepSize<<std::endl;
-
-	std::cout<<std::endl<<"_parameters:"<<std::endl;
-	print_vector(_parameters);
-	std::cout<<std::endl<<"_upper_parameter_limits:"<<std::endl;
-	print_vector(_upper_parameter_limits);
-	std::cout<<std::endl<<"_lower_parameter_limits:"<<std::endl;
-	print_vector(_lower_parameter_limits);	
 	std::cout<<std::endl<<"_step_sizes"<<std::endl;
 	print_vector(_step_sizes);
 	std::cout<<std::endl<<"_released:"<<std::endl;
 	print_vector(_released);
-	std::cout<<std::endl<<"_parNames:"<<std::endl;
-	print_vector(_parNames);
 };
 
 void minimize::setRandRange(double range){
@@ -487,45 +337,47 @@ void minimize::initCouplings(){ // Finds 'good' values for couplings and branchi
 	std::cout<<"Couplings and branchings found"<<std::endl;
 };
 
-void minimize::writePlots(int tbin,std::string filename){ // Does not work with branchings at the moment
-	std::vector<std::complex<double> > cpl(_nCpl);
-	std::vector<double> par(_nPar);
-	int count_xx =0;
-	for (int i=0;i<_nCpl;i++){
-		cpl[i] = std::complex<double>(_parameters[count_xx],_parameters[count_xx+1]);
-		count_xx+=2;
+
+
+
+
+
+void minimize::setParameter(int i, double par){
+	anchor_t::setParameter(i,par);
+	reload_par_definitions(i);
+};
+void minimize::setParameter(std::string name, double par){
+	int number = getParNumber(name);
+	if (-1==number){
+		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
+	}else if (_nTot <= number){
+		std::cerr << "Error: Parameter number too high"<<std::endl;
+	}else{
+		setParameter(number,par);
 	};
-	for (int i=0;i<_nPar;i++){
-		par[i] = _parameters[count_xx];
-		count_xx++;
-	};
-	std::vector<std::vector<double> >plots = getPlots(tbin,cpl,par);
-	std::ofstream outfile;
-	outfile.open(filename.c_str());
-	for (int i=0;i<plots[0].size()/3;i++){
-		outfile<<(_binning[i]+_binning[i+1])/2<<" ";
-		for (int j=0;j<plots.size();j++){
-			outfile<<plots[j][3*i]<<" "<<plots[j][3*i+1]<<" "<<pow(plots[j][3*i+2],-.5)<<" ";
-		};
-		outfile<<"\n";
-	};
-	outfile.close();
 };
 
-std::string minimize::getParName(int i){ // Self explanatory
-	return _parNames[i];
+void minimize::setParameters(std::vector<double> pars){
+	anchor_t::setParameters(pars);
+	reload_par_definitions();
 };
-
-void minimize::branchCouplingsToOne(){ // Set the anchor coupligs to one, that are coupled to another function
-	for (unsigned int i=0;i<_coupled.size();i++){
-		if(_coupled[i] >=0){
-			int nCpl = _n_cpls[i];
-			if (nCpl <= _nBrCplAnc){
-				for (int tbin =0;tbin<_nTbin;tbin++){
-					_parameters[2*_nBrCplAnc*tbin+2*nCpl ]=1.;
-					_parameters[2*_nBrCplAnc*tbin+2*nCpl+1]=0.;
-				};
-			};
+#ifdef USE_YAML
+void minimize::loadFitterDefinitions(YAML::Node &waveset){
+	if (waveset["min_step_size"]){
+		_minStepSize = waveset["min_step_size"].as<double>();
+	};
+	int nPar = getNpar();
+	int nCpl = getNanc();
+	for (int par = 0;par<nPar;par++){
+		setStepSize(2*nCpl+par,max(_minStepSize, 0.0001*fabs(_parameters[2*nCpl+par])));
+	};
+	if (waveset["real_anchor_cpl"]){ /// Also include this here, so no extra method is necessary
+		if(waveset["real_anchor_cpl"].as<bool>()){
+			setParameter(1,0.);
+			fixPar(1);
 		};
 	};
 };
+
+#endif//USE_YAML
+

@@ -3,14 +3,23 @@ set(CMAKE_CXX_FLAGS "-O3")
 project (Mdep)
 
 set(use_auto_diff ON) 
+set(use_YAML ON)
 
 set(CMAKE_MODULE_PATH  ${PROJECT_SOURCE_DIR} )
 set( INCLUDE_DIRS
     ${PROJECT_BINARY_DIR} 
     ${PROJECT_SOURCE_DIR} 
     /nfs/mnemosyne/sys/slc6/sw/root/x86-64/5.34.20/root/include
-    /nfs/hicran/project/compass/analysis/fkrinner/yaml-cpp-0.5.1/include
+    /nfs/hicran/project/compass/analysis/fkrinner/yaml/include
 ) 
+if( use_YAML )
+  add_definitions( -DUSE_YAML )
+  set( INCLUDE_DIRS
+       ${INCLUDE_DIRS}
+      /nfs/hicran/project/compass/analysis/fkrinner/yaml-cpp-0.5.1/build/
+  )
+endif()
+
 
 if( use_auto_diff )
   add_definitions( -DADOL_ON )
@@ -50,7 +59,11 @@ target_link_libraries(de_isobarring anchor_t)
 target_link_libraries(minimize /nfs/mnemosyne/sys/slc6/sw/root/x86-64/5.34.20/root/lib/libMathCore.so.5.34 )
 
 #link YAML
-target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml-cpp-0.5.1/build/libyaml-cpp.a )
+if ( use_YAML )
+  target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
+  target_link_libraries(waveset /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
+  
+endif()
 
 #link ADOL
 if ( use_auto_diff )
