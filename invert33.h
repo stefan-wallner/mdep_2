@@ -28,7 +28,7 @@ std::vector<std::vector<T> > invert33(std::vector<std::vector<T> > mat){
 
 // Prints a matrix
 template<typename T>
-void print_matrix(std::vector<std::vector<T> > mat){
+void print_matrix(const std::vector<std::vector<T> > &mat){
 	std::cout<<"[";
 	for (unsigned int i =0;i<mat.size();i++){
 		std::cout<<"[    ";
@@ -47,7 +47,7 @@ void print_matrix(std::vector<std::vector<T> > mat){
 };
 // Prints a vector
 template<typename T>
-void print_vector(std::vector<T> in){
+void print_vector(const std::vector<T> &in){
 	std::cout << "[";
 	if (in.size()>0){
 		std::cout << in[0];

@@ -7,10 +7,11 @@
 #include<limits>
 
 #include"cholesky.h"
-#include "adolc/adolc.h"
+
 #include"invert33.h"
 
 #ifdef ADOL_ON
+#include "adolc/adolc.h"
 std::complex<adouble> operator*(std::complex<adouble> a,double d){// Define std::complex<adouble> * double
 	return std::complex<adouble>(a.real()*d,a.imag()*d);
 };
@@ -29,16 +30,15 @@ anchor_t::anchor_t():
 #ifdef USE_YAML
 ///Constructror from YAML files
 anchor_t::anchor_t(
-							std::string 						card,
-							std::string 						waves,
-							std::string 						parametrizations):
-	waveset(card,waves,parametrizations),
+							std::string 						card):
+	waveset(card),
 	_is_ampl(false),
 	_nOut(1000),
 	_count(0),
 	_useBranch(true){
-	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
 	YAML::Node Ycard   = YAML::LoadFile(card);
+	std::string parametrizations = Ycard["parametrization_file"].as<std::string>();
+	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
 	update_n_cpls();
 	setTbinning(_t_binning);
 	update_definitions();
@@ -212,7 +212,7 @@ xdouble anchor_t::EvalAutoCplBranch(
 			for(int i=0;i<nNon;i++){
 				actCpl[i] = cpl[i+tbin*nNon];
 			};
-			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par, iso_par);
+			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par,iso_par);
 		//	print_vector(bestcpl);
 			std::vector<std::complex<xdouble> > best_cpl_std = std::vector<std::complex<xdouble> >(_nFtw);
 			for (int i=0;i<_nFtw;i++){
@@ -1011,6 +1011,67 @@ std::vector<std::complex<double> > anchor_t::get_branchings(
 	return brchs;
 };
 //########################################################################################################################################################
+///Gets the couplings-without-branchings from couplings-with-branchings and branchings
+std::vector<std::complex<double> > anchor_t::getUnbranchedCouplings(
+							std::vector<std::complex<double> >		&cpl,
+							std::vector<std::complex<double> >		&bra){
+	
+	std::vector<std::complex<double> > cpl_un(_nFtw);
+	for (int i=0;i<_nFtw;i++){
+		if(-1==_n_branch[i]){
+			cpl_un[i] = cpl[_n_cpls[i]];
+		}else{
+			cpl_un[i] = cpl[_n_cpls[i]] * bra[_n_branch[i]];
+		};
+	};
+	return cpl_un;
+};
+//########################################################################################################################################################
+///Gets all couplings for one t' bin (.size() = _nFtw) for different input formats
+std::vector<std::complex<double> > anchor_t::getAllCouplings(
+							int						tbin,
+							std::vector<std::complex<double> >		&cpl,
+							std::vector<double>				&par,
+							std::vector<std::complex<double> >		&bra,
+							std::vector<double>				&iso){
+
+	std::vector<std::complex<double> > cpl_all;
+	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
+		std::vector<std::complex<double> > cpl_t;
+		for (int i=0;i<_nBrCplAnc;i++){
+			cpl_t.push_back(cpl[tbin*_nBrCplAnc+i]);
+		};
+		cpl_all = getMinimumCplBra(tbin,bra,cpl_t,par,iso);
+		cpl_all = getUnbranchedCouplings(cpl_all,bra);
+		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
+	}else if (cpl.size() == _nBrCplAnc){ 			// Anchor couplings for one t' bin
+		cpl_all = getMinimumCplBra(tbin,bra,cpl,par,iso);
+		cpl_all = getUnbranchedCouplings(cpl_all,bra);
+		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
+	}else if (cpl.size() == _nBrCpl*_nTbin){ 		// Branched couplings for all t' bins
+		std::vector<std::complex<double> > cpl_t;
+		for (int i=0;i<_nBrCpl;i++){
+			cpl_t.push_back(cpl[tbin*_nBrCpl+i]);
+		};
+		cpl_all = getUnbranchedCouplings(cpl_t,bra);
+		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for all t' bins"<<std::endl;
+	}else if (cpl.size() == _nBrCpl){ 			// Branched couplings for one t' bin
+		cpl_all = getUnbranchedCouplings(cpl,bra);
+		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for one t' bin"<<std::endl;
+	}else if (cpl.size() == _nTbin*_nFtw){ 			// Simple couplings for all t' bins
+		for (int i=0;i<_nFtw;i++){
+			cpl_all.push_back(cpl[tbin*_nFtw+i]);
+		};
+		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for all t' bins"<<std::endl;
+	}else if (cpl.size() == _nFtw){ 			// Simple couplings for one t' bin
+		cpl_all = cpl;
+		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for one t' bin"<<std::endl;
+	}else{
+		std::cerr<<"Error: Can't determine the format of the couplings"<<std::endl;
+	};
+	return cpl_all;
+};
+//########################################################################################################################################################
 ///Set the anchor coupligs to one, that are coupled to another function
 void anchor_t::branchCouplingsToOne(){
 	for (unsigned int i=0;i<_coupled.size();i++){
@@ -1425,5 +1486,76 @@ void anchor_t::update_definitions(){
 		names.push_back(getIsoParName(i));
 	};
 	_parNames = names;
+};
+//########################################################################################################################################################
+///Writes plots with the internal _parameters
+void anchor_t::write_plots(
+							std::string						filename,
+							int							tbin){
+
+	write_plots(filename,tbin,_parameters);
+};
+//########################################################################################################################################################
+///Write plots with the usual parameter ordering
+void anchor_t::write_plots(
+							std::string						filename,
+							int							tbin,
+							std::vector<double>					&param){
+
+	std::vector<std::complex<double> > cpl(_nCpl);
+	std::vector<double> par(_nPar);	
+	std::vector<std::complex<double> > bra(_nBra);
+	std::vector<double> iso(_nIso);
+	int count =0;
+	for (int i=0;i<_nCpl;i++){
+		cpl[i] = std::complex<double>(param[count],param[count+1]);
+		count+=2;
+	};
+	for (int i=0;i<_nPar;i++){
+		par[i] = param[count];
+		count++;
+	};
+	for (int i=0;i<_nBra;i++){
+		bra[i] = std::complex<double>(param[count],param[count+1]);
+		count+=2;
+	};
+	for (int i=0;i<_nIso;i++){
+		iso[i]=param[count];
+		count++;
+	};
+	write_plots(filename,tbin,cpl,par,bra,iso);
+};
+//########################################################################################################################################################
+///Writes plots for one t' bin
+void anchor_t::write_plots(
+							std::string						filename,
+							int 							tbin,
+							std::vector<std::complex<double> >			&cpl,
+							std::vector<double>					&par,
+							std::vector<std::complex<double> >			&bra,
+							std::vector<double> 					&iso){
+
+	updateTprime(tbin);
+	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
+	std::vector<std::vector<std::complex<double> > > iso_eval;
+	if(_has_isobars){
+		iso_eval = iso_funcs(iso);
+	};
+	std::ofstream write_out;
+	write_out.open(filename.c_str());
+	std::cout<<"Chi2 for the used paramters is: "<<EvalTbin(tbin,cpl_all,par,iso)<<std::endl;
+	for (int bin=0;bin<_nBins;bin++){
+		double mass = (_binning[bin]+_binning[bin+1])/2.;
+		std::vector<std::complex<double> > amplitudes = amps(mass,cpl_all,par,iso_eval);
+		std::complex<double> ancAmp = amplitudes[0];
+		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
+		for (int i=1; i<_nPoints; i++){
+			std::complex<double> inter = ancAmp*conj(amplitudes[i]);
+			write_out<<" "<<inter.real()<<" "<<_data[tbin][bin][2*i-1]<<" "<<1/sqrt(_coma[tbin][bin][2*i-1][2*i-1]);
+			write_out<<" "<<inter.imag()<<" "<<_data[tbin][bin][2*i  ]<<" "<<1/sqrt(_coma[tbin][bin][2*i  ][2*i  ]);
+		};
+		write_out<<std::endl;
+	};
+	write_out.close();
 };
 //########################################################################################################################################################

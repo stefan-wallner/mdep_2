@@ -15,9 +15,7 @@ class waveset {
 		waveset();
 #ifdef USE_YAML
 		waveset(
-								std::string 						card,
-								std::string 						waves,
-								std::string 						parametrizations);
+								std::string 						card);
 #endif//USE_YAML
 	// FUNCTIONS AND AMPLITUDES
 
@@ -84,6 +82,7 @@ class waveset {
 		void				loadFtw(YAML::Node &waveset, std::map<std::string,int> &fMap);
 		void				loadBranchings(YAML::Node &waveset);
 		void				loadBinnings(YAML::Node &waveset);
+		void				loadIsoBinnings(YAML::Node &waveset, YAML::Node &iso_binnings);
 #endif//USE_YAML
 
 	// GETTERS
@@ -223,29 +222,15 @@ class waveset {
 		std::vector<bool> 			_eval_tbin; 		// switch on/off single t' bins
 
 	// BRANCHING
+		int 					_nBranch;  		// Number of branchings
+		int 					_nBrCpl;   		// Number of couplings with branchings
+		std::vector<int> 			_coupled;  		// Encodes coupled functions
+		std::vector<int>			_n_branch; 		// Number of branching for wave/function
+		std::vector<int> 			_n_cpls;   		// Number of coupling for wave/function
 
 	// INTERNAL
 		bool 					_write_out;		// Flag to switch on the text_output
 		std::ofstream*				_outStream;		// Stream for the text output
 		bool 					_has_isobars;		// true, if de-isobarred waves are in the fit
-
-
-
-
-
-
-
-
-		int _nBranch;  // Number of branchings
-		int _nBrCpl;   // Number of couplings with branchings
-
-		std::vector<int> _coupled;  // Encodes coupled functions
-		std::vector<int> _n_branch; // Number of branching for wave/function
-		std::vector<int> _n_cpls;   // Number of coupling for wave/function
-					    // Map of how to treat the nonAnchor couplings in the analytic calculation.
-
-
-
-
 };
 #endif//WAVESET_SETS_WAVES

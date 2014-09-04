@@ -16,9 +16,7 @@ class anchor_t : public waveset {
 		anchor_t();
 #ifdef USE_YAML
 		anchor_t(
-								std::string 						card,
-								std::string 						waves,
-								std::string 						parametrizations);
+								std::string 						card);
 #endif//USE_YAML
 	// EVALUATION METHODS
 		double operator()();
@@ -129,6 +127,8 @@ class anchor_t : public waveset {
 		int 					getParNumber(std::string name);
 		void 					setParLimits(int i, double upper, double lower);
 		std::vector<std::complex<double> > 	get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
+		std::vector<std::complex<double> >	getUnbranchedCouplings(std::vector<std::complex<double> > &cpl, std::vector<std::complex<double> > &bra);
+		std::vector<std::complex<double> >	getAllCouplings(int tbin,std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
 		void 					branchCouplingsToOne();
 
 
@@ -160,6 +160,11 @@ class anchor_t : public waveset {
 		void 					update_min_max_bin();
 		void 					update_definitions();
 
+	// PLOTTING
+		void					write_plots(std::string filename, int tbin);
+		void					write_plots(std::string filename, int tbin, std::vector<double> &paramters);
+		void					write_plots(std::string filename, int tbin,std::vector<std::complex<double> >&cpl,std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
+
 	protected:
 		// PARAMETER NUMBERS
 		int 									_nTot; 			// Total number of parameters
@@ -179,11 +184,9 @@ class anchor_t : public waveset {
 
 		// OTHER MEMBERS
 		bool 									_is_ampl; 		// Enable Amplitunde fitting, needs to be tested.
-		bool 									_useBranch; 		// Switches the usage of branchings on/off (only in the operator() method
+		bool 									_useBranch; 	// Switches the usage of branchings on/off (only in the operator() method
 		int 									_nOut; 			// Print output after _nOut iterations
 		int 									_count;			// Count of calls
-
-
 };
 
 

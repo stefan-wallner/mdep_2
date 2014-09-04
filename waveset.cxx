@@ -33,9 +33,7 @@ waveset::waveset():
 #ifdef USE_YAML
 ///Constructror from YAML files
 waveset::waveset(
-							std::string 						card,
-							std::string 						waves,
-							std::string 						parametrizations):
+							std::string 						card):
 	_nWaves(0),
 	_nFuncs(0),
 	_globalPs(0),
@@ -54,9 +52,10 @@ waveset::waveset(
 	_binning(std::vector<double>(2)){
 
 	setTbinning(std::vector<double>(2,0.));
-
-	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
 	YAML::Node Ycard   = YAML::LoadFile(card);
+	std::string parametrizations = Ycard["parametrization_file"].as<std::string>();
+	std::string waves = Ycard["wave_file"].as<std::string>();
+	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
 	YAML::Node Ywaves  = YAML::LoadFile(waves);
 	loadGlobalPhaseSpace(Ycard);
 	std::map<std::string,int> fMap = loadFunctions(Ycard, Yparam);
@@ -64,6 +63,17 @@ waveset::waveset(
 	loadFtw(Ycard, fMap);
 	loadBranchings(Ycard);
 	loadBinnings(Ycard);
+	if(_has_isobars){
+		std::string binning_file;
+		if (Ycard["isobar_binnings"]){
+			binning_file = Ycard["isobar_binnings"].as<std::string>();
+		}else{
+			std::cerr<<"Error: No isobar binnings given"<<std::endl;
+		};
+		std::cout<<"open: "<<binning_file<<std::endl;
+		YAML::Node Yisob = YAML::LoadFile(binning_file);
+		loadIsoBinnings(Ycard,Yisob);
+	};
 };
 #endif//USE_YAML
 //########################################################################################################################################################
@@ -330,7 +340,7 @@ void waveset::add_func_to_wave(
 			new_relations_iso.push_back(-1);
 		};
 	};
-	if (new_relations.size() ==0){
+	if (0==new_relations.size()){
 		new_relations.push_back(func);
 		new_relations_iso.push_back(-1);
 	};
@@ -365,7 +375,7 @@ void waveset::add_funcs_to_wave(
 			_has_isobars=true;
 		};
 	};
-	if (new_relations.size() ==0){
+	if (0==new_relations.size()){
 		new_relations.push_back(func);
 		new_relations_iso.push_back(func2);
 		_has_isobars=true; // Set falg to indicate isobar parametrization
@@ -396,7 +406,7 @@ void waveset::couple_funcs(
 	if (branch1 == branch2 and branch1 != -1){
 		return;
 	};
-	if (branch1 == -1 and branch2 == -1){
+	if (-1==branch1 and -1==branch2){
 		int last_branch = -1;
 		int nCpl = _coupled.size();
 		for (int i = 0;i<nCpl;i++){
@@ -407,9 +417,9 @@ void waveset::couple_funcs(
 		last_branch++;
 		_coupled[i1] = last_branch;
 		_coupled[i2] = last_branch;
-	}else if(branch1 == -1){
+	}else if(-1==branch1){
 		_coupled[i1] = branch2;
-	}else if(branch2 == -1){
+	}else if(-1==branch2){
 		_coupled[i2] = branch1;
 	}else{
 		std::cerr<<"function["<<i1<<"] and function["<<i2<<"] are already in different branchings"<<std::endl;
@@ -637,19 +647,19 @@ std::map<std::string,int> waveset::loadFunctions(
 			std::string iName = "none";
 			bool isisobar = false;
 			if (waveset["waves"][i]["parametrizations"][0].size() != waveset["waves"][i]["parametrizations"][j].size()){
-				std::cout<<"Error: Isobarred and de-isobarred parametrizations in the same wave"<<std::endl;
+				std::cerr<<"Error: Isobarred and de-isobarred parametrizations in the same wave"<<std::endl;
 			};
-			if (waveset["waves"][i]["parametrizations"][j].size()==0){
+			if (0==waveset["waves"][i]["parametrizations"][j].size()){
 				fName = waveset["waves"][i]["parametrizations"][j].as<std::string>();
 //				std::cout<<fName<<" alone"<<std::endl;
-			}else if(waveset["waves"][i]["parametrizations"][j].size()==2) {
+			}else if(2==waveset["waves"][i]["parametrizations"][j].size()) {
 				isisobar = true;
 				fName = waveset["waves"][i]["parametrizations"][j][0].as<std::string>();
 				iName = waveset["waves"][i]["parametrizations"][j][1].as<std::string>();
 //				std::cout<<iName<<" to "<<fName<<std::endl;
 			};
 			if(param[fName]){
-				if (fMap[fName]==0){
+				if (0==fMap[fName]){
 					fMap[fName]=fCount;
 					int nParam = param[fName]["parametrization"].as<int>();
 					int nPar = getNparsNonConst(nParam);
@@ -693,7 +703,7 @@ std::map<std::string,int> waveset::loadFunctions(
 			};
 			if (isisobar){
 				if(param[iName]){
-					if (fMap[iName]==0){ // Write isobars also in the fMap
+					if (0==fMap[iName]){ // Write isobars also in the fMap
 						fMap[iName]=iCount;
 						int nParam = param[iName]["parametrization"].as<int>();
 						int nPar = getNparsNonConst(nParam);
@@ -756,7 +766,9 @@ bool waveset::loadWaves(
 			std::cerr<<"Error: "<< wName<<" not defined in the wave-definitions file"<<std::endl;
 		};
 		setWaveSpin(i,defs[wName]["spin"].as<int>());
-		setWaveIsobarSpin(i,defs[wName]["isobar_spin"].as<int>());
+		if(defs[wName]["isobar_spin"]){
+			setWaveIsobarSpin(i,defs[wName]["isobar_spin"].as<int>());
+		};
 		double mmin_act = waveset["waves"][i]["mmin"].as<double>();
 		double mmax_act = waveset["waves"][i]["mmax"].as<double>();
 		if (mmin_act<mmin){
@@ -785,12 +797,12 @@ void waveset::loadFtw(
 			std::string fName;
 			std::string iName;
 			bool isisobar = false;
-			if (waveset["waves"][i]["parametrizations"][func].size()==0){
+			if (0==waveset["waves"][i]["parametrizations"][func].size()){
 				fName = waveset["waves"][i]["parametrizations"][func].as<std::string>();
 				int nf = fMap[fName]-1;
 				add_func_to_wave(i,nf);
 //				std::cout<<fName<<" alone"<<std::endl;
-			}else if(waveset["waves"][i]["parametrizations"][func].size()==2) {
+			}else if(2==waveset["waves"][i]["parametrizations"][func].size()) {
 				isisobar = true;
 				fName = waveset["waves"][i]["parametrizations"][func][0].as<std::string>();
 				iName = waveset["waves"][i]["parametrizations"][func][1].as<std::string>();
@@ -823,9 +835,9 @@ void waveset::loadBranchings(
 				int nfunc = waveset["waves"][wave]["parametrizations"].size();
 				for (int func=0;func<nfunc;func++){
 					std::string fnam_d;
-					if (waveset["waves"][wave]["parametrizations"][func].size()==0){
+					if (0==waveset["waves"][wave]["parametrizations"][func].size()){
 						fnam_d = waveset["waves"][wave]["parametrizations"][func].as<std::string>();
-					}else if(waveset["waves"][wave]["parametrizations"][func].size()==2){
+					}else if(2==waveset["waves"][wave]["parametrizations"][func].size()){
 						fnam_d = waveset["waves"][wave]["parametrizations"][func][0].as<std::string>(); // When a coupled function appear with different isobars in one wave, all of them will be "branched"
 					};
 					if (fnam_d == fnam_b and wnam_d == wnam_b){
@@ -868,6 +880,44 @@ void waveset::loadBinnings(
 		setTbinning(tbinning);
 	};
 	update_min_max_bin();
+};
+//########################################################################################################################################################
+///Load isobar binnings from YAML file
+void waveset::loadIsoBinnings(
+							YAML::Node 						&waveset,
+							YAML::Node						&binnings){
+
+	std::map<std::string,int> binnings_map;
+	int nWaves = waveset["waves"].size();
+	int nBinn = 1;// Start with 1 for int maps, to determine, if entry exists
+	for (int i=0;i<nWaves;i++){ // Create the binnigns map
+		std::string wName = waveset["waves"][i]["name"].as<std::string>();
+		int nPar = waveset["waves"][i]["parametrizations"].size();
+		if (nPar>0){
+			int nPer = waveset["waves"][i]["parametrizations"][0].size();
+			if (2==nPer){
+				if(waveset["waves"][i]["isobar_binning"]){
+					std::string binning_name = waveset["waves"][i]["isobar_binning"].as<std::string>();
+					if (0==binnings_map[binning_name]){
+						binnings_map[binning_name] = nBinn;
+						nBinn++;
+						std::vector<double> binning;
+						int binning_size = binnings[binning_name].size();
+						for (int bin;bin<binning_size;bin++){
+							binning.push_back(binnings[binning_name][bin].as<double>());
+						};
+						add_isobar_binning(binning);
+					};
+					setWaveIsobarBinning(i,binnings_map[binning_name]-1);
+				}else{
+					std::cerr<<"Error: De-isobarred wave '"<<wName<<"' does not have an isobar binning"<<std::endl;
+				};
+			};
+		};
+	};
+	
+
+
 };
 #endif//USE_YAML
 //########################################################################################################################################################
@@ -1856,7 +1906,7 @@ void waveset::printParameters(){
 void waveset::open_output(
 							std::string 							name){
 
-	_outStream = new ofstream;
+	_outStream = new std::ofstream;
 	_outStream->open(name.c_str());
 	_write_out = true;
 };

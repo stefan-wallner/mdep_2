@@ -72,6 +72,9 @@ mass_independent_fit:
 - /nfs/mds/user/fhaas/PWA/fits/2008-all-lH-DT0/PHD/best_11tbins/0.448588-0.724294
 - /nfs/mds/user/fhaas/PWA/fits/2008-all-lH-DT0/PHD/best_11tbins/0.724294-1.000000
 min_step_size: 1.0e-05
+isobar_binnings: /nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/isobar_binnings.yaml
+parametrization_file: /nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/parametrizations_13_waves.yaml
+wave_file: /nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/wave_specifications.yaml
 mmax: 2.5
 mmin: 0.5
 standard_phase_space: true
@@ -91,6 +94,7 @@ t_binning:
 waves:
 - mmax: 2.3
   mmin: 0.9
+  isobar_binning: f0
   name: 1-(1++)0+ rho pi S
   parametrizations:
   - a1(1260)
@@ -176,3 +180,11 @@ waves:
   parametrizations:
   - a4(2040)
   - cohBKG(4++)1+_rho_pi_G
+parameters:
+- name: qwqwq
+- name: M_a1(1260)
+  value: 12345.
+- name: G_a1(1260)
+  value: 1221.
+  upper_limit: 12121.
+  lower_limit: 45454.

@@ -16,50 +16,62 @@ double MIN_STEP_SIZE = 0.00001;
 class minimize : public anchor_t{
 	public:
 		minimize();
-#ifdef USE_YAML
-		minimize(std::string card, std::string waves, std::string parametrizations);
-#endif//USE_YAML
-		void setStepSize(std::string name, double par);
 
-		void setParameter(int i, double par);
-		void setParameter(std::string name, double par);
-		void setParameters(std::vector<double> pars);
-		std::string className();
-		std::vector<bool> getReleased();
-		void fixPar(std::string name);
-		void relPar(std::string name);
-		void setStepSize(int i, double step);
-		void setStepSizes(std::vector<double> steps);
-		void relPar(int i);
-		void fixPar(int i);
-		void reload_par_definitions(int mara_peter = -1);
-		bool initialize(std::string s1="Minuit2", std::string s2="Migrad");
-		void initCouplings();
-		void printStatus();
-		double fit();
-		void update_definitions();
-		void setRandomCpl();
-		void setRandomBra();
-		void setRandRange(double range);
-		void finish_setUp();
 #ifdef USE_YAML
-		void loadFitterDefinitions(YAML::Node &waveset);
+		minimize(std::string card);
+#endif//USE_YAML
+	// Fitting routines
+		double 			fit();
+		void 			initCouplings();
+
+	// Setters and getters
+		void 			setParameter(int i, double par);
+		void 			setParameter(std::string name, double par);
+		void 			setParameters(std::vector<double> pars);
+		void 			setStepSize(int i, double step);
+		void 			setStepSize(std::string name, double par);
+		void 			setStepSizes(std::vector<double> steps);
+		void 			setRandRange(double range);
+
+	// Fixing and releasing
+		void 			relPar(int i);
+		void 			fixPar(int i);
+		void 			relPar(std::string name);
+		void 			fixPar(std::string name);
+		std::vector<bool> 	getReleased();
+
+
+	// Print routines
+		std::string 		className();
+		void 			printStatus();
+
+	// Internal handlers
+		void 			update_definitions();
+		void 			reload_par_definitions(int mara_peter = -1);
+		bool 			initialize(std::string s1="Minuit2", std::string s2="Migrad");
+		void 			setRandomCpl();
+		void 			setRandomBra();
+		void 			finish_setUp();
+
+#ifdef USE_YAML	
+		void 			loadFitterDefinitions(YAML::Node &waveset);
 #endif//USE_YAML
 	protected:
-		bool _init; // true, if the minimizer is already initialized
+	// OWN STUFF
+		std::vector<double> 	_best_par; 						// Best paramters
+		double 			_randRange; 						// Range for random paramters (couplings and branchings)
+		double 			_minStepSize;						// Minimal step size
 
-		int _maxFunctionCalls;
-		int _maxIterations;
+	// MINIMIZER STUFF
+		ROOT::Math::Minimizer* 	_min;							// ROOT Minimizer
+		ROOT::Math::Functor 	_f;							// ROOT Functor object
+		bool 			_init; 							// Flag for the initialization of the minimizer
+		int 			_maxFunctionCalls;					// Miminizer definition
+		int 			_maxIterations;						// Miminizer definition
+		double 			_tolerance;						// Miminizer definition
+		std::vector<double> 	_step_sizes;						// Step Size for each paramter	
+		std::vector<bool> 	_released; 						// Status of each paramters
 
-		double _tolerance;
-
-		std::vector<double> _best_par; // Best paramters
-		ROOT::Math::Minimizer* _min;
-		ROOT::Math::Functor _f;
-		double _minStepSize; // Minimal step size
-		double _randRange; 		// Range for random paramters (couplings and branchings)
-		std::vector<double> _step_sizes;
-		std::vector<bool> _released; // status of each paramters
 
 };
 #endif//MINIMIZE_MINI_MICE
