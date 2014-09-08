@@ -25,10 +25,9 @@ minimize::minimize():
 	_maxIterations(100000),
 	_tolerance(1.),
 	_minStepSize(0.0001){};
+#ifdef USE_YAML
 //########################################################################################################################################################
 ///Constructor from YAML file
-#ifdef USE_YAML
-///Constructror from YAML files
 minimize::minimize(
 							std::string 					card):
 	anchor_t(card), 
@@ -132,6 +131,20 @@ void minimize::initCouplings(){
 	};
 	std::cout<<"Total: "<<(*this)(_min->X())<<std::endl;
 	std::cout<<"Couplings and branchings found"<<std::endl;
+	std::cout<<"Setting paramter limits"<<std::endl;
+	for (int i=0;i<_nCpl;i++){
+		double val = max(_parameters[2*i]*_parameters[2*i],_parameters[2*i+1]*_parameters[2*i+1]);
+		val = pow(val,.5);
+		setParLimits(2*i  ,3*val,-3*val);
+		setParLimits(2*i+1,3*val,-3*val);
+	};
+	int par_bef = 2*_nCpl +_nPar;
+	for (int i=0;i<_nBra;i++){
+		double val = max(_parameters[par_bef+2*i]*_parameters[par_bef+2*i],_parameters[par_bef+2*i+1]*_parameters[par_bef+2*i+1]);
+		val = pow(val,.5);
+		setParLimits(par_bef+2*i  ,3*val,-3*val);
+		setParLimits(par_bef+2*i+1,3*val,-3*val);
+	};
 };
 //########################################################################################################################################################
 ///Call lower 'setParamter' and sets internal definitions
@@ -377,7 +390,6 @@ bool minimize::initialize(std::string s1, std::string s2){
 	_min->SetMaxFunctionCalls(_maxFunctionCalls);
 	_min->SetMaxIterations(_maxIterations);
 	_min->SetTolerance(_tolerance);
-	// _f=ROOT::Math::Functor(fcn_pointer,_nTot);
 	_f=ROOT::Math::Functor((*this),_nTot);
 	_min->SetFunction(_f);
 	_init = true;
@@ -451,6 +463,13 @@ void minimize::loadFitterDefinitions(
 		};
 	};
 };
-
 #endif//USE_YAML
+//########################################################################################################################################################
+///Cube required by the MultiNest package
+void minimize::cube(					double						*in){
+	
+	for (int i=0;i<_nTot;i++){
+		in[i] = (1-in[i])*_lower_parameter_limits[i]+ in[i]*_upper_parameter_limits[i];
+	};
+};
 //########################################################################################################################################################

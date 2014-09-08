@@ -48,8 +48,8 @@ def writeFit(	name,			#-explenatory
 				coma_line.append(coma[i][j])
 			coma_red.append(coma_line)
 		reduced_coma.append(coma_red)
-	dataname = name+'_data.dat'
-	comaname = name+'_coma.dat'
+	dataname = './data_files/'+name+'_data.dat'
+	comaname = './data_files/'+name+'_coma.dat'
 	datFile = open(dataname,'w')
 	comaFile= open(comaname,'w')
 	for bin in range(len(reduced_dat)):
@@ -141,8 +141,8 @@ for path in apath:
 	config["coma_files"].append(path[1])
 config["data_files_created"]=str(datetime.datetime.now())
 config_out =  yaml.dump(config, default_flow_style=False)
-
-out=open(config_file,'w')
+out_card_name = os.path.splitext(config_file)[0]+'_'+str(datetime.datetime.now())+os.path.splitext(config_file)[1]
+out=open(out_card_name.replace(' ','_'),'w')
 out.write(config_out)
 out.close()
 

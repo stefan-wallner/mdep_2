@@ -20,6 +20,7 @@ class minimize : public anchor_t{
 #ifdef USE_YAML
 		minimize(std::string card);
 #endif//USE_YAML
+
 	// Fitting routines
 		double 			fit();
 		void 			initCouplings();
@@ -53,6 +54,9 @@ class minimize : public anchor_t{
 		void 			setRandomBra();
 		void 			finish_setUp();
 
+	// MULTINEST
+		void			cube(double* in);
+
 #ifdef USE_YAML	
 		void 			loadFitterDefinitions(YAML::Node &waveset);
 #endif//USE_YAML
@@ -71,7 +75,6 @@ class minimize : public anchor_t{
 		double 			_tolerance;						// Miminizer definition
 		std::vector<double> 	_step_sizes;						// Step Size for each paramter	
 		std::vector<bool> 	_released; 						// Status of each paramters
-
 
 };
 #endif//MINIMIZE_MINI_MICE

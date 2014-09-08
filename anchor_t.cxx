@@ -960,11 +960,11 @@ void anchor_t::setParLimits(
 							double 						upper,
 							double 						lower){
 
-	if(_lower_parameter_limits.size() != _parameters.size()){
-		_lower_parameter_limits=std::vector<double>(_parameters.size(),1.);
+	if(_lower_parameter_limits.size() != _nTot){
+		_lower_parameter_limits=std::vector<double>(_nTot,1.);
 	};
-	if(_upper_parameter_limits.size() != _parameters.size()){
-		_upper_parameter_limits=std::vector<double>(_parameters.size(),0.);
+	if(_upper_parameter_limits.size() != _nTot){
+		_upper_parameter_limits=std::vector<double>(_nTot,0.);
 	};
 	_upper_parameter_limits[par]=upper;
 	_lower_parameter_limits[par]=lower;
@@ -1351,6 +1351,7 @@ bool anchor_t::loadDataComa(
 bool anchor_t::loadParameterValues(
 							YAML::Node					&waveset,
 							YAML::Node					&param){
+
 	std::map<std::string,int> fMap;
 	int fCount = 1; // Starts as one, since map[nonExistingKey] = 0 -> use this to determine, whether a function exists.
 	int iCount = 1;
@@ -1412,7 +1413,6 @@ bool anchor_t::loadParameterValues(
 					};
 				}else{
 					ookk = false;
-					std::cerr << "Error: '"<<iName<<"' not defined in parametrization file, no values set"<<std::endl;
 				};
 			};
 		};
@@ -1543,7 +1543,7 @@ void anchor_t::write_plots(
 	};
 	std::ofstream write_out;
 	write_out.open(filename.c_str());
-	std::cout<<"Chi2 for the used paramters is: "<<EvalTbin(tbin,cpl_all,par,iso)<<std::endl;
+	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,cpl_all,par,iso)<<std::endl;
 	for (int bin=0;bin<_nBins;bin++){
 		double mass = (_binning[bin]+_binning[bin+1])/2.;
 		std::vector<std::complex<double> > amplitudes = amps(mass,cpl_all,par,iso_eval);

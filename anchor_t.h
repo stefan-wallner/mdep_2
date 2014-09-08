@@ -184,7 +184,7 @@ class anchor_t : public waveset {
 
 		// OTHER MEMBERS
 		bool 									_is_ampl; 		// Enable Amplitunde fitting, needs to be tested.
-		bool 									_useBranch; 	// Switches the usage of branchings on/off (only in the operator() method
+		bool 									_useBranch; 		// Switches the usage of branchings on/off (only in the operator() method
 		int 									_nOut; 			// Print output after _nOut iterations
 		int 									_count;			// Count of calls
 };

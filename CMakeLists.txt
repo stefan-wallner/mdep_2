@@ -4,6 +4,7 @@ project (Mdep)
 
 set(use_auto_diff ON) 
 set(use_YAML ON)
+set(use_multiNest ON)
 
 set(CMAKE_MODULE_PATH  ${PROJECT_SOURCE_DIR} )
 set( INCLUDE_DIRS
@@ -12,6 +13,8 @@ set( INCLUDE_DIRS
     /nfs/mnemosyne/sys/slc6/sw/root/x86-64/5.34.20/root/include
     /nfs/hicran/project/compass/analysis/fkrinner/yaml/include
 ) 
+#### Switch on single modules
+
 if( use_YAML )
   add_definitions( -DUSE_YAML )
   set( INCLUDE_DIRS
@@ -29,6 +32,14 @@ if( use_auto_diff )
   )
 endif()
 
+if( use_multiNest )
+  set( INCLUDE_DIRS
+      ${INCLUDE_DIRS}
+      /nfs/hicran/project/compass/analysis/fkrinner/MultiNest-master/include
+  )
+endif()
+
+
 include_directories(
      ${INCLUDE_DIRS}	
 )
@@ -41,6 +52,11 @@ add_library(minimize SHARED minimize.cxx)
 #set execuatbles
 add_executable(fitmd.exe fitmd.cc)
 add_executable(de_isobarring test_de-isobar.cc)
+
+if ( use_multiNest )
+  add_executable(multinest  multinest.cc)
+endif()
+
 
 #link own libraries
 target_link_libraries(anchor_t waveset)
@@ -63,4 +79,9 @@ if ( use_auto_diff )
   target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(anchor_t /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
+endif()
+
+if ( use_multiNest )
+  target_link_libraries(multinest  /nfs/hicran/project/compass/analysis/fkrinner/MultiNest-master/lib/libmultinest.so )
+  target_link_libraries(multinest minimize)
 endif()
