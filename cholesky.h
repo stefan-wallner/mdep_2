@@ -2,9 +2,11 @@
 #define CHOLESKY_SUPER_DUPER
 #include<vector>
 #include<math.h>
+#include<iostream>
 
 // At the moment no error handling is included, 
 // The sizes of the matrices, as well as their symmetricity and their positive definiteness have to be ensured
+// Also seems to work for complex matrices 
 
 namespace cholesky{
 	template<typename xdouble>
@@ -112,9 +114,6 @@ namespace cholesky{
 
 	template<typename xdouble> // Solves A*x=B assuming A is symmetrix and positive definite // This destroys A!!!
 	std::vector<xdouble> cholesky_solve(std::vector<std::vector<xdouble> > &A, std::vector<xdouble> &b){
-		if (not is_symmetric(A)){
-			std::cout<<"Try to fool me, bro?"<<std::endl;
-		};
 		std::vector<std::vector<xdouble> > G = cholesky_decompose(A);
 		std::vector<std::vector<xdouble> > GT= transpose(G);
 		std::vector<xdouble> y = lower_diag_solve(G,b);

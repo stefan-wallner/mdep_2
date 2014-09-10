@@ -1344,6 +1344,11 @@ bool anchor_t::loadDataComa(
 		std::cerr<<"Error: Wrong number of files, no _data or _coma loaded"<<std::endl;
 		return false;
 	};
+	if (waveset["conjugate_fit_result"]){
+		if (waveset["conjugate_fit_result"].as<bool>()){
+			conjugate();
+		};
+	};
 	return true;
 };
 //########################################################################################################################################################
