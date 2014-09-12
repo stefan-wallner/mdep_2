@@ -361,120 +361,9 @@ template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, std:
 		└───────────────────────────────────────┘
 */
 //########################################################################################################################################################
-///Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C
-template<typename xdouble>
-AandB<xdouble> anchor_t::get_AB(
-							int								tbin,
-							std::vector<std::complex<xdouble> > 				&anchor_cpl,
-							std::vector<xdouble> 						&par){
-
-	// Maybe this is obsolete, since the thing subborting the de-isobarred case should do the same and not be significantly slower. Nevertheless, keep it at the moment
-	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
-	int nNon = _nFtw - nCplAnc;
-	AandB<xdouble> AB(2*nNon);
-	std::vector<xdouble> lines = std::vector<xdouble>(2*_nWaves-2,0.);
-	for(int bin=_minBin;bin<_maxBin;bin++){
-		double m = (_binning[bin]+_binning[bin+1])/2;
-		std::vector<std::complex<xdouble> > func = funcs(m,par);
-
-		std::vector<double> phase = phase_space(m);
-		std::complex<xdouble> ampAnc = std::complex<xdouble>(0.,0.);
-		for(int i=0;i<nCplAnc;i++){
-			ampAnc+= anchor_cpl[i]*func[_funcs_to_waves[i]]*phase[0];
-		};
-		if(_is_ampl){ // Divide ampAnc by |ampAnc| to get the amplitude with phase 0. // Need to be tested
-			ampAnc/=pow(std::norm(ampAnc),.5);
-		};
-		xdouble RR = ampAnc.real();
-		xdouble II = ampAnc.imag();
-		for (int i =0;i<2*_nWaves-2;i++){
-			xdouble val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
-			for (int j=1;j<2*_nWaves-1;j++){
-				val+=-_data[tbin][bin][j]*_coma[tbin][bin][i+1][j];
-			};
-			lines[i]=val;
-		};
-		xdouble intAnc = RR*RR+II*II;
-		int wave1 = 1;	// Start with 1, leave anchor wave out
-		int up1 = _borders_waves[1];
-		for (unsigned int nf1 = nCplAnc;nf1<_nFtw;nf1++){
-			if (nf1==up1){
-				wave1+=1;
-				up1 = _borders_waves[wave1];
-			};
-			int f1 = _funcs_to_waves[nf1];
-			int ind1=nf1-nCplAnc;
-			int wave2=1;
-			int up2=_borders_waves[1];
-
-			std::complex<xdouble> AB1 = ampAnc * conj(func[f1]) * phase[wave1];
-
-			xdouble r1 = func[f1].real()*phase[wave1];
-			xdouble i1 = func[f1].imag()*phase[wave1];
-			//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-
-//			xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
-//			xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
-//			xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
-//			xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
-
-			AB.B[2*ind1  ] += AB1.real() * lines[2*wave1-2] * 2;
-			AB.B[2*ind1  ] += AB1.imag() * lines[2*wave1-1] * 2;
-
-			AB.B[2*ind1+1] +=-AB1.real() * lines[2*wave1-1] * 2;
-			AB.B[2*ind1+1] += AB1.imag() * lines[2*wave1-2] * 2;
-
-			for (unsigned int nf2= nCplAnc;nf2<_nFtw;nf2++){
-				if(nf2==up2){
-					wave2+=1;
-					up2 = _borders_waves[wave2];
-				};
-				int f2 = _funcs_to_waves[nf2];
-				int ind2=nf2-nCplAnc;
-
-
-				std::complex<xdouble> AB2 = ampAnc * conj(func[f2]) * phase[wave2];
-
-				xdouble r2 = func[f2].real()*phase[wave2];
-				xdouble i2 = func[f2].imag()*phase[wave2];
-				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-//				xdouble RR2 = RR*r2+II*i2;
-//				xdouble RI2 =-RR*i2-II*r2;
-//				xdouble IR2 = II*r2-RR*i2;
-//				xdouble II2 = II*i2-RR*r2;
-//				std::cout<<"_coma[tbin][bin][2*wave1-1][2*wave2-1]: "<<_coma[tbin][bin][2*wave1-1][2*wave2-1]<<std::endl;
-//				std::cout<< "AB1.real(): "<<AB1.real()<<std::endl;
-//				std::cout<< "AB2.real(): "<<AB2.real()<<std::endl;
-
-				AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
-				AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
-				AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
-				AB.A[2*ind1  ][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
-
-				AB.A[2*ind1  ][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
-				AB.A[2*ind1  ][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
-				AB.A[2*ind1  ][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
-				AB.A[2*ind1  ][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
-
-				AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.real();
-				AB.A[2*ind1+1][2*ind2  ]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.imag();
-				AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.real();
-				AB.A[2*ind1+1][2*ind2  ]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.imag();
-
-				AB.A[2*ind1+1][2*ind2+1]+= AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2  ] * AB2.real();
-				AB.A[2*ind1+1][2*ind2+1]+=-AB1.real() * _coma[tbin][bin][2*wave1  ][2*wave2-1] * AB2.imag();
-				AB.A[2*ind1+1][2*ind2+1]+=-AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2  ] * AB2.real();
-				AB.A[2*ind1+1][2*ind2+1]+= AB1.imag() * _coma[tbin][bin][2*wave1-1][2*wave2-1] * AB2.imag();
-			};
-		};
-	};
-	return AB;
-};
-template AandB<double> anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par);
-//########################################################################################################################################################
 ///Gets the coefficients A and B for Chi2 = x^T*A*x + B*x + C, works with isobars
 template<typename xdouble>
-AandB<xdouble> anchor_t::get_AB_iso(
+AandB<xdouble> anchor_t::get_AB(
 							int 								tbin,
 							std::vector<std::complex<xdouble> > 				&anchor_cpl,
 							std::vector<xdouble> 						&par,
@@ -619,7 +508,7 @@ AandB<xdouble> anchor_t::get_AB_iso(
 	};
 	return AB;
 };
-template AandB<double> anchor_t::get_AB_iso(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template AandB<double> anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
 //########################################################################################################################################################
 ///Gets the best couplings without branchings
 template<typename xdouble>
@@ -634,12 +523,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(
 	for (int i=0; i<nCplAnc; i++){
 		cpl[i] = anchor_cpl[i];
 	};
-	AandB<xdouble>AB(0);
-	if (_has_isobars){
-		AB = get_AB_iso(tbin,anchor_cpl,par,iso_par);
-	}else{
-		AB = get_AB(tbin,anchor_cpl,par);
-	};
+	AandB<xdouble>AB = get_AB(tbin,anchor_cpl,par,iso_par);
 
 	std::vector<xdouble> D = cholesky::cholesky_solve(AB.A,AB.B);
 
@@ -689,12 +573,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 				cplAncBr[i] = anchor_cpl[ncpl_act] * branch[nbranch_act];
 			};
 		};
-		AandB<xdouble>AB(0); // Here probably the if can be deleted and everything be done with 'get_AB_iso(...)' since it produces the same result, nevertheless, keep it atm
-		if (_has_isobars){
-			AB = get_AB_iso(tbin,cplAncBr,par,iso_par);
-		}else{
-			AB = get_AB(tbin,cplAncBr,par);
-		};
+		AandB<xdouble>AB = get_AB(tbin,cplAncBr,par,iso_par);
 		AandB<xdouble> ABprime(2*(_nBrCpl - _nBrCplAnc));
 		for (int i =0;i<nNon;i++){ // Reshuffle the coefficients
 			int i_tot = i+nCplAnc;
@@ -802,8 +681,7 @@ template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, std
 template adouble anchor_t::EvalAutoCpl(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
 template adouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<adouble> >&bra, std::vector<std::complex<adouble> >&cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
 template adouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template AandB<adouble> anchor_t::get_AB(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par);
-template AandB<adouble> anchor_t::get_AB_iso(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
+template AandB<adouble> anchor_t::get_AB(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<adouble> > &branch, std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
 //#######################################################################################################################################################

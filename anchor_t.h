@@ -86,13 +86,7 @@ class anchor_t : public waveset {
 
 	// AUTO CPL METHODS
 		template<typename xdouble>
-		AandB<xdouble> get_AB(
-								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&anchor_cpl,
-								std::vector<xdouble> 					&par);
-
-		template<typename xdouble>
-		AandB<xdouble> get_AB_iso( // For de-isobarred
+		AandB<xdouble> get_AB( // For de-isobarred
 								int 							tbin,
 								std::vector<std::complex<xdouble> > 			&anchor_cpl,
 								std::vector<xdouble> 					&par,

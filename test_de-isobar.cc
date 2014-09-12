@@ -112,7 +112,7 @@ int main(){
 	std::vector<std::complex<double> > startcpl(1,std::complex<double>(1.,0));
 
 	std::cout<<"beforeGET"<<std::endl;
-	AandB<double> AB = Chi2.get_AB_iso(0,startcpl,par, isopar);
+	AandB<double> AB = Chi2.get_AB(0,startcpl,par, isopar);
 	std::cout<<"afterGET"<<std::endl;
 	print_matrix(AB.A);
 	std::vector<double> inver = cholesky::cholesky_solve(AB.A,AB.B);
