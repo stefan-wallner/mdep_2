@@ -116,9 +116,12 @@ def write_fit(name,wave_names,lower_lims,upper_lims,indep_fit):
 	comaFile= open(comaname,'w')
 	for bin in range(len(datas)):
 		data = datas[bin]
+#		print "len(data)",len(data)
 		for ptt in data:
 			dataFile.write(str(ptt)+' ')
 		coma = comas[bin]
+#		print "len(coma)",len(coma)
+#		print "len(coma[0])",len(coma[0])
 		for line in coma:
 			for ptt in line:
 				comaFile.write(str(ptt)+' ')
@@ -157,8 +160,8 @@ def process_config(config_file, date_time_flag=False):
 					raise ValueError("Lower mass limit smaller than anchor mass limit")
 				if mmax > Mmax:
 					raise ValueError("Upper mass limit bigger than anchor mass limit")
-				upper_lims.append(mmin)
-				lower_lims.append(mmax)
+				upper_lims.append(mmax)
+				lower_lims.append(mmin)
 		if not isdeis:
 			wave_names.append(wave["name"])
 			mmin = wave["mmin"]
@@ -191,7 +194,7 @@ def process_config(config_file, date_time_flag=False):
 		config["coma_files"].append(path[1])
 	config["data_files_created"]=str(datetime.datetime.now())
 	if date_time_flag: # Make the writing a bit more complicated that just yaml.dump(...), to keep comments in the old file.
-		out_card_name = (os.path.splitext(config_file)[0]+'_'+str(datetime.datetime.now())+os.path.splitext(config_file)[1]).replace(' ','_')
+		out_card_name = (os.path.splitext(config_file)[0]+'_'+str(datetime.datetime.now())+os.path.splitext(config_file)[1]).replace(' ','_').replace(':','.')
 		shutil.copyfile(os.path.abspath(config_file),"/"+"/".join(os.path.abspath(config_file).split('/')[:-1])+'/'+out_card_name)
 	else:
 		out_card_name = config_file

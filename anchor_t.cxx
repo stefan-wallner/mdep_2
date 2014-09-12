@@ -43,8 +43,12 @@ anchor_t::anchor_t(
 	setTbinning(_t_binning);
 	update_definitions();
 	update_min_max_bin();
+	std::cout<<"Load anchor_t from YAML file"<<std::endl;
 	loadDataComa(Ycard);
+	std::cout<<"Data and coma loaded"<<std::endl;
 	loadParameterValues(Ycard, Yparam);
+	std::cout<<"Paramter values loaded"<<std::endl;
+	std::cout<<"anchor_t loaded"<<std::endl;
 };
 #endif//USE_YAML
 //########################################################################################################################################################
@@ -213,7 +217,6 @@ xdouble anchor_t::EvalAutoCplBranch(
 				actCpl[i] = cpl[i+tbin*nNon];
 			};
 			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par,iso_par);
-		//	print_vector(bestcpl);
 			std::vector<std::complex<xdouble> > best_cpl_std = std::vector<std::complex<xdouble> >(_nFtw);
 			for (int i=0;i<_nFtw;i++){
 				if(-1==_n_branch[i]){
@@ -410,10 +413,10 @@ AandB<xdouble> anchor_t::get_AB(
 			xdouble i1 = func[f1].imag()*phase[wave1];
 			//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
 
-			xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
-			xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
-			xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
-			xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
+//			xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
+//			xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
+//			xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
+//			xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
 
 			AB.B[2*ind1  ] += AB1.real() * lines[2*wave1-2] * 2;
 			AB.B[2*ind1  ] += AB1.imag() * lines[2*wave1-1] * 2;
@@ -435,10 +438,10 @@ AandB<xdouble> anchor_t::get_AB(
 				xdouble r2 = func[f2].real()*phase[wave2];
 				xdouble i2 = func[f2].imag()*phase[wave2];
 				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-				xdouble RR2 = RR*r2+II*i2;
-				xdouble RI2 =-RR*i2-II*r2;
-				xdouble IR2 = II*r2-RR*i2;
-				xdouble II2 = II*i2-RR*r2;
+//				xdouble RR2 = RR*r2+II*i2;
+//				xdouble RI2 =-RR*i2-II*r2;
+//				xdouble IR2 = II*r2-RR*i2;
+//				xdouble II2 = II*i2-RR*r2;
 //				std::cout<<"_coma[tbin][bin][2*wave1-1][2*wave2-1]: "<<_coma[tbin][bin][2*wave1-1][2*wave2-1]<<std::endl;
 //				std::cout<< "AB1.real(): "<<AB1.real()<<std::endl;
 //				std::cout<< "AB2.real(): "<<AB2.real()<<std::endl;
@@ -477,6 +480,8 @@ AandB<xdouble> anchor_t::get_AB_iso(
 							std::vector<xdouble> 						&par,
 							std::vector<xdouble> 						&iso_par){
 
+
+
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
 	std::vector<std::vector<std::complex<xdouble> > > iso_eval  =  iso_funcs(iso_par);					//// ><>< Maybe just give pointer to already evaluated functions to save time???
 	int nNon = _nFtw - nCplAnc;
@@ -494,6 +499,9 @@ AandB<xdouble> anchor_t::get_AB_iso(
 		if(_is_ampl){ // Divide ampAnc by |ampAnc| to get the amplitude with phase 0. // Need to be tested
 			ampAnc/=pow(std::norm(ampAnc),.5);
 		};
+		if(ampAnc == std::complex<xdouble>(0.,0.)){
+			continue;
+		};
 		xdouble RR = ampAnc.real();
 		xdouble II = ampAnc.imag();
 		for (int i =0;i<2*_nPoints-2;i++){ 										//// >>>>  _nPoints
@@ -503,7 +511,6 @@ AandB<xdouble> anchor_t::get_AB_iso(
 			};
 			lines[i]=val;
 		};
-		xdouble intAnc = RR*RR+II*II;
 		int wave1 = 1;	// Start with 1, leave anchor wave out								//// |||| For de-isobarred, this stays, because anchor wave must be isobarred
 		int up1 = _borders_waves[1];
 		for (unsigned int nf1 = nCplAnc;nf1<_nFtw;nf1++){
@@ -517,31 +524,20 @@ AandB<xdouble> anchor_t::get_AB_iso(
 			int ind1=nf1-nCplAnc;
 			int wave_start1 = _point_borders_wave[wave1-1];								//// >>>> To calculate the _data and _coma indices
 
-			xdouble r1;
-			xdouble i1;
-
-
 			for (int i_iso_1=0;i_iso_1<iso_nBin1;i_iso_1++){								//// >>>> Here loop ofer isobar bins, if necessary (i_iso_1)(_wave_binning_pts[wave1)
 				std::complex<xdouble> AB1;
 				if (iso_f1 == -1){
 					AB1 = ampAnc * conj(func[f1]) * phase[wave1];
-					r1 = func[f1].real()*phase[wave1];
-					i1 = func[f1].imag()*phase[wave1];
 				}else{
 					AB1 = ampAnc * conj(func[f1]*iso_eval[iso_f1][i_iso_1]) * phase[wave1];				//// >>>> Here take isobar function evaluation
-					r1 = (func[f1]*iso_eval[iso_f1][i_iso_1]).real()* phase[wave1];					//// >>>> Here take isobar function evaluation
-					i1 = (func[f1]*iso_eval[iso_f1][i_iso_1]).imag()* phase[wave1];					//// >>>> Here take isobar function evaluation
 				};
-
+				if (AB1 == std::complex<xdouble>(0.,0.)){
+					continue;
+				};
 				int point1 = wave_start1 + i_iso_1;	// Position of data and coma points
 				int wave2=1;
 				int up2=_borders_waves[1];
 				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-
-				xdouble RR1 = RR*r1+II*i1; // = Coefficient of the real part of the coupling 1 in the real part of wave one
-				xdouble RI1 =-RR*i1-II*r1; // = Coefficient of the imag part of the coupling 1 in the real part of wave one
-				xdouble IR1 = II*r1-RR*i1; // = Coefficient of the real part of the coupling 1 in the imag part of wave one
-				xdouble II1 = II*i1-RR*r1; // = Coefficient of the imag part of the coupling 1 in the imag part of wave one
 
 				AB.B[2*ind1  ] += AB1.real() * lines[2*point1-2] * 2;							//// >>>> now is Point
 				AB.B[2*ind1  ] += AB1.imag() * lines[2*point1-1] * 2;							//// >>>> now is Point
@@ -563,25 +559,16 @@ AandB<xdouble> anchor_t::get_AB_iso(
 
 						int point2 = wave_start2+i_iso_2;
 						std::complex<xdouble> AB2;
-						xdouble r2;
-						xdouble i2;
-				if (iso_f2 == -1){
-					AB2 = ampAnc * conj(func[f2]) * phase[wave2];
-					r2 = func[f2].real()*phase[wave2];
-					i2 = func[f2].imag()*phase[wave2];
-				}else{
-					AB2 = ampAnc * conj(func[f2]*iso_eval[iso_f2][i_iso_2]) * phase[wave2];				//// >>>> Here take isobar function evaluation
-					r2 = (func[f2]*iso_eval[iso_f2][i_iso_2]).real()* phase[wave2];					//// >>>> Here take isobar function evaluation
-					i2 = (func[f2]*iso_eval[iso_f2][i_iso_2]).imag()* phase[wave2];					//// >>>> Here take isobar function evaluation
-				};
+//						xdouble r2;
+//						xdouble i2;
+						if (iso_f2 == -1){
+							AB2 = ampAnc * conj(func[f2]) * phase[wave2];
+						}else{
+							AB2 = ampAnc * conj(func[f2]*iso_eval[iso_f2][i_iso_2]) * phase[wave2];				//// >>>> Here take isobar function evaluation
+						};
+				
+
 						//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
-						xdouble RR2 = RR*r2+II*i2;
-						xdouble RI2 =-RR*i2-II*r2;
-						xdouble IR2 = II*r2-RR*i2;
-						xdouble II2 = II*i2-RR*r2;
-		//				std::cout<<"_coma[tbin][bin][2*wave1-1][2*wave2-1]: "<<_coma[tbin][bin][2*wave1-1][2*wave2-1]<<std::endl;
-		//				std::cout<< "AB1.real(): "<<AB1.real()<<std::endl;
-		//				std::cout<< "AB2.real(): "<<AB2.real()<<std::endl;
 
 						AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*point1-1][2*point2-1] * AB2.real();	//// >>>> are points1/2 now
 						AB.A[2*ind1  ][2*ind2  ]+= AB1.real() * _coma[tbin][bin][2*point1-1][2*point2  ] * AB2.imag();	//// >>>> are points1/2 now
@@ -1173,7 +1160,7 @@ void anchor_t::loadData(
 		};
 	};
 	if (_nBins != _data[tbin].size()){
-		std::cout << "Warning: _nBins != _data.size()"<<std::endl;
+		std::cout << "Warning: _nBins="<<_nBins<<" != _data.size()="<<_data[tbin].size()<<std::endl;
 	}else{
 		std::cout << "File delivered the right size for _data"<<std::endl;
 	};
@@ -1202,7 +1189,7 @@ void anchor_t::loadComa(
 		};
 	};
 	if (_nBins != _coma[tbin].size()){
-		std::cout << "Warning: _nBins != _coma.size()" << std::endl;
+		std::cout << "Warning: _nBins="<<_nBins<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
 	}else{
 		std::cout<< "File delivered the right size for _coma"<<std::endl;
 	};
@@ -1406,12 +1393,14 @@ bool anchor_t::loadParameterValues(
 						iCount++;
 						int nPar =  param[iName]["parameters"].size();
 						for(int par=0;par<nPar;par++){
+std::cout<<"do i get my error here?"<<std::endl;
 							double value = param[iName]["parameters"][par]["value"].as<double>();
-							if(param[fName]["parameters"][par]["upper_limit"] and param[fName]["parameters"][par]["lower_limit"]){
+							if(param[iName]["parameters"][par]["upper_limit"] and param[iName]["parameters"][par]["lower_limit"]){
 								double upper = param[iName]["parameters"][par]["upper_limit"].as<double>();
 								double lower = param[iName]["parameters"][par]["lower_limit"].as<double>();
 								setParLimits(2*_nCpl+_nPar+2*_nBra+ipCount,upper,lower);
 							};
+std::cout<<"no!"<<std::endl;
 							setParameter(2*_nCpl+_nPar+2*_nBra+ipCount,value);
 							ipCount++;
 						};

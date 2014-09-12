@@ -131,7 +131,7 @@ void minimize::initCouplings(){
 	};
 	std::cout<<"Total: "<<(*this)(_min->X())<<std::endl;
 	std::cout<<"Couplings and branchings found"<<std::endl;
-	std::cout<<"Setting paramter limits"<<std::endl;
+	std::cout<<"Setting automatic limits for couplings and branchings"<<std::endl;
 	for (int i=0;i<_nCpl;i++){
 		double val = max(_parameters[2*i]*_parameters[2*i],_parameters[2*i+1]*_parameters[2*i+1]);
 		val = pow(val,.5);

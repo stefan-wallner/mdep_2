@@ -57,12 +57,21 @@ waveset::waveset(
 	std::string waves = Ycard["wave_file"].as<std::string>();
 	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
 	YAML::Node Ywaves  = YAML::LoadFile(waves);
+	std::cout<<"Take parametrizations from: "<<parametrizations<<std::endl;
+	std::cout<<"Take wave-definitions from: "<<waves<<std::endl;
+	std::cout<<"Initialize waveset from YAML file: "<<card<<std::endl;
 	loadGlobalPhaseSpace(Ycard);
+	std::cout<<"Phase space loaded"<<std::endl;
 	std::map<std::string,int> fMap = loadFunctions(Ycard, Yparam);
+	std::cout<<"Functions loaded"<<std::endl;
 	loadWaves(Ycard, Ywaves);
+	std::cout<<"Waves loaded"<<std::endl;
 	loadFtw(Ycard, fMap);
+	std::cout<<"Parametrizations set"<<std::endl;
 	loadBranchings(Ycard);
+	std::cout<<"Branchings set"<<std::endl;
 	loadBinnings(Ycard);
+	std::cout<<"Binning set"<<std::endl;
 	if(_has_isobars){
 		std::string binning_file;
 		if (Ycard["isobar_binnings"]){
@@ -73,7 +82,9 @@ waveset::waveset(
 		std::cout<<"open: "<<binning_file<<std::endl;
 		YAML::Node Yisob = YAML::LoadFile(binning_file);
 		loadIsoBinnings(Ycard,Yisob);
+		std::cout<<"Isobar binnings set"<<std::endl;
 	};
+	std::cout<<"waveset initialized from YAML file"<<std::endl;
 };
 #endif//USE_YAML
 //########################################################################################################################################################
@@ -705,7 +716,9 @@ std::map<std::string,int> waveset::loadFunctions(
 				if(param[iName]){
 					if (0==fMap[iName]){ // Write isobars also in the fMap
 						fMap[iName]=iCount;
+std::cout<<"do i get my error here? iName:"<<iName<<std::endl;
 						int nParam = param[iName]["parametrization"].as<int>();
+std::cout<<"no!"<<std::endl;
 						int nPar = getNparsNonConst(nParam);
 						int nCon = getNpars(nParam)-getNparsNonConst(nParam);
 						if (param[iName]["t_dependent"]){
@@ -903,7 +916,7 @@ void waveset::loadIsoBinnings(
 						nBinn++;
 						std::vector<double> binning;
 						int binning_size = binnings[binning_name].size();
-						for (int bin;bin<binning_size;bin++){
+						for (int bin=0;bin<binning_size;bin++){
 							binning.push_back(binnings[binning_name][bin].as<double>());
 						};
 						add_isobar_binning(binning);
@@ -915,9 +928,7 @@ void waveset::loadIsoBinnings(
 			};
 		};
 	};
-	
-
-
+	updateNpoints();
 };
 #endif//USE_YAML
 //########################################################################################################################################################
