@@ -793,7 +793,15 @@ bool waveset::loadWaves(
 			std::cerr << "Error: Upper limit of '"<<waveset["waves"][i]["name"]<<"' above anchor mass limit"<<std::endl;
 		};
 		setWaveLimits(i,mmin_act,mmax_act);
-		setWavePhaseSpace(i,defs[wName]["phase_space"].as<int>());
+		bool set_phase_space = true; 
+		if (waveset["divide_integrals"]){
+			if (waveset["divide_integrals"].as<bool>()){
+				set_phase_space = false; // If the phase space is already divided out, do not apply it.
+			};
+		};
+		if (set_phase_space){
+			setWavePhaseSpace(i,defs[wName]["phase_space"].as<int>());
+		};
 	};
 	return ookk;
 };

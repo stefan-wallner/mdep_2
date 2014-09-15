@@ -12,8 +12,8 @@
 
 
 //std::string C="../13w_11t_testload.yaml";
-std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/6waves_2014-09-05_10:08:53.191171.yaml";
-
+//std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/6waves_2014-09-05_10:08:53.191171.yaml";
+std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/card_test_deiso_2014-09-11_10.38.02.497167.yaml";
 int main(int argc, char* argv[]){
 	std::cout<<"--------start------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
@@ -65,7 +65,9 @@ int main(int argc, char* argv[]){
 
 	Chi2.initCouplings();
 
-	Chi2.printStatus();
+	std::cout<<Chi2()<<std::endl;
+
+//	Chi2.printStatus();
 /*
 	std::cout<<"--------fit--------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;

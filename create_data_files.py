@@ -3,6 +3,7 @@ import sys
 sys.path.append('/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/convertTextOutput')
 from sys import argv
 from convertTextOutput import getRelevantData
+from convertTextOutput import getIntegralAverage
 import yaml
 import os
 import datetime
@@ -12,13 +13,15 @@ import shutil
 
 f0_list=['f0_0278_0320',  'f0_0320_0360',  'f0_0360_0400',  'f0_0400_0440',  'f0_0440_0480',  'f0_0480_0520',  'f0_0520_0560',  'f0_0560_0600',  'f0_0600_0640',  'f0_0640_0680',  'f0_0680_0720',  'f0_0720_0760',  'f0_0760_0800',  'f0_0800_0840',  'f0_0840_0880',  'f0_0880_0920',  'f0_0920_0930',  'f0_0930_0940',  'f0_0940_0950',  'f0_0950_0960',  'f0_0960_0970',  'f0_0970_0980',  'f0_0980_0990',  'f0_0990_1000',  'f0_1000_1010',  'f0_1010_1020',  'f0_1020_1030',  'f0_1030_1040',  'f0_1040_1050',  'f0_1050_1060',  'f0_1060_1070',  'f0_1070_1080',  'f0_1080_1120',  'f0_1120_1160',  'f0_1160_1200',  'f0_1200_1240',  'f0_1240_1280',  'f0_1280_1320',  'f0_1320_1360',  'f0_1360_1400',  'f0_1400_1440',  'f0_1440_1480',  'f0_1480_1520',  'f0_1520_1560',  'f0_1560_1600',  'f0_1600_1640',  'f0_1640_1680',  'f0_1680_1720',  'f0_1720_1760',  'f0_1760_1800',  'f0_1800_1840',  'f0_1840_1880',  'f0_1880_1920',  'f0_1920_1960',  'f0_1960_2000',  'f0_2000_2040',  'f0_2040_2080',  'f0_2080_2120',  'f0_2120_2160',  'f0_2160_2200',  'f0_2200_2240',  'f0_2240_2280']
 
-def get_data_anchor(waves,up,low,direct):
+def get_data_anchor(waves,up,low,direct,DIVIDE_PHASE_SPACE,int_dir,ACC_CORRECTED):
 	"""Gets data points and covariance matrix for anchor wave fitting"""
 	nWaves = len(waves)
 	if len(waves) != len(up) or len(waves) != len(low):
 		print "Lenghts of waves and limits do not match"
 		raise IndexError
 	raw_data = getRelevantData(waves,direct)
+	if DIVIDE_PHASE_SPACE:
+		raw_data = normalize_to_integrals(raw_data,waves,int_dir,ACC_CORRECTED)
 	data_points=[]
 	final_comas_inv=[]
 	for point in raw_data:
@@ -79,6 +82,37 @@ def get_data_anchor(waves,up,low,direct):
 		data_points.append(data_point)
 	return data_points,final_comas_inv
 
+
+def normalize_to_integrals(raw_data,waves,int_dir,ACC_CORRECTED=True):
+	"""Divides the data points in raw_data by their integral"""
+	nWaves = len(waves)
+	wave_60 = [make_60(wave) for wave in waves]
+	for point in raw_data:
+		m_low= point[0]		
+		m_up = point[1]
+		integral_matrix = getIntegralAverage(m_low,m_up,int_dir,acceptanceCorrected=ACC_CORRECTED,normalizeToDiag=False) # Normalization to diag would spoil everything ;) => False
+		int_factors=[integral_matrix[wave][0]**.5 for wave in wave_60]
+		for i in range(nWaves):
+			try:
+				point[2][2*i  ]/=int_factors[i]
+				point[2][2*i+1]/=int_factors[i]
+			except ZeroDivisionError:
+				point[2][2*i  ] = 0.
+				point[2][2*i+1] = 0.				
+			for j in range(nWaves):
+				try:
+					point[3][2*i  ][2*j  ]/=(int_factors[i]*int_factors[j])
+					point[3][2*i  ][2*j+1]/=(int_factors[i]*int_factors[j])
+					point[3][2*i+1][2*j  ]/=(int_factors[i]*int_factors[j])
+					point[3][2*i+1][2*j+1]/=(int_factors[i]*int_factors[j])
+				except ZeroDivisionError:
+					point[3][2*i  ][2*j  ] = 0.
+					point[3][2*i  ][2*j+1] = 0.
+					point[3][2*i+1][2*j  ] = 0.
+					point[3][2*i+1][2*j+1] = 0.
+	return raw_data					
+
+
 def de_isobarred_list(name):
 	"""Generates a list """
 	type_isob = ''
@@ -101,15 +135,27 @@ def de_isobarred_list(name):
 		raise Exception
 	return waves
 
+
 def islist(obj):
+	"""Checks if 'obj' is a list"""
 	try:
 		obj+=[]
 	except TypeError:
 		return False
 	return True
 
-def write_fit(name,wave_names,lower_lims,upper_lims,indep_fit):
-	datas,comas=get_data_anchor(wave_names,upper_lims,lower_lims,indep_fit)
+
+def make_60(wave):
+	"""Appends ' ' to wave until len(wave) = 60"""
+	wave_60 = wave
+	while len(wave_60) < 60:
+		wave_60+=' '
+	return wave_60
+
+
+def write_fit(name,wave_names,lower_lims,upper_lims,indep_fit,DIVIDE_PHASE_SPACE=False,int_dir='',ACC_CORRECTED=True):
+	"""Writes data and coma files"""
+	datas,comas=get_data_anchor(wave_names,upper_lims,lower_lims,indep_fit,DIVIDE_PHASE_SPACE,int_dir,ACC_CORRECTED)
 	dataname = './data_files/'+name+'_data.dat'
 	comaname = './data_files/'+name+'_coma.dat'
 	dataFile = open(dataname,'w')
@@ -133,6 +179,7 @@ def write_fit(name,wave_names,lower_lims,upper_lims,indep_fit):
 
 
 def process_config(config_file, date_time_flag=False):
+	"""Creates data and coma files for a config file and wirtes the according paths to the config_file"""
 	try:
 		config_stream=open(config_file,'r')
 	except IOError:
@@ -184,9 +231,27 @@ def process_config(config_file, date_time_flag=False):
 		config["fit_name"] = name
 	apath=[]
 	tbinning = config["t_binning"]
+	norm_to_int = False
+	acc_corr = True
+	try:
+		norm_to_int = config["divide_integrals"]
+		try:
+			acc_corr = config["acc_corrected"]
+		except KeyError:
+			pass
+	except KeyError:
+		pass
+
 	for tbin in range(len(tbinning)-1):
 		t_name = name+"_"+str(tbinning[tbin])+'_'+str(tbinning[tbin+1])
-		apath.append(write_fit(t_name,wave_names,lower_lims,upper_lims,config["mass_independent_fit"][tbin]))
+		int_dir=''
+		if norm_to_int:
+			try:
+				int_dir = config["integral_dir"][tbin]
+			except (KeyError, IndexError):
+				print "No integral directory given"
+				return 1
+		apath.append(write_fit(t_name,wave_names,lower_lims,upper_lims,config["mass_independent_fit"][tbin],norm_to_int,int_dir,acc_corr))
 	config["data_files"]=[]
 	config["coma_files"]=[]
 	for path in apath:
