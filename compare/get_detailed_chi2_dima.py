@@ -104,7 +104,7 @@ def get_single_bins(points):
 
 deltas_d,delchi_d=get_detailed_chi2_dima()
 deltas_f,delchi_f=get_detailed_chi2_dima('./chi2_f.dat')
-BUILD_FILES=False
+BUILD_FILES=True
 if BUILD_FILES:
 	for tbin in range(1,12): # 11 t'-bins
 		datafile = open('./data_coma/data_'+str(tbin)+".dat",'w')
@@ -165,19 +165,21 @@ if CHECK_DATA_INPUT:
 	if ndiff==0:
 		print "All matches"
 
-d_not_f,f_not_d = pointdiff_cc(delchi_d,delchi_f)
-print "evaluated by d, not by f",len(d_not_f)
-print "evaluated by f, not by d",len(f_not_d)
-print "contrib to d-chi2, by non f-points",list_chi2(d_not_f,deltas_d,delchi_d)
-print "contrib to f-chi2, by non d-points",list_chi2(f_not_d,deltas_f,delchi_f)
 
-print 'ddd',cross_chi2(deltas_d,deltas_d,delchi_d)
-#print 'ddf',cross_chi2(deltas_d,deltas_d,delchi_f)
-#print 'dfd',cross_chi2(deltas_d,deltas_f,delchi_d)
-#print 'fdd',cross_chi2(deltas_f,deltas_d,delchi_d)
-#print 'dff',cross_chi2(deltas_d,deltas_f,delchi_f)
-#print 'fdf',cross_chi2(deltas_f,deltas_d,delchi_f)
-#print 'ffd',cross_chi2(deltas_f,deltas_f,delchi_d)
-print 'fff',cross_chi2(deltas_f,deltas_f,delchi_f)
+if False:
+	d_not_f,f_not_d = pointdiff_cc(delchi_d,delchi_f)
+	print "evaluated by d, not by f",len(d_not_f)
+	print "evaluated by f, not by d",len(f_not_d)
+	print "contrib to d-chi2, by non f-points",list_chi2(d_not_f,deltas_d,delchi_d)
+	print "contrib to f-chi2, by non d-points",list_chi2(f_not_d,deltas_f,delchi_f)
 
-print get_single_bins(d_not_f)
+	print 'ddd',cross_chi2(deltas_d,deltas_d,delchi_d)
+	#print 'ddf',cross_chi2(deltas_d,deltas_d,delchi_f)
+	#print 'dfd',cross_chi2(deltas_d,deltas_f,delchi_d)
+	#print 'fdd',cross_chi2(deltas_f,deltas_d,delchi_d)
+	#print 'dff',cross_chi2(deltas_d,deltas_f,delchi_f)
+	#print 'fdf',cross_chi2(deltas_f,deltas_d,delchi_f)
+	#print 'ffd',cross_chi2(deltas_f,deltas_f,delchi_d)
+	print 'fff',cross_chi2(deltas_f,deltas_f,delchi_f)
+
+	print get_single_bins(d_not_f)

@@ -240,3 +240,20 @@ a4:
    value: 0.139
  - name: mRho4pp
    value: 0.770
+
+f0(980):
+ parametrization: 0
+ parameters:
+ - name: mf0
+   value: 0.98
+ - name: Gf0
+   value: 0.110
+
+rho(770):
+ parametrization: 0
+ parameters:
+ - name: mRho
+   value: 0.77525
+ - name: GRho
+   value: 0.1491
+

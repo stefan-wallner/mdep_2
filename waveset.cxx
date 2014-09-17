@@ -92,8 +92,8 @@ waveset::waveset(
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::amps(
 							double 							m,
-							std::vector<std::complex<xdouble> > 			&cpl,
-							std::vector<xdouble> 					&par,
+							const std::complex<xdouble>	 			*cpl,
+							const xdouble	 					*par,
 							std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi){
 
 	std::vector<std::complex<xdouble> > funcEval = funcs(m,par); // Evalulated BW-functions
@@ -134,13 +134,13 @@ std::vector<std::complex<xdouble> > waveset::amps(
 	};
 	return ampl;
 };
-template std::vector<std::complex<double> > waveset::amps(double m, std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi);
+template std::vector<std::complex<double> > waveset::amps(double m, const std::complex<double> *cpl,const double *par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi);
 //########################################################################################################################################################
 ///Returns the function values at m3pi = m and shape parameters par
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::funcs(
 							double 							m,
-							std::vector<xdouble> 					&par){
+							const xdouble	 					*par){
 
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
 	int upPar=0;
@@ -172,12 +172,12 @@ std::vector<std::complex<xdouble> > waveset::funcs(
 	};
 	return f;
 };
-template std::vector<std::complex<double> > waveset::funcs(double m,std::vector<double> &par);
+template std::vector<std::complex<double> > waveset::funcs(double m,const double *par);
 //########################################################################################################################################################
 ///Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
 template<typename xdouble>
 std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
-							std::vector<xdouble> 					&par){
+							const xdouble	  						*par){
 
 	if (_has_isobars){
 		std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
@@ -212,7 +212,7 @@ std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
 	};
 	return std::vector<std::vector<std::complex<xdouble> > >();
 };
-template std::vector<std::vector<std::complex<double> > > waveset::iso_funcs(std::vector<double> &par);
+template std::vector<std::vector<std::complex<double> > > waveset::iso_funcs(const double *par);
 //########################################################################################################################################################
 ///Gives a vector with phase space factors for each wave at m3pi = m
 std::vector<double> waveset::phase_space(
@@ -228,9 +228,9 @@ std::vector<double> waveset::phase_space(
 //########################################################################################################################################################
 ///Enable Auto-diff, if needed
 #ifdef ADOL_ON
-template std::vector<std::complex<adouble> > waveset::amps(double m, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &funcEvals2pi);
-template std::vector<std::complex<adouble> > waveset::funcs(double m,std::vector<adouble> &par);
-template std::vector<std::vector<std::complex<adouble> > > waveset::iso_funcs(std::vector<adouble> &par);
+template std::vector<std::complex<adouble> > waveset::amps(double m, const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &funcEvals2pi);
+template std::vector<std::complex<adouble> > waveset::funcs(double m,const adouble *par);
+template std::vector<std::vector<std::complex<adouble> > > waveset::iso_funcs(const adouble *par);
 #endif//ADOL_ON
 //########################################################################################################################################################
 ///Adds a wave, increases the internal definitions
@@ -796,6 +796,7 @@ bool waveset::loadWaves(
 		bool set_phase_space = true; 
 		if (waveset["divide_integrals"]){
 			if (waveset["divide_integrals"].as<bool>()){
+				std::cout<<"'divide_integrals' flag found. Do not set phase_space"<<std::endl;
 				set_phase_space = false; // If the phase space is already divided out, do not apply it.
 			};
 		};

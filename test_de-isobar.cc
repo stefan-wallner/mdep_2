@@ -107,12 +107,12 @@ int main(){
 	cpl[2] = std::complex<double>(1.,0.);
 
 	std::cout<<"EVAL"<<std::endl;
-	std::cout<<"Eval: "<<Chi2.EvalCP(cpl,par,isopar)<<std::endl;
+	std::cout<<"Eval: "<<Chi2.EvalCP(&cpl[0],&par[0],&isopar[0])<<std::endl;
 
 	std::vector<std::complex<double> > startcpl(1,std::complex<double>(1.,0));
 
 	std::cout<<"beforeGET"<<std::endl;
-	AandB<double> AB = Chi2.get_AB(0,startcpl,par, isopar);
+	AandB<double> AB = Chi2.get_AB(0,&startcpl[0],&par[0], &isopar[0]);
 	std::cout<<"afterGET"<<std::endl;
 	print_matrix(AB.A);
 	std::vector<double> inver = cholesky::cholesky_solve(AB.A,AB.B);
@@ -122,7 +122,7 @@ int main(){
 		inver[i]*=-.5;
 	};
 	print_vector(inver);
-	print_vector(Chi2.getMinimumCplBra(0,bra,startcpl,par, isopar));
+	print_vector(Chi2.getMinimumCplBra(0,&bra[0],&startcpl[0],&par[0], &isopar[0]));
 
 
 

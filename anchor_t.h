@@ -29,50 +29,50 @@ class anchor_t : public waveset {
 
 		template<typename xdouble>
 		xdouble EvalCP(
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>	 			*cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalBranch(
-								std::vector<std::complex<xdouble> >			&branch,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>				*branch,
+								const std::complex<xdouble>	 			*cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalAutoCpl(
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>	 			*cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalAutoCplBranch(
-								std::vector<std::complex<xdouble> >			&bra,
-								std::vector<std::complex<xdouble> >			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>				*bra,
+								const std::complex<xdouble>				*cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalAutoCplTbin(
 								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble> 				*cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalTbin(
 								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble> 				*cpl,
+								const xdouble	 					*par,
+								const xdouble						*iso_par);
 
 		template<typename xdouble>
 		xdouble EvalBin(
 								int 							tbin,
 								int 							bin,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
+								const std::complex<xdouble> 				*cpl,
+								const xdouble	 					*par,
 								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval);
 
 		template<typename xdouble>
@@ -80,32 +80,32 @@ class anchor_t : public waveset {
 								int 							tbin,
 								int 							bin,
 								double 							mass,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
+								const std::complex<xdouble>	 			*cpl,
+								const xdouble	 					*par,
 								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval);
 
 	// AUTO CPL METHODS
 		template<typename xdouble>
 		AandB<xdouble> get_AB( // For de-isobarred
 								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&anchor_cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>	 			*anchor_cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCpl(
 								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&anchor_cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble> 				*anchor_cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCplBra(
 								int 							tbin,
-								std::vector<std::complex<xdouble> > 			&branch,
-								std::vector<std::complex<xdouble> > 			&anchor_cpl,
-								std::vector<xdouble> 					&par,
-								std::vector<xdouble> 					&iso_par);
+								const std::complex<xdouble>	 			*branch,
+								const std::complex<xdouble> 				*anchor_cpl,
+								const xdouble	 					*par,
+								const xdouble	 					*iso_par);
 	// DERIVATIVES
 #ifdef ADOL_ON
 		std::vector<double> 				Diff(std::vector<double> &xx);
@@ -153,6 +153,9 @@ class anchor_t : public waveset {
 		void 					update_n_cpls();
 		void 					update_min_max_bin();
 		void 					update_definitions();
+#ifdef STORE_ACTIVE
+		void					update_is_active();
+#endif//STORE_ACTIVE
 
 	// PLOTTING
 		void					write_plots(std::string filename, int tbin);
@@ -175,6 +178,9 @@ class anchor_t : public waveset {
 		std::vector<std::string> 						_parNames; 		// Name of each parameter
 		std::vector<std::vector<std::vector<double> > > 			_data; 			// Data
 		std::vector<std::vector<std::vector<std::vector<double> > > > 		_coma; 			// Covariance matrix
+#ifdef STORE_ACTIVE
+		std::vector<std::vector<std::vector<bool> > >				_is_active;		// Flag, which point is actually active
+#endif//STORE_ACTIVE
 
 		// OTHER MEMBERS
 		bool 									_is_ampl; 		// Enable Amplitunde fitting, needs to be tested.

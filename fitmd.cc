@@ -13,8 +13,9 @@
 
 //std::string C="../13w_11t_testload.yaml";
 //std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/6waves_2014-09-05_10:08:53.191171.yaml";
-std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/card_test_deiso_2014-09-11_10.38.02.497167.yaml";
+//std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/card_test_deiso_2014-09-11_10.38.02.497167.yaml";
 int main(int argc, char* argv[]){
+	std::string C = std::string(argv[1]);
 	std::cout<<"--------start------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
@@ -22,7 +23,7 @@ int main(int argc, char* argv[]){
 
 	//int n = Chi2.getParNumber("G_a1(1260)");
 	//Chi2.setParLimits(n,.13,13.);
-	Chi2.printStatus();
+	//Chi2.printStatus();
 	//return 0;
 
 	int nPar = Chi2.getNpar();
@@ -57,7 +58,9 @@ int main(int argc, char* argv[]){
 
 //	Chi2();
 //	Chi2.write_plots("plots.txt",5);
-
+#ifdef STORE_ACTIVE
+	Chi2.update_is_active();
+#endif//STORE_ACTIVE
 
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
@@ -65,7 +68,17 @@ int main(int argc, char* argv[]){
 
 	Chi2.initCouplings();
 
+
+
+	std::cout<<"-------inited------"<<std::endl;
+	std::cout<<currentDateTime()<<std::endl;
+	std::cout<<"-------------------"<<std::endl;
+
+	Chi2.open_output("./out_out.out");
 	std::cout<<Chi2()<<std::endl;
+	Chi2.close_output();
+
+
 
 //	Chi2.printStatus();
 /*

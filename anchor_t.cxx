@@ -69,33 +69,25 @@ double anchor_t::operator()(
 double anchor_t::operator()(
 							const double							*xx){
 
-	std::vector<std::complex<double> > cpl(_nCpl);
-	std::vector<double> par(_nPar);
-	std::vector<std::complex<double> > bra(_nBra);
-	std::vector<double> iso_par(_nIso);
-	int count_xx =0;
-	for (int i=0;i<_nCpl;i++){ // Build cpl, par, bra from xx
-		cpl[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
-		count_xx+=2;
+//	const std::complex<double>* cpl = (std::complex<double>*)xx; // This is forbidden by Charly, build complex variables by hand :(
+	std::complex<double> cpl[_nCpl];
+	for (int i=0;i<_nCpl;i++){
+		cpl[i] = std::complex<double>(xx[2*i],xx[2*i+1]);
 	};
-	for (int i=0;i<_nPar;i++){
-		par[i] = xx[count_xx];
-		count_xx++;
-	};
+	const double* par = xx+2*_nCpl;
+//	const std::complex<double>* bra = (std::complex<double>*)(xx+2*_nCpl+_nPar);// This is forbidden by Charly, build complex variables by hand :(
+	std::complex<double> bra[_nBra];
 	for (int i=0;i<_nBra;i++){
-		bra[i] = std::complex<double>(xx[count_xx],xx[count_xx+1]);
-		count_xx+=2;
+		bra[i] = std::complex<double>(xx[2*_nCpl+_nPar+2*i],xx[2*_nCpl+_nPar+2*i+1]);
 	};
-	for(int i=0;i<_nIso;i++){
-		iso_par[i] = xx[count_xx];
-		count_xx++;
-	};
+	const double* iso_par = xx + 2*_nCpl + _nPar + 2*_nBra;
+
 	// std::cout<<par[0]<<std::endl;
 	double chi2;
 	if (_useBranch){ // Evaluate
-		chi2 = EvalAutoCplBranch(bra,cpl,par, iso_par);
+		chi2 = EvalAutoCplBranch(bra,cpl,par,iso_par);
 	}else{
-		chi2 = EvalAutoCpl(cpl,par,iso_par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give adiitional couplings
+		chi2 = EvalAutoCpl(cpl,par,iso_par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give additional couplings
 	};
 	_count++;
 	/* if (chi2 != chi2){ // Check for NaN
@@ -118,9 +110,9 @@ double anchor_t::operator()(
 ///Evaluates chi2 w/o branchings (EvalC(ouplings)P(arameters))
 template<typename xdouble>
 xdouble anchor_t::EvalCP(
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>					*cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 	xdouble chi2 = 0.;
 	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(_nFtw);
@@ -130,7 +122,7 @@ xdouble anchor_t::EvalCP(
 			for (int i=0;i<_nFtw;i++){
 				actCpl[i] = cpl[i+tbin*_nFtw];
 			};
-			chi2+=EvalTbin(tbin,actCpl,par,iso_par);
+			chi2+=EvalTbin(tbin,&actCpl[0],&par[0],&iso_par[0]);//[0]//
 	//		std::cout<<tbin<<":E:"<<EvalTbin(tbin,actCpl,par)<<std::endl;
 //			std::cout<<chi2<<std::endl;
 		};
@@ -140,17 +132,17 @@ xdouble anchor_t::EvalCP(
 	};
 	return chi2;
 };
-template double anchor_t::EvalCP(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalCP(const std::complex<double> *cpl,const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Evaluates chi2 with branchings
 template<typename xdouble>
 xdouble anchor_t::EvalBranch(
-							std::vector<std::complex<xdouble> >				&branch,
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>					*branch,
+							const std::complex<xdouble>	 				*cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
-	std::vector<std::complex<xdouble> > cplin = std::vector<std::complex<xdouble> >(_nFtw*_nTbin);
+	std::vector<std::complex<xdouble> > cplin(_nFtw*_nTbin);
 	for (int tbin=0;tbin<_nTbin;tbin++){
 		if(_eval_tbin[tbin]){
 			updateTprime(tbin);
@@ -163,30 +155,27 @@ xdouble anchor_t::EvalBranch(
 			};
 		};
 	};
-	xdouble chi2 = EvalCP(cplin,par, iso_par);
+	xdouble chi2 = EvalCP(&cplin[0],par, iso_par);//&...[0] stays
 	if (_write_out){
 		*_outStream <<"  Ci^2 final      "<<chi2<<std::endl;
 	};
 	return chi2;
 };
-template double anchor_t::EvalBranch(std::vector<std::complex<double> >&branch, std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalBranch(const std::complex<double> *branch, const std::complex<double> *cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets Chi2 with automatic non anchor couplings (no branchings)
 template<typename xdouble>
 xdouble anchor_t::EvalAutoCpl(
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>	 				*cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 	xdouble chi2 = 0.;
 	int nNon = _borders_waves[0];
-	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(nNon);
 	for (int tbin=0;tbin<_nTbin;tbin++){
 		if(_eval_tbin[tbin]){
 			updateTprime(tbin);
-			for(int i=0;i<nNon;i++){
-				actCpl[i] = cpl[i+tbin*nNon];
-			};
+			const std::complex<xdouble>* actCpl = cpl+tbin*nNon;
 			chi2+=EvalAutoCplTbin(tbin,actCpl,par,iso_par);
 	//		std::cout << tbin<<":A:"<< EvalAutoCplTbin(tbin,actCpl,par)<<std::endl;
 		};
@@ -196,26 +185,22 @@ xdouble anchor_t::EvalAutoCpl(
 	};
 	return chi2;
 };
-template double anchor_t::EvalAutoCpl(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalAutoCpl(const std::complex<double> *cpl,const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets Chi2 for automatically calculated couplings with branchings (the BEST)
 template<typename xdouble>
 xdouble anchor_t::EvalAutoCplBranch(
-							std::vector<std::complex<xdouble> >				&bra,
-							std::vector<std::complex<xdouble> >				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>					*bra,
+							const std::complex<xdouble>					*cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 	xdouble chi2=0.;
-//	std::cout<<"par[1]: "<<par[1]<<std::endl;
 	int nNon = _nBrCplAnc;
-	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(nNon);
 	for(int tbin=0;tbin<_nTbin;tbin++){
 		if (_eval_tbin[tbin]){
 			updateTprime(tbin);
-			for(int i=0;i<nNon;i++){
-				actCpl[i] = cpl[i+tbin*nNon];
-			};
+			const std::complex<xdouble>* actCpl = cpl+tbin*nNon;
 			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par,iso_par);
 			std::vector<std::complex<xdouble> > best_cpl_std = std::vector<std::complex<xdouble> >(_nFtw);
 			for (int i=0;i<_nFtw;i++){
@@ -225,7 +210,7 @@ xdouble anchor_t::EvalAutoCplBranch(
 					best_cpl_std[i] = bestcpl[_n_cpls[i]] * bra[_n_branch[i]];
 				};
 			};
-			chi2+=EvalTbin(tbin,best_cpl_std,par,iso_par);
+			chi2+=EvalTbin(tbin,&best_cpl_std[0],par,iso_par);//&...[0] stays ...
 		};
 	};
 	if (_write_out){
@@ -233,15 +218,15 @@ xdouble anchor_t::EvalAutoCplBranch(
 	};
 	return chi2;
 };
-template double anchor_t::EvalAutoCplBranch(std::vector<std::complex<double> >&bra, std::vector<std::complex<double> >&cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalAutoCplBranch(const std::complex<double> *bra, const std::complex<double> *cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets the chi2 for a single t' bin
 template<typename xdouble>
 xdouble anchor_t::EvalTbin(
 							int 								tbin,
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>	 				*cpl,
+							const xdouble	 						*par,
+							const xdouble 							*iso_par){
 
 	updateTprime(tbin);
 	xdouble chi2 = 0.;
@@ -253,37 +238,38 @@ xdouble anchor_t::EvalTbin(
 	};
 	return chi2;
 };
-template double anchor_t::EvalTbin(int tbin, std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalTbin(int tbin, const std::complex<double> *cpl,const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets the chi2 for a certain t' bin, with automatically calculated couplings
 template<typename xdouble>
 xdouble anchor_t::EvalAutoCplTbin(
 							int 								tbin,
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>	 				*cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 	std::vector<std::complex<xdouble> > mincpl = getMinimumCpl(tbin,cpl,par,iso_par);
-	return EvalTbin(tbin,mincpl,par,iso_par);
+	return EvalTbin(tbin,&mincpl[0],par,iso_par); // &...[0] stays, since mincpl is built inside the function
 };
-template double anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template double anchor_t::EvalAutoCplTbin(int tbin, const std::complex<double> *cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets the Chi2 for a single t' and m3pi bin
 template<typename xdouble>
 xdouble anchor_t::EvalBin(
 							int 								tbin,
 							int 								bin,
-							std::vector<std::complex<xdouble> >				&cpl,
-							std::vector<xdouble> 						&par,
+							const std::complex<xdouble>					*cpl,
+							const xdouble	 						*par,
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval){
 
 	double mass = (_binning[bin] + _binning[bin+1])/2; // Eval at bin center.
-	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl,par,iso_eval);
+	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl, par,iso_eval);
 	xdouble chi2 = 0.;
 //	print_vector(deltas);
 	for (int i=0;i<2*_nPoints-1;i++){
 		int iWave = _point_to_wave[(i+1)/2];
-		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
+//		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
+		if (_is_active[tbin][bin][iWave]){
 //			std::cout<<"le_addite:D"<<pow(deltas[i],2.)*_coma[tbin][bin][i][i]<<std::endl;
 			if (_write_out){
 				*_outStream <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -298,7 +284,8 @@ xdouble anchor_t::EvalBin(
 			};
 			for (int j=0;j<i;j++){
 				int jWave = _point_to_wave[(j+1)/2];
-				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
+//				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
+				if(_is_active[tbin][bin][jWave]){
 //					std::cout<<"le_addite: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
 					if (_write_out){
 						*_outStream <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<j+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -317,7 +304,7 @@ xdouble anchor_t::EvalBin(
 	};
 	return chi2;
 };
-template double anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<double> >&cpl,std::vector<double> &par,std::vector<std::vector<std::complex<double> > > &iso_eval);
+template double anchor_t::EvalBin(int tbin,int bin,const std::complex<double> *cpl,const double *par,std::vector<std::vector<std::complex<double> > > &iso_eval);
 //########################################################################################################################################################
 ///Returns f(m,...) - data[...] for each SDM entry in the fit
 template<typename xdouble>
@@ -325,8 +312,8 @@ std::vector<xdouble> anchor_t::delta(
 							int 								tbin,
 							int 								bin,
 							double 								mass,
-							std::vector<std::complex<xdouble> > 				&cpl,
-							std::vector<xdouble> 						&par,
+							const std::complex<xdouble> 					*cpl,
+							const xdouble	 						*par,
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval){
 
 	std::vector<std::complex<xdouble> > ampls = amps(mass, cpl, par, iso_eval);
@@ -339,8 +326,13 @@ std::vector<xdouble> anchor_t::delta(
 		*_outStream << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           1  isectd=           "<<tbin+1<<std::endl;
 		*_outStream << " Re1 data    "<<_data[tbin][bin][0]<<"     - theory   "<<std::norm(ampls[0]/divider)<<"       =    "<<std::norm(ampls[0]/divider) - _data[tbin][bin][0]<<std::endl;
 	};
-	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0];
+	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0]; ////// HERE ADD if(_is_point_bin[bin][i]){...}; so that no deltas are aclculated for turend off bins
 	for (int i = 1; i<_nPoints;i++){
+#ifdef STORE_ACTIVE
+		if (not _is_active[tbin][bin][i]){
+			continue;
+		};
+#endif//STORE_ACTIVE
 		std::complex<xdouble> inter = ampls[0]*std::conj(ampls[i])/divider;
 		del[2*i-1]=real(inter) - _data[tbin][bin][2*i-1]; // real part
 		del[2*i]=imag(inter) - _data[tbin][bin][2*i];    // imag part
@@ -353,7 +345,7 @@ std::vector<xdouble> anchor_t::delta(
 	};
 	return del;
 };
-template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::vector<std::complex<double> > > &iso_eval);
+template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, const std::complex<double> *cpl, const double *par, std::vector<std::vector<std::complex<double> > > &iso_eval);
 //########################################################################################################################################################
 /*
 		┌───────────────────────────────────────┐
@@ -365,9 +357,9 @@ template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, std:
 template<typename xdouble>
 AandB<xdouble> anchor_t::get_AB(
 							int 								tbin,
-							std::vector<std::complex<xdouble> > 				&anchor_cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>	 				*anchor_cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 
 
@@ -414,6 +406,12 @@ AandB<xdouble> anchor_t::get_AB(
 			int wave_start1 = _point_borders_wave[wave1-1];								//// >>>> To calculate the _data and _coma indices
 
 			for (int i_iso_1=0;i_iso_1<iso_nBin1;i_iso_1++){								//// >>>> Here loop ofer isobar bins, if necessary (i_iso_1)(_wave_binning_pts[wave1)
+				int point1 = wave_start1 + i_iso_1;	// Position of data and coma points
+#ifdef STORE_ACTIVE
+				if (not _is_active[tbin][bin][point1]){
+					continue;
+				};
+#endif//STORE_ACTIVE
 				std::complex<xdouble> AB1;
 				if (iso_f1 == -1){
 					AB1 = ampAnc * conj(func[f1]) * phase[wave1];
@@ -423,7 +421,7 @@ AandB<xdouble> anchor_t::get_AB(
 				if (AB1 == std::complex<xdouble>(0.,0.)){
 					continue;
 				};
-				int point1 = wave_start1 + i_iso_1;	// Position of data and coma points
+
 				int wave2=1;
 				int up2=_borders_waves[1];
 				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
@@ -447,6 +445,11 @@ AandB<xdouble> anchor_t::get_AB(
 					for (int i_iso_2=0;i_iso_2<iso_nBin2;i_iso_2++){						//// >>>> loop over second isobar bins (i_iso_2) (_wave_binning_pts[wave2)
 
 						int point2 = wave_start2+i_iso_2;
+#ifdef STORE_ACTIVE
+						if (not _is_active[tbin][bin][point2]){
+							continue;
+						};
+#endif//STORE_ACTIVE
 						std::complex<xdouble> AB2;
 //						xdouble r2;
 //						xdouble i2;
@@ -508,15 +511,15 @@ AandB<xdouble> anchor_t::get_AB(
 	};
 	return AB;
 };
-template AandB<double> anchor_t::get_AB(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template AandB<double> anchor_t::get_AB(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Gets the best couplings without branchings
 template<typename xdouble>
 std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(
 							int 								tbin,
-							std::vector<std::complex<xdouble> > 				&anchor_cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>					*anchor_cpl,
+							const xdouble 							*par,
+							const xdouble 							*iso_par){
 	int nCplAnc = _borders_waves[0]; // Number of couplings for the anchor wave
 	int nNon = _nFtw - nCplAnc;
 	std::vector<std::complex<xdouble> > cpl = std::vector<std::complex<xdouble> >(_nFtw);
@@ -543,16 +546,16 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(
 	};
 	return cpl;
 };
-template std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Calculated all non anchor couplings (no need for fitting)
 template<typename xdouble>
 std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 							int 								tbin,
-							std::vector<std::complex<xdouble> > 				&branch,
-							std::vector<std::complex<xdouble> > 				&anchor_cpl,
-							std::vector<xdouble> 						&par,
-							std::vector<xdouble> 						&iso_par){
+							const std::complex<xdouble>	 				*branch,
+							const std::complex<xdouble>	 				*anchor_cpl,
+							const xdouble	 						*par,
+							const xdouble	 						*iso_par){
 
 	if (0==_nBranch){ // Do not do the complicated stuff, when no branchings are used
 		return getMinimumCpl(tbin,anchor_cpl,par, iso_par);
@@ -573,7 +576,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 				cplAncBr[i] = anchor_cpl[ncpl_act] * branch[nbranch_act];
 			};
 		};
-		AandB<xdouble>AB = get_AB(tbin,cplAncBr,par,iso_par);
+		AandB<xdouble>AB = get_AB(tbin,&cplAncBr[0],par,iso_par); // &...[0] stays here, since the vector is built inside the function
 		AandB<xdouble> ABprime(2*(_nBrCpl - _nBrCplAnc));
 		for (int i =0;i<nNon;i++){ // Reshuffle the coefficients
 			int i_tot = i+nCplAnc;
@@ -669,21 +672,21 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 		return ccppll;
 	};
 };
-template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<double> > &branch, std::vector<std::complex<double> > &anchor_cpl, std::vector<double> &par, std::vector<double> &iso_par);
+template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, const std::complex<double> *branch, const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
 //########################################################################################################################################################
 ///Instantiate auto diff methods, if needed (Enable adouble operations, if the auto diff package is loaded)
 #ifdef ADOL_ON
-template adouble anchor_t::EvalCP(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template adouble anchor_t::EvalBranch(std::vector<std::complex<adouble> >&branch, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template adouble anchor_t::EvalTbin(int tbin, std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template adouble anchor_t::EvalBin(int tbin,int bin,std::vector<std::complex<adouble> >&cpl,std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &iso_par);
-template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par, std::vector<std::vector<std::complex<adouble> > > &iso_eval);
-template adouble anchor_t::EvalAutoCpl(std::vector<std::complex<adouble> > &cpl,std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template adouble anchor_t::EvalAutoCplBranch(std::vector<std::complex<adouble> >&bra, std::vector<std::complex<adouble> >&cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template adouble anchor_t::EvalAutoCplTbin(int tbin, std::vector<std::complex<adouble> > &cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template AandB<adouble> anchor_t::get_AB(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
-template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, std::vector<std::complex<adouble> > &branch, std::vector<std::complex<adouble> > &anchor_cpl, std::vector<adouble> &par, std::vector<adouble> &iso_par);
+template adouble anchor_t::EvalCP(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalBranch(const std::complex<adouble> *branch, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalTbin(int tbin, const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalBin(int tbin,int bin,const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_par);
+template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, const std::complex<adouble> *cpl, const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_eval);
+template adouble anchor_t::EvalAutoCpl(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalAutoCplBranch(const std::complex<adouble> *bra, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalAutoCplTbin(int tbin, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
+template AandB<adouble> anchor_t::get_AB(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, const std::complex<adouble> *branch, const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
 //#######################################################################################################################################################
 ///Gets the gradient w.r.t. xx
 std::vector<double> anchor_t::Diff(
@@ -735,7 +738,7 @@ std::vector<double> anchor_t::Diff(
 	};
 	double Chi2;
 	adouble aChi2;
-	aChi2 = EvalAutoCplBranch(aBra_c,aCpl_c,aPar,aIso);
+	aChi2 = EvalAutoCplBranch(&aBra_c[0],&aCpl_c[0],&aPar[0],&aIso[0]);//[0]//
 	aChi2 >>= Chi2;
 	trace_off();
 	double grad[_nTot];
@@ -858,7 +861,7 @@ std::vector<std::complex<double> > anchor_t::get_branchings(
 			};
 			active_t_bins++;
 			updateTprime(tbin);
-			std::vector<std::complex<double> > all_cpls_t= getMinimumCpl(tbin,cpl_t,par, iso_par);
+			std::vector<std::complex<double> > all_cpls_t= getMinimumCpl(tbin,&cpl_t[0],&par[0], &iso_par[0]);//[0]//
 			std::complex<double> phase = all_cpls_t[0]/abs(all_cpls_t[0]);
 			for (int i=0;i<_nFtw;i++){
 				all_cpls[i]+=all_cpls_t[i]/phase;
@@ -906,11 +909,11 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 		for (int i=0;i<_nBrCplAnc;i++){
 			cpl_t.push_back(cpl[tbin*_nBrCplAnc+i]);
 		};
-		cpl_all = getMinimumCplBra(tbin,bra,cpl_t,par,iso);
+		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl_t[0],&par[0],&iso[0]);//[0]//
 		cpl_all = getUnbranchedCouplings(cpl_all,bra);
 		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
 	}else if (cpl.size() == _nBrCplAnc){ 			// Anchor couplings for one t' bin
-		cpl_all = getMinimumCplBra(tbin,bra,cpl,par,iso);
+		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl[0],&par[0],&iso[0]);//[0]//
 		cpl_all = getUnbranchedCouplings(cpl_all,bra);
 		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _nBrCpl*_nTbin){ 		// Branched couplings for all t' bins
@@ -1271,14 +1274,12 @@ bool anchor_t::loadParameterValues(
 						iCount++;
 						int nPar =  param[iName]["parameters"].size();
 						for(int par=0;par<nPar;par++){
-std::cout<<"do i get my error here?"<<std::endl;
 							double value = param[iName]["parameters"][par]["value"].as<double>();
 							if(param[iName]["parameters"][par]["upper_limit"] and param[iName]["parameters"][par]["lower_limit"]){
 								double upper = param[iName]["parameters"][par]["upper_limit"].as<double>();
 								double lower = param[iName]["parameters"][par]["lower_limit"].as<double>();
 								setParLimits(2*_nCpl+_nPar+2*_nBra+ipCount,upper,lower);
 							};
-std::cout<<"no!"<<std::endl;
 							setParameter(2*_nCpl+_nPar+2*_nBra+ipCount,value);
 							ipCount++;
 						};
@@ -1359,6 +1360,26 @@ void anchor_t::update_definitions(){
 	};
 	_parNames = names;
 };
+#ifdef STORE_ACTIVE
+//########################################################################################################################################################
+///Updates, which data-point is actually active
+void anchor_t::update_is_active(){
+
+	_is_active = std::vector<std::vector<std::vector<bool> > >(_nTbin,std::vector<std::vector<bool> >(_nBins,std::vector<bool>(_nPoints,true)));
+	for (int tbin =0;tbin<_nTbin;tbin++){
+		for(int bin=0;bin<_nBins;bin++){
+			if(_data[tbin][bin][0] == 0.){
+				_is_active[tbin][bin][0] = false;
+			};
+			for(int point=1;point<_nPoints;point++){
+				if (_data[tbin][bin][2*point-1] == 0. and _data[tbin][bin][2*point] ==0.){
+					_is_active[tbin][bin][point] = false;
+				};
+			};
+		};
+	};
+};
+#endif//STORE_ACTIVE
 //########################################################################################################################################################
 ///Writes plots with the internal _parameters
 void anchor_t::write_plots(
@@ -1411,14 +1432,14 @@ void anchor_t::write_plots(
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_has_isobars){
-		iso_eval = iso_funcs(iso);
+		iso_eval = iso_funcs(&iso[0]);
 	};
 	std::ofstream write_out;
 	write_out.open(filename.c_str());
-	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,cpl_all,par,iso)<<std::endl;
+	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,&cpl_all[0],&par[0],&iso[0])<<std::endl;//[0]//
 	for (int bin=0;bin<_nBins;bin++){
 		double mass = (_binning[bin]+_binning[bin+1])/2.;
-		std::vector<std::complex<double> > amplitudes = amps(mass,cpl_all,par,iso_eval);
+		std::vector<std::complex<double> > amplitudes = amps(mass,&cpl_all[0],&par[0],iso_eval);
 		std::complex<double> ancAmp = amplitudes[0];
 		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
 		for (int i=1; i<_nPoints; i++){

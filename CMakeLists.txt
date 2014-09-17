@@ -15,6 +15,8 @@ set( INCLUDE_DIRS
 ) 
 #### Switch on single modules
 
+add_definitions( -DSTORE_ACTIVE )
+
 if( use_YAML )
   add_definitions( -DUSE_YAML )
   set( INCLUDE_DIRS

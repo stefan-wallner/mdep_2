@@ -101,7 +101,7 @@ void minimize::initCouplings(){
 	for (int i=0;i<_nIso;i++){
 		iso_par[i] = _parameters[2*_nCpl+_nPar+2*_nBra+i];
 	};
-	std::cout << "Total with EvalAutoCpl() (For consistency check): "<< EvalAutoCpl(couplings,par,iso_par)<<std::endl;
+	std::cout << "Total with EvalAutoCpl() (For consistency check): "<< EvalAutoCpl(&couplings[0],&par[0],&iso_par[0])<<std::endl;
 	_useBranch=true;
 	if (_nBra>0){
 		std::vector<std::complex<double> > bra = get_branchings(couplings,par,iso_par);
@@ -110,7 +110,7 @@ void minimize::initCouplings(){
 			setParameter(2*_nCpl+_nPar+2*i ,bra[i].real());
 			setParameter(2*_nCpl+_nPar+2*i+1,bra[i].imag());
 		};
-		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(bra,couplings,par,iso_par)<<" ('EvalAutoCplBranch(...)')"<<std::endl;
+		std::cout << "With the found branchings, Chi2(...)="<< EvalAutoCplBranch(&bra[0],&couplings[0],&par[0],&iso_par[0])<<" ('EvalAutoCplBranch(...)')"<<std::endl; //[0]//
 		for (int i =0;i<2*_nCpl;i++){ // Fix couplings
 			fixPar(i);
 		};

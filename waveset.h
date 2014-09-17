@@ -22,18 +22,18 @@ class waveset {
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > amps(
 								double 							m,
-								std::vector<std::complex<xdouble> > 			&cpl,
-								std::vector<xdouble> 					&par,
+								const std::complex<xdouble> 				*cpl,
+								const xdouble	 					*par,
 								std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi);
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > funcs(
 								double 							m,
-								std::vector<xdouble> 					&par);
+								const xdouble 						*par);
 
 		template<typename xdouble>
 		std::vector<std::vector<std::complex<xdouble> > > iso_funcs(
-								std::vector<xdouble> 					&par);
+								const xdouble 						*par);
 
 		std::vector<double> phase_space(
 								double 							m);

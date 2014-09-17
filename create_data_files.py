@@ -12,6 +12,7 @@ from numpy import linalg as la
 import shutil
 
 f0_list=['f0_0278_0320',  'f0_0320_0360',  'f0_0360_0400',  'f0_0400_0440',  'f0_0440_0480',  'f0_0480_0520',  'f0_0520_0560',  'f0_0560_0600',  'f0_0600_0640',  'f0_0640_0680',  'f0_0680_0720',  'f0_0720_0760',  'f0_0760_0800',  'f0_0800_0840',  'f0_0840_0880',  'f0_0880_0920',  'f0_0920_0930',  'f0_0930_0940',  'f0_0940_0950',  'f0_0950_0960',  'f0_0960_0970',  'f0_0970_0980',  'f0_0980_0990',  'f0_0990_1000',  'f0_1000_1010',  'f0_1010_1020',  'f0_1020_1030',  'f0_1030_1040',  'f0_1040_1050',  'f0_1050_1060',  'f0_1060_1070',  'f0_1070_1080',  'f0_1080_1120',  'f0_1120_1160',  'f0_1160_1200',  'f0_1200_1240',  'f0_1240_1280',  'f0_1280_1320',  'f0_1320_1360',  'f0_1360_1400',  'f0_1400_1440',  'f0_1440_1480',  'f0_1480_1520',  'f0_1520_1560',  'f0_1560_1600',  'f0_1600_1640',  'f0_1640_1680',  'f0_1680_1720',  'f0_1720_1760',  'f0_1760_1800',  'f0_1800_1840',  'f0_1840_1880',  'f0_1880_1920',  'f0_1920_1960',  'f0_1960_2000',  'f0_2000_2040',  'f0_2040_2080',  'f0_2080_2120',  'f0_2120_2160',  'f0_2160_2200',  'f0_2200_2240',  'f0_2240_2280']
+rho_list=['rho_0278_0320', 'rho_0320_0360', 'rho_0360_0400', 'rho_0400_0440', 'rho_0440_0480', 'rho_0480_0520', 'rho_0520_0560', 'rho_0560_0600', 'rho_0600_0640', 'rho_0640_0680', 'rho_0680_0700', 'rho_0700_0720', 'rho_0720_0740', 'rho_0740_0760', 'rho_0760_0780', 'rho_0780_0800', 'rho_0800_0820', 'rho_0820_0840', 'rho_0840_0860', 'rho_0860_0880', 'rho_0880_0900', 'rho_0900_0920', 'rho_0920_0960', 'rho_0960_1000', 'rho_1000_1040', 'rho_1040_1080', 'rho_1080_1120', 'rho_1120_1160', 'rho_1160_1200', 'rho_1200_1240', 'rho_1240_1280', 'rho_1280_1320', 'rho_1320_1360', 'rho_1360_1400', 'rho_1400_1440', 'rho_1440_1480', 'rho_1480_1520', 'rho_1520_1560', 'rho_1560_1600', 'rho_1600_1640', 'rho_1640_1680', 'rho_1680_1720', 'rho_1720_1760', 'rho_1760_1800', 'rho_1800_1840', 'rho_1840_1880', 'rho_1880_1920', 'rho_1920_1960', 'rho_1960_2000', 'rho_2000_2040', 'rho_2040_2080', 'rho_2080_2120', 'rho_2120_2160', 'rho_2160_2200', 'rho_2200_2240', 'rho_2240_2280']
 
 def get_data_anchor(waves,up,low,direct,DIVIDE_PHASE_SPACE,int_dir,ACC_CORRECTED):
 	"""Gets data points and covariance matrix for anchor wave fitting"""
@@ -114,7 +115,7 @@ def normalize_to_integrals(raw_data,waves,int_dir,ACC_CORRECTED=True):
 
 
 def de_isobarred_list(name):
-	"""Generates a list """
+	"""Generates a list of waves"""
 	type_isob = ''
 	identifier = name.split()[1]
 	if identifier in ['f0','f0(980)','[pipi]_S']:
@@ -131,7 +132,15 @@ def de_isobarred_list(name):
 				waves.append(repwave)
 			else:
 				waves.append(repwave[:60])
+	elif type_isob=='rho':
+		for step in rho_list:
+			repwave=name.replace(identifier,step)
+			if len(repwave) < 60:
+				waves.append(repwave)
+			else:
+				waves.append(repawve[:60])
 	else:
+		print "Wave not defined for de-isobarring"
 		raise Exception
 	return waves
 
@@ -241,7 +250,6 @@ def process_config(config_file, date_time_flag=False):
 			pass
 	except KeyError:
 		pass
-
 	for tbin in range(len(tbinning)-1):
 		t_name = name+"_"+str(tbinning[tbin])+'_'+str(tbinning[tbin+1])
 		int_dir=''
