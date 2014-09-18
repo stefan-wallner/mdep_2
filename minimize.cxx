@@ -69,11 +69,11 @@ void minimize::initCouplings(){
 	std::cout<<"Initialize couplings"<<std::endl;
 	int cpls = _nBrCplAnc;
 	setRandomCpl(); // Set random couplings
-	for(int tbin=0; tbin<_waveset.getNtBin();tbin++){ // Switch off all t' bins
+	for(int tbin=0; tbin<_waveset.nTbin();tbin++){ // Switch off all t' bins
 		_waveset.setEvalTbin(tbin,false);
 	};
 	_useBranch = false; // Do not use branchings at first
-	for(int tbin=0; tbin<_waveset.getNtBin();tbin++){ // Find cpl for each t' bin
+	for(int tbin=0; tbin<_waveset.nTbin();tbin++){ // Find cpl for each t' bin
 		_waveset.setEvalTbin(tbin,true);
 		std::cout<<"tBin #"<<tbin<<std::endl;
 		for (int i =0;i<2*_nCpl;i++){
@@ -86,7 +86,7 @@ void minimize::initCouplings(){
 		std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
 		_waveset.setEvalTbin(tbin,false);
 	};
-	for(int tbin=0;tbin<_waveset.getNtBin();tbin++){ // Switch on all t' bins
+	for(int tbin=0;tbin<_waveset.nTbin();tbin++){ // Switch on all t' bins
 		_waveset.setEvalTbin(tbin,true);
 	};
 	std::vector<std::complex<double> > couplings(_nCpl);

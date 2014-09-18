@@ -41,7 +41,7 @@ mass_independent_fit:
 min_step_size: 1.0e-05
 mmax: 2.5
 mmin: 0.5
-standard_phase_space: true
+standard_phase_space: true # I want to have some comment here
 t_binning:
 - 0.1
 - 0.112853
@@ -55,6 +55,7 @@ t_binning:
 - 0.448588
 - 0.724294
 - 1.0
+# And also here
 waves:
 - mmax: 2.3
   mmin: 0.9

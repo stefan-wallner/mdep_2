@@ -74,6 +74,9 @@ class waveset {
 		void 				setBinning(std::vector<double> binning);
 		void 				setTbinning(std::vector<double> binning);
 		void 				setEvalTbin(int i, bool flag);
+		void 				setMinBin(int in);
+		void 				setMaxBin(int in);
+
 
 #ifdef USE_YAML
 		// // YAML LOADER
@@ -87,47 +90,43 @@ class waveset {
 #endif//USE_YAML
 
 	// GETTERS
+
+		// // ONE LINE GETTERS
+		bool 				write_out		()		{return _write_out;};			
+		bool				has_isobars		()		{return _has_isobars;};			
+		int				minBin			()		{return _minBin;};			
+		int				maxBin			()		{return _maxBin;};			
+		int				nBrCpl			()		{return _nBrCpl;};			
 		// // SIMPLE OVER ALL NUMBERS
-		int 				getNpoints();
-		int 				getNftw();
-		int 				getNtBin();
-		int 				getNbins();
+		int 				nPoints			()		{return _nPoints;};
+		int 				nFtw			()		{return _nFtw;};
+		int 				nTbin			()		{return _nTbin;};
+		int 				nBins			()		{return _nBins;};
+		int 				getNtot			()		{return 2*getNcpl() + getNpar() + 2*nBranch() + getNiso();};
+		int 				getNcpl			()		{return _nBrCpl * _nTbin;};
+		int 				nBranch			()		{return _nBranch;};
+		double				get_m			(int bin)	{return (_binning[bin]+_binning[bin+1])/2.;};
+		std::ofstream*			outStream		()		{return _outStream;};
+		const std::vector<bool>*	eval_tbin		()		{return &_eval_tbin;};
 
-		// // PARAMETER NUMBERS
-		int 				getNtot();
-		int 				getNcpl();
-		int 				getNpar();
-		int 				getNbra();
-		int 				getNiso();
+		const std::vector<int>* 	n_branch		()		{return &_n_branch;};
+		const std::vector<int>*		n_cpls			()		{return &_n_cpls;};
+		const std::vector<int>*		borders_waves		()		{return &_borders_waves;};
+		const std::vector<int>*		point_to_wave		()		{return &_point_to_wave;};
+		const std::vector<int>*		funcs_to_waves		()		{return &_funcs_to_waves;};
+		const std::vector<int>*		iso_to_waves		()		{return &_iso_to_waves;};
+		const std::vector<int>*		wave_binning_pts	()		{return &_wave_binning_pts;};
+		const std::vector<int>*		point_borders_wave	()		{return &_point_borders_wave;};
+		const std::vector<int>*		coupled			()		{return &_coupled;};
 
-		// // NEW GETTERS FORMAT AT SOME POINT
-		const std::vector<double>	get_t_binning(){return _t_binning;};
-		const std::vector<bool>*	eval_tbin(){return &_eval_tbin;};
-		bool 				write_out(){return _write_out;};
-		std::ofstream*			outStream(){return _outStream;};
-		const std::vector<int>* 	n_branch(){return &_n_branch;};
-		const std::vector<int>*		n_cpls(){return &_n_cpls;};
-		int				nBrCpl(){return _nBrCpl;};
-		const std::vector<int>*		borders_waves(){return &_borders_waves;};
-		int				minBin(){return _minBin;};
-		int				maxBin(){return _maxBin;};
-		const std::vector<double>*	binning(){return &_binning;};
-		const std::vector<int>*		point_to_wave(){return &_point_to_wave;};
-		const std::vector<int>*		funcs_to_waves(){return &_funcs_to_waves;};
-		const std::vector<int>*		iso_to_waves(){return &_iso_to_waves;};
-		const std::vector<int>*		wave_binning_pts(){return &_wave_binning_pts;};
-		const std::vector<int>*		point_borders_wave(){return &_point_borders_wave;};
-		const std::vector<int>*		coupled(){return &_coupled;};
-		const std::vector<double>*	upperLims(){return &_upperLims;};
-		const std::vector<double>*	lowerLims(){return &_lowerLims;};
-		bool				has_isobars(){return _has_isobars;};
-
-		double				get_m(int bin){return (_binning[bin]+_binning[bin+1])/2.;};
-
-		void 				setMinBin(int in){_minBin = in;};
-		void 				setMaxBin(int in){_maxBin = in;};
+		const std::vector<double>*	upperLims		()		{return &_upperLims;};
+		const std::vector<double>*	lowerLims		()		{return &_lowerLims;};
+		const std::vector<double>*	binning			()		{return &_binning;};
+		const std::vector<double>*	t_binning		()		{return &_t_binning;};
 
 		// // PROPERTIES OF THE WAVES
+		int 				getNpar();
+		int 				getNiso();
 		std::string 			getWaveName(int i);
 		std::vector<int>	 	get_wave_functions(int wave);
 		std::vector<int>	 	get_wave_pars(int wave);

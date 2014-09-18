@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
 
 	int nPar = Chi2.Waveset()->getNpar();
 	int nCpl = Chi2.getNanc();
-	int nBra = Chi2.Waveset()->getNbra();
+	int nBra = Chi2.Waveset()->nBranch();
 	int nTot = Chi2.getNtotAnc();
 	int nIso = Chi2.Waveset()->getNiso();
 

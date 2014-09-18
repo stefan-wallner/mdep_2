@@ -47,10 +47,10 @@ int main(){
 	Chi2.Waveset()->setWaveIsobarBinning(1,0);
 	std::vector<double> data;
 	std::vector<std::vector<double> > coma;
-	for (int i=0;i<2*Chi2.Waveset()->getNpoints()-1;i++){
+	for (int i=0;i<2*Chi2.Waveset()->nPoints()-1;i++){
 		data.push_back(1.);
 		std::vector<double> comaLine;
-		for (int j=0;j<2*Chi2.Waveset()->getNpoints()-1;j++){
+		for (int j=0;j<2*Chi2.Waveset()->nPoints()-1;j++){
 			if(i==j){
 				comaLine.push_back(1.);
 			}else{
@@ -63,7 +63,7 @@ int main(){
 	for (int i=0;i<11;i++){
 		data[i] = data_c[i];
 	};
-	for (int bin=0;bin<Chi2.Waveset()->getNbins();bin++){
+	for (int bin=0;bin<Chi2.Waveset()->nBins();bin++){
 		if (not Chi2.set_data(0,bin,data)){
 			std::cout<<"data wrong"<<std::endl;
 		};
@@ -74,7 +74,7 @@ int main(){
 	Chi2.printStatus();
 
 //// Start here with the evaluation
-	std::vector<std::complex<double> > cpl(Chi2.Waveset()->getNftw(),std::complex<double>(1.,0.));
+	std::vector<std::complex<double> > cpl(Chi2.Waveset()->nFtw(),std::complex<double>(1.,0.));
 	std::vector<double> par;
 	std::vector<std::complex<double> > bra;
 	std::vector<double> isopar;

@@ -180,11 +180,3 @@ waves:
   parametrizations:
   - a4(2040)
   - cohBKG(4++)1+_rho_pi_G
-parameters:
-- name: qwqwq
-- name: M_a1(1260)
-  value: 12345.
-- name: G_a1(1260)
-  value: 1221.
-  upper_limit: 12121.
-  lower_limit: 45454.

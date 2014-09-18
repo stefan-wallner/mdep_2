@@ -614,6 +614,20 @@ void waveset::setEvalTbin(
 	_eval_tbin[i] = flag;
 };
 //########################################################################################################################################################
+///Sets minimum bin evaluated my hand
+void waveset::setMinBin(
+							int 							in){
+
+_minBin = in;
+};
+//########################################################################################################################################################
+///Sets maximum bin evaluated my hand
+void waveset::setMaxBin(
+							int 							in){
+
+_maxBin = in;
+};
+//########################################################################################################################################################
 #ifdef USE_YAML
 ///Loads the phase space from a YAML file
 bool waveset::loadGlobalPhaseSpace(
@@ -941,42 +955,6 @@ void waveset::loadIsoBinnings(
 };
 #endif//USE_YAML
 //########################################################################################################################################################
-///Gets total number of points: sum_{waves} n_{isobar_bins} // If no wave is de-isobarred, returns _nWaves
-int waveset::getNpoints(){
-
-	return _nPoints;
-};
-//########################################################################################################################################################
-///Returns the number of couplings 'functions to waves'
-int waveset::getNftw(){
-
-	return _nFtw;
-};
-//########################################################################################################################################################
-///Gives the number of m3Pi bins
-int waveset::getNbins(){
-
-	return _nBins;
-};
-//########################################################################################################################################################
-///Gives the number of t' bins
-int waveset::getNtBin(){
-
-	return _nTbin;
-};
-//########################################################################################################################################################
-///Total number of parameters (including non achor couplings)
-int waveset::getNtot(){
-
-	return 2*getNcpl() + getNpar() + 2*getNbra() + getNiso();
-};
-//########################################################################################################################################################
-///Number of total couplings
-int waveset::getNcpl(){
-
-	return _nBrCpl * _nTbin;
-};
-//########################################################################################################################################################
 ///Returns the number of parameters (without branchings or couplings)
 int waveset::getNpar(){
 
@@ -984,12 +962,6 @@ int waveset::getNpar(){
 		return 0;
 	};
 	return _borders_par[_borders_par.size() -1];
-};
-//########################################################################################################################################################
-///Number of sets coupled by branchings
-int waveset::getNbra(){
-
-	return _nBranch;
 };
 //########################################################################################################################################################
 ///Returns the number of parameters for isobars
