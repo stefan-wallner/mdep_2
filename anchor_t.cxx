@@ -43,9 +43,9 @@ anchor_t::anchor_t(
 	setTbinning(_t_binning);
 	update_definitions();
 	update_min_max_bin();
-	std::cout<<"Load anchor_t from YAML file"<<std::endl;
+	std::cout<<"Load anchor_t from YAML file\nLoad data and coma"<<std::endl;
 	loadDataComa(Ycard);
-	std::cout<<"Data and coma loaded"<<std::endl;
+	std::cout<<"Data and coma loaded\nLoad parameter values"<<std::endl;
 	loadParameterValues(Ycard, Yparam);
 	std::cout<<"Paramter values loaded"<<std::endl;
 	std::cout<<"anchor_t loaded"<<std::endl;
@@ -974,6 +974,10 @@ bool anchor_t::set_data(
 		_data[tbin] = std::vector<std::vector<double> >(_nBins);
 	};
 	_data[tbin][bin] = data;
+#ifdef STORE_ACTIVE
+	update_is_active();
+#endif//STORE_ACTIVE
+
 	if (data.size() == 2*_nPoints -1){
 		return true;
 	};
@@ -1040,6 +1044,9 @@ void anchor_t::loadData(
 			data_bin = std::vector<double>();
 		};
 	};
+#ifdef STORE_ACTIVE
+	update_is_active();
+#endif//STORE_ACTIVE
 	if (_nBins != _data[tbin].size()){
 		std::cout << "Warning: _nBins="<<_nBins<<" != _data.size()="<<_data[tbin].size()<<std::endl;
 	}else{
@@ -1367,7 +1374,16 @@ void anchor_t::update_is_active(){
 
 	_is_active = std::vector<std::vector<std::vector<bool> > >(_nTbin,std::vector<std::vector<bool> >(_nBins,std::vector<bool>(_nPoints,true)));
 	for (int tbin =0;tbin<_nTbin;tbin++){
+		if (_data.size() < tbin){
+			break;
+		};
 		for(int bin=0;bin<_nBins;bin++){
+			if (_data[tbin].size() < bin){
+				break;
+			};
+			if (_data[tbin][bin].size() < 2*_nPoints-1){
+				break;
+			};
 			if(_data[tbin][bin][0] == 0.){
 				_is_active[tbin][bin][0] = false;
 			};

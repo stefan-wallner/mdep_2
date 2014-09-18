@@ -60,19 +60,21 @@ waveset::waveset(
 	std::cout<<"Take parametrizations from: "<<parametrizations<<std::endl;
 	std::cout<<"Take wave-definitions from: "<<waves<<std::endl;
 	std::cout<<"Initialize waveset from YAML file: "<<card<<std::endl;
+	std::cout<<"Load phase space"<<std::endl;
 	loadGlobalPhaseSpace(Ycard);
-	std::cout<<"Phase space loaded"<<std::endl;
+	std::cout<<"Phase space loaded\nLoad functions"<<std::endl;
 	std::map<std::string,int> fMap = loadFunctions(Ycard, Yparam);
-	std::cout<<"Functions loaded"<<std::endl;
+	std::cout<<"Functions loaded\nLoad waves"<<std::endl;
 	loadWaves(Ycard, Ywaves);
-	std::cout<<"Waves loaded"<<std::endl;
+	std::cout<<"Waves loaded\nSet parametrizations"<<std::endl;
 	loadFtw(Ycard, fMap);
-	std::cout<<"Parametrizations set"<<std::endl;
+	std::cout<<"Parametrizations set\nSetBranchings"<<std::endl;
 	loadBranchings(Ycard);
-	std::cout<<"Branchings set"<<std::endl;
+	std::cout<<"Branchings set\nSet binnings"<<std::endl;
 	loadBinnings(Ycard);
 	std::cout<<"Binning set"<<std::endl;
 	if(_has_isobars){
+		std::cout<<"Try to set isobar binnings"<<std::endl;
 		std::string binning_file;
 		if (Ycard["isobar_binnings"]){
 			binning_file = Ycard["isobar_binnings"].as<std::string>();
@@ -716,9 +718,7 @@ std::map<std::string,int> waveset::loadFunctions(
 				if(param[iName]){
 					if (0==fMap[iName]){ // Write isobars also in the fMap
 						fMap[iName]=iCount;
-std::cout<<"do i get my error here? iName:"<<iName<<std::endl;
 						int nParam = param[iName]["parametrization"].as<int>();
-std::cout<<"no!"<<std::endl;
 						int nPar = getNparsNonConst(nParam);
 						int nCon = getNpars(nParam)-getNparsNonConst(nParam);
 						if (param[iName]["t_dependent"]){

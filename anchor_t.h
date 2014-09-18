@@ -161,7 +161,6 @@ class anchor_t : public waveset {
 		void					write_plots(std::string filename, int tbin);
 		void					write_plots(std::string filename, int tbin, std::vector<double> &paramters);
 		void					write_plots(std::string filename, int tbin,std::vector<std::complex<double> >&cpl,std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
-
 	protected:
 		// PARAMETER NUMBERS
 		int 									_nTot; 			// Total number of parameters

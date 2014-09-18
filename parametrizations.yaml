@@ -241,13 +241,29 @@ a4:
  - name: mRho4pp
    value: 0.770
 
+pi 1300:
+ parametrization: 0
+ parameters:
+ - name: mPi1300
+   value: 1.14345
+ - name: GPi1300
+   value: 0.818072
+
+pi 1800:
+ parametrization: 0
+ parameters:
+ - name: mPi1800
+   value: 1.77068
+ - name: GPi1800
+   value: 0.251763
+
 f0(980):
  parametrization: 0
  parameters:
  - name: mf0
-   value: 0.98
+   value: 0.990
  - name: Gf0
-   value: 0.110
+   value: 0.90
 
 rho(770):
  parametrization: 0
