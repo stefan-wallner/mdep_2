@@ -1378,7 +1378,7 @@ void anchor_t::update_is_active(){
 			break;
 		};
 		for(int bin=0;bin<_nBins;bin++){
-			if (_data[tbin].size() < bin){
+			if (_data[tbin].size() < bin-1){
 				break;
 			};
 			if (_data[tbin][bin].size() < 2*_nPoints-1){
