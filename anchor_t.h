@@ -10,7 +10,7 @@
 #include "yaml-cpp/yaml.h"
 #endif//USE_YAML
 
-class anchor_t : public waveset {
+class anchor_t{
 	public:
 	// CONSTRUCTOR
 		anchor_t();
@@ -142,6 +142,7 @@ class anchor_t : public waveset {
 		bool					loadParameterValues(YAML::Node &waveset, YAML::Node &param);
 #endif//USE_YAML
 	// OTHER SETTERS & GETTERS
+		waveset* 				Waveset();
 		int getNtotAnc();
 		int getNanc();
 
@@ -162,7 +163,11 @@ class anchor_t : public waveset {
 		void					write_plots(std::string filename, int tbin, std::vector<double> &paramters);
 		void					write_plots(std::string filename, int tbin,std::vector<std::complex<double> >&cpl,std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
 	protected:
+		// WAVESET
+		waveset									_waveset;		// The waveset used
+
 		// PARAMETER NUMBERS
+
 		int 									_nTot; 			// Total number of parameters
 		int 									_nPar; 			// Number of shape parameters
 		int 									_nCpl; 			// Number of couplings (total, all t' bins summed)

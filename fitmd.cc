@@ -27,11 +27,11 @@ int main(int argc, char* argv[]){
 	//Chi2.printStatus();
 	//return 0;
 
-	int nPar = Chi2.getNpar();
+	int nPar = Chi2.Waveset()->getNpar();
 	int nCpl = Chi2.getNanc();
-	int nBra = Chi2.getNbra();
+	int nBra = Chi2.Waveset()->getNbra();
 	int nTot = Chi2.getNtotAnc();
-	int nIso = Chi2.getNiso();
+	int nIso = Chi2.Waveset()->getNiso();
 
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 	

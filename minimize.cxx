@@ -69,12 +69,12 @@ void minimize::initCouplings(){
 	std::cout<<"Initialize couplings"<<std::endl;
 	int cpls = _nBrCplAnc;
 	setRandomCpl(); // Set random couplings
-	for(int tbin=0; tbin<_nTbin;tbin++){ // Switch off all t' bins
-		setEvalTbin(tbin,false);
+	for(int tbin=0; tbin<_waveset.getNtBin();tbin++){ // Switch off all t' bins
+		_waveset.setEvalTbin(tbin,false);
 	};
 	_useBranch = false; // Do not use branchings at first
-	for(int tbin=0; tbin<_nTbin;tbin++){ // Find cpl for each t' bin
-		setEvalTbin(tbin,true);
+	for(int tbin=0; tbin<_waveset.getNtBin();tbin++){ // Find cpl for each t' bin
+		_waveset.setEvalTbin(tbin,true);
 		std::cout<<"tBin #"<<tbin<<std::endl;
 		for (int i =0;i<2*_nCpl;i++){
 			fixPar(i);
@@ -84,10 +84,10 @@ void minimize::initCouplings(){
 		};
 		double onetbinchi2 = fit();
 		std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
-		setEvalTbin(tbin,false);
+		_waveset.setEvalTbin(tbin,false);
 	};
-	for(int tbin=0;tbin<_nTbin;tbin++){ // Switch on all t' bins
-		setEvalTbin(tbin,true);
+	for(int tbin=0;tbin<_waveset.getNtBin();tbin++){ // Switch on all t' bins
+		_waveset.setEvalTbin(tbin,true);
 	};
 	std::vector<std::complex<double> > couplings(_nCpl);
 	std::vector<double> par(_nPar);
@@ -423,7 +423,7 @@ void minimize::setRandomBra(){
 ///Sets some internal vaiables accordingly
 void minimize::finish_setUp(){
 
-	std::vector<int> first_branch = getFirstBranch();
+	std::vector<int> first_branch = _waveset.getFirstBranch();
 	if (_released.size() != _parameters.size()){
 	//		std::cout<<"Warning: No paramter status set, releasing couplings, fixing all others."<<std::endl;
 		std::vector<bool> std_rel(_parameters.size(),false);
@@ -451,7 +451,7 @@ void minimize::loadFitterDefinitions(
 	if (waveset["min_step_size"]){
 		_minStepSize = waveset["min_step_size"].as<double>();
 	};
-	int nPar = getNpar();
+	int nPar = _waveset.getNpar();
 	int nCpl = getNanc();
 	for (int par = 0;par<nPar;par++){
 		setStepSize(2*nCpl+par,std::max(_minStepSize, 0.0001*fabs(_parameters[2*nCpl+par])));

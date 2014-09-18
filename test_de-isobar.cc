@@ -9,28 +9,28 @@
 
 int main(){
 	anchor_t Chi2 = anchor_t();
-	Chi2.add_wave();
-	Chi2.add_wave();
-	Chi2.add_wave();
-	Chi2.setWaveLimits(0,0.,2.);
-	Chi2.setWaveLimits(1,0.,2.);
-	Chi2.setWaveLimits(2,0.,2.);
-	Chi2.setWaveName(0,"anchor");
-	Chi2.setWaveName(1,"wave1");
-	Chi2.setWaveName(2,"le_non_et_non");
-	Chi2.add_func(-1);
-	Chi2.add_func(-1);
-	Chi2.add_func(-1);
-	Chi2.setFunctionName(0,"anchor_func");
-	Chi2.setFunctionName(1,"isobar_3pi");
-	Chi2.add_iso(10);
-//	Chi2.add_iso(10);
-	Chi2.setIsobarName(0,"iso1");
-//	Chi2.setIsobarName(1,"iso2");
-	Chi2.add_func_to_wave(0,0);
-	Chi2.add_funcs_to_wave(1,1,0);	
-//	Chi2.add_funcs_to_wave(1,1,1);	
-	Chi2.add_func_to_wave(2,2);
+	Chi2.Waveset()->add_wave();
+	Chi2.Waveset()->add_wave();
+	Chi2.Waveset()->add_wave();
+	Chi2.Waveset()->setWaveLimits(0,0.,2.);
+	Chi2.Waveset()->setWaveLimits(1,0.,2.);
+	Chi2.Waveset()->setWaveLimits(2,0.,2.);
+	Chi2.Waveset()->setWaveName(0,"anchor");
+	Chi2.Waveset()->setWaveName(1,"wave1");
+	Chi2.Waveset()->setWaveName(2,"le_non_et_non");
+	Chi2.Waveset()->add_func(-1);
+	Chi2.Waveset()->add_func(-1);
+	Chi2.Waveset()->add_func(-1);
+	Chi2.Waveset()->setFunctionName(0,"anchor_func");
+	Chi2.Waveset()->setFunctionName(1,"isobar_3pi");
+	Chi2.Waveset()->add_iso(10);
+//	Chi2.Waveset()->add_iso(10);
+	Chi2.Waveset()->setIsobarName(0,"iso1");
+//	Chi2.Waveset()->setIsobarName(1,"iso2");
+	Chi2.Waveset()->add_func_to_wave(0,0);
+	Chi2.Waveset()->add_funcs_to_wave(1,1,0);	
+//	Chi2.Waveset()->add_funcs_to_wave(1,1,1);	
+	Chi2.Waveset()->add_func_to_wave(2,2);
 	std::vector<double> binning;
 	std::vector<double> iso_binning;
 	for (int i=0;i<3;i++){
@@ -42,15 +42,15 @@ int main(){
 	iso_binning.push_back(2.5);
 	iso_binning.push_back(3.5);
 	iso_binning.push_back(4.5);
-	Chi2.setBinning(binning);
-	Chi2.add_isobar_binning(iso_binning);
-	Chi2.setWaveIsobarBinning(1,0);
+	Chi2.Waveset()->setBinning(binning);
+	Chi2.Waveset()->add_isobar_binning(iso_binning);
+	Chi2.Waveset()->setWaveIsobarBinning(1,0);
 	std::vector<double> data;
 	std::vector<std::vector<double> > coma;
-	for (int i=0;i<2*Chi2.getNpoints()-1;i++){
+	for (int i=0;i<2*Chi2.Waveset()->getNpoints()-1;i++){
 		data.push_back(1.);
 		std::vector<double> comaLine;
-		for (int j=0;j<2*Chi2.getNpoints()-1;j++){
+		for (int j=0;j<2*Chi2.Waveset()->getNpoints()-1;j++){
 			if(i==j){
 				comaLine.push_back(1.);
 			}else{
@@ -63,7 +63,7 @@ int main(){
 	for (int i=0;i<11;i++){
 		data[i] = data_c[i];
 	};
-	for (int bin=0;bin<Chi2.getNbins();bin++){
+	for (int bin=0;bin<Chi2.Waveset()->getNbins();bin++){
 		if (not Chi2.set_data(0,bin,data)){
 			std::cout<<"data wrong"<<std::endl;
 		};
@@ -74,7 +74,7 @@ int main(){
 	Chi2.printStatus();
 
 //// Start here with the evaluation
-	std::vector<std::complex<double> > cpl(Chi2.getNftw(),std::complex<double>(1.,0.));
+	std::vector<std::complex<double> > cpl(Chi2.Waveset()->getNftw(),std::complex<double>(1.,0.));
 	std::vector<double> par;
 	std::vector<std::complex<double> > bra;
 	std::vector<double> isopar;
@@ -104,12 +104,6 @@ int main(){
 	};
 	print_vector(inver);
 	print_vector(Chi2.getMinimumCplBra(0,&bra[0],&startcpl[0],&par[0], &isopar[0]));
-
-
-
-
-
-
 
 
 

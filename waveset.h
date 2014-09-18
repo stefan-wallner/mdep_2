@@ -11,6 +11,7 @@
 
 class waveset {
 	public:
+
 	// CONSTRUCTOR
 		waveset();
 #ifdef USE_YAML
@@ -98,6 +99,33 @@ class waveset {
 		int 				getNpar();
 		int 				getNbra();
 		int 				getNiso();
+
+		// // NEW GETTERS FORMAT AT SOME POINT
+		const std::vector<double>	get_t_binning(){return _t_binning;};
+		const std::vector<bool>*	eval_tbin(){return &_eval_tbin;};
+		bool 				write_out(){return _write_out;};
+		std::ofstream*			outStream(){return _outStream;};
+		const std::vector<int>* 	n_branch(){return &_n_branch;};
+		const std::vector<int>*		n_cpls(){return &_n_cpls;};
+		int				nBrCpl(){return _nBrCpl;};
+		const std::vector<int>*		borders_waves(){return &_borders_waves;};
+		int				minBin(){return _minBin;};
+		int				maxBin(){return _maxBin;};
+		const std::vector<double>*	binning(){return &_binning;};
+		const std::vector<int>*		point_to_wave(){return &_point_to_wave;};
+		const std::vector<int>*		funcs_to_waves(){return &_funcs_to_waves;};
+		const std::vector<int>*		iso_to_waves(){return &_iso_to_waves;};
+		const std::vector<int>*		wave_binning_pts(){return &_wave_binning_pts;};
+		const std::vector<int>*		point_borders_wave(){return &_point_borders_wave;};
+		const std::vector<int>*		coupled(){return &_coupled;};
+		const std::vector<double>*	upperLims(){return &_upperLims;};
+		const std::vector<double>*	lowerLims(){return &_lowerLims;};
+		bool				has_isobars(){return _has_isobars;};
+
+		double				get_m(int bin){return (_binning[bin]+_binning[bin+1])/2.;};
+
+		void 				setMinBin(int in){_minBin = in;};
+		void 				setMaxBin(int in){_maxBin = in;};
 
 		// // PROPERTIES OF THE WAVES
 		std::string 			getWaveName(int i);
