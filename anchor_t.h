@@ -120,6 +120,8 @@ class anchor_t{
 		std::string 				getParName(int i);
 		int 					getParNumber(std::string name);
 		void 					setParLimits(int i, double upper, double lower);
+		void					init_lower_limits(int n=-1);
+		void					init_upper_limits(int n=-1);
 		std::vector<std::complex<double> > 	get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
 		std::vector<std::complex<double> >	getUnbranchedCouplings(std::vector<std::complex<double> > &cpl, std::vector<std::complex<double> > &bra);
 		std::vector<std::complex<double> >	getAllCouplings(int tbin,std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
@@ -142,9 +144,23 @@ class anchor_t{
 		bool					loadParameterValues(YAML::Node &waveset, YAML::Node &param);
 #endif//USE_YAML
 	// OTHER SETTERS & GETTERS
-		waveset* 				Waveset();
+		waveset* 				Waveset(){return &_waveset;};
+		bool					useBranch(){return _useBranch;};
+		int					nTot(){return _nTot;};
+		int					nPar(){return _nPar;};
+		int					nCpl(){return _nCpl;};
+		int					nBra(){return _nBra;};
+		int 					nIso(){return _nIso;};
+		int					nBrCplAnc(){return _nBrCplAnc;};
+		const std::vector<double>*		parameters(){return &_parameters;};
+		const std::vector<double>*		upper_parameter_limits(){return &_upper_parameter_limits;};
+		const std::vector<double>*		lower_parameter_limits(){return &_lower_parameter_limits;};
+		const std::vector<std::string>*		parNames(){return &_parNames;};
+
 		int getNtotAnc();
 		int getNanc();
+		void setUseBranch(bool in);
+
 
 	// OTHER METHODS
 		std::string 				className();

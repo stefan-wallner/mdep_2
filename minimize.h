@@ -13,7 +13,7 @@
 #endif//USE_YAML
 double MIN_STEP_SIZE = 0.00001;
 
-class minimize : public anchor_t{
+class minimize{
 	public:
 		minimize();
 
@@ -26,6 +26,7 @@ class minimize : public anchor_t{
 		void 			initCouplings();
 
 	// Setters and getters
+		anchor_t*		method(){return &_method;};
 		void 			setParameter(int i, double par);
 		void 			setParameter(std::string name, double par);
 		void 			setParameters(std::vector<double> pars);
@@ -61,6 +62,9 @@ class minimize : public anchor_t{
 		void 			loadFitterDefinitions(YAML::Node &waveset);
 #endif//USE_YAML
 	protected:
+	//METHOD
+		anchor_t		_method;						// The method used (at the moment anchor_t)
+
 	// OWN STUFF
 		std::vector<double> 	_best_par; 						// Best paramters
 		double 			_randRange; 						// Range for random paramters (couplings and branchings)

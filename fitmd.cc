@@ -26,38 +26,29 @@ int main(int argc, char* argv[]){
 	//Chi2.setParLimits(n,.13,13.);
 	//Chi2.printStatus();
 	//return 0;
-
-	int nPar = Chi2.Waveset()->getNpar();
-	int nCpl = Chi2.getNanc();
-	int nBra = Chi2.Waveset()->nBranch();
-	int nTot = Chi2.getNtotAnc();
-	int nIso = Chi2.Waveset()->getNiso();
-
+	int nPar = Chi2.method()->Waveset()->getNpar();
+	int nCpl = Chi2.method()->getNanc();
+	int nBra = Chi2.method()->Waveset()->nBranch();
+	int nTot = Chi2.method()->getNtotAnc();
+	int nIso = Chi2.method()->Waveset()->getNiso();
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 	
-
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
-
 	Chi2.initCouplings();
-
 
 
 	std::cout<<"-------inited------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
-
 	Chi2.relPar(nTot-1);
 	Chi2.relPar(nTot-2);
 	Chi2.relPar(nTot-3);
 	Chi2.relPar(nTot-4);
-
-	Chi2.write_plots("plots.txt",0);
-
+	Chi2.method()->write_plots("plots.txt",0);
 	Chi2.fit();
-	Chi2.write_plots("plots.txt",0);
-
+	Chi2.method()->write_plots("plots.txt",0);
 //	Chi2.open_output("./out_out.out");
 //	std::cout<<Chi2()<<std::endl;
 //	Chi2.close_output();

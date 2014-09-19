@@ -829,13 +829,31 @@ void anchor_t::setParLimits(
 							double 						lower){
 
 	if(_lower_parameter_limits.size() != _nTot){
-		_lower_parameter_limits=std::vector<double>(_nTot,1.);
+		init_lower_limits();
 	};
 	if(_upper_parameter_limits.size() != _nTot){
-		_upper_parameter_limits=std::vector<double>(_nTot,0.);
+		init_upper_limits();
 	};
 	_upper_parameter_limits[par]=upper;
 	_lower_parameter_limits[par]=lower;
+};
+//########################################################################################################################################################
+///Inits all lower parateter limits to 1.
+void anchor_t::init_lower_limits(int n){
+
+	if (n==-1){
+		n=_nTot;
+	};
+	_lower_parameter_limits = std::vector<double>(n,1.);
+};
+//########################################################################################################################################################
+///Inits all upper parateter limits to 0.
+void anchor_t::init_upper_limits(int n){
+
+	if(n==-1){
+		n=_nTot;
+	};
+	_upper_parameter_limits = std::vector<double>(n,0.);
 };
 //########################################################################################################################################################
 ///Calculates some initial values for the branchigs
@@ -1088,10 +1106,9 @@ int anchor_t::getNanc(){
 	return _nBrCplAnc * _waveset.nTbin();
 };
 //########################################################################################################################################################
-///Gives pointer to the used waveset
-waveset* anchor_t::Waveset(){
-
-	return &_waveset;
+///Switches on/off usage of branchings in the operator()
+void anchor_t::setUseBranch(bool in){
+	_useBranch = in;
 };
 //########################################################################################################################################################
 ///Gets the total number of paramters with only anchor couplings
