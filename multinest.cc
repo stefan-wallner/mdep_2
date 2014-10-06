@@ -29,7 +29,7 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 	minimize* Chi2 = static_cast<minimize*>(context);
 
 	Chi2->cube(Cube);
-	lnew = -.5*Chi2->operator()(Cube);
+	lnew = -.5*(*Chi2->method())(Cube);
 };
 
 /***********************************************************************************************************************/
@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
 	
 	double tol = 0.5;				// tol, defines the stopping criteria
 	
-	int ndims = Chi2.getNtotAnc();					// dimensionality (no. of free parameters)
+	int ndims = Chi2.method()->getNtotAnc();	// dimensionality (no. of free parameters)
 	
-	int nPar = Chi2.getNtotAnc();					// total no. of parameters including free & derived parameters
+	int nPar = Chi2.method()->getNtotAnc();		// total no. of parameters including free & derived parameters
 	
-	int nClsPar = Chi2.getNtotAnc();				// no. of parameters to do mode separation on
+	int nClsPar = Chi2.method()->getNtotAnc();	// no. of parameters to do mode separation on
 	
 	int updInt = 1000;				// after how many iterations feedback is required & the output files should be updated
 							// note: posterior files are updated & dumper routine is called after every updInt*10 iterations

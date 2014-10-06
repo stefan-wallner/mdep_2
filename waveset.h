@@ -25,19 +25,19 @@ class waveset {
 								double 							m,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
-								std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi);
+								std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi) 	const;
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > funcs(
 								double 							m,
-								const xdouble 						*par);
+								const xdouble 						*par) 		const;
 
 		template<typename xdouble>
 		std::vector<std::vector<std::complex<xdouble> > > iso_funcs(
-								const xdouble 						*par);
+								const xdouble 						*par) 		const;
 
 		std::vector<double> phase_space(
-								double 							m);
+								double 							m) 		const;
 
 	// SET UP WAVESET
 		// // WAVES AND FUNCTIONS
@@ -92,74 +92,74 @@ class waveset {
 	// GETTERS
 
 		// // ONE LINE GETTERS
-		bool 				write_out		()		{return _write_out;};			
-		bool				has_isobars		()		{return _has_isobars;};			
-		int				minBin			()		{return _minBin;};			
-		int				maxBin			()		{return _maxBin;};			
-		int				nBrCpl			()		{return _nBrCpl;};			
+		bool 				write_out		()const		{return _write_out;};			
+		bool				has_isobars		()const		{return _has_isobars;};				
+		int				minBin			()const		{return _minBin;};			
+		int				maxBin			()const		{return _maxBin;};			
+		int				nBrCpl			()const		{return _nBrCpl;};			
 		// // SIMPLE OVER ALL NUMBERS
-		int 				nPoints			()		{return _nPoints;};
-		int 				nFtw			()		{return _nFtw;};
-		int 				nTbin			()		{return _nTbin;};
-		int 				nBins			()		{return _nBins;};
-		int 				getNtot			()		{return 2*getNcpl() + getNpar() + 2*nBranch() + getNiso();};
-		int 				getNcpl			()		{return _nBrCpl * _nTbin;};
-		int 				nBranch			()		{return _nBranch;};
-		double				get_m			(int bin)	{return (_binning[bin]+_binning[bin+1])/2.;};
-		std::ofstream*			outStream		()		{return _outStream;};
-		const std::vector<bool>*	eval_tbin		()		{return &_eval_tbin;};
+		int 				nPoints			()const		{return _nPoints;};
+		int 				nFtw			()const		{return _nFtw;};
+		int 				nTbin			()const		{return _nTbin;};
+		int 				nBins			()const		{return _nBins;};
+		int 				getNtot			()const		{return 2*getNcpl() + getNpar() + 2*nBranch() + getNiso();};
+		int 				getNcpl			()const		{return _nBrCpl * _nTbin;};
+		int 				nBranch			()const		{return _nBranch;};
+		double				get_m			(int bin)const	{return (_binning[bin]+_binning[bin+1])/2.;};
+		std::ofstream*			outStream		()const		{return _outStream;};
+		const std::vector<bool>*	eval_tbin		()const		{return &_eval_tbin;};
 
-		const std::vector<int>* 	n_branch		()		{return &_n_branch;};
-		const std::vector<int>*		n_cpls			()		{return &_n_cpls;};
-		const std::vector<int>*		borders_waves		()		{return &_borders_waves;};
-		const std::vector<int>*		point_to_wave		()		{return &_point_to_wave;};
-		const std::vector<int>*		funcs_to_waves		()		{return &_funcs_to_waves;};
-		const std::vector<int>*		iso_to_waves		()		{return &_iso_to_waves;};
-		const std::vector<int>*		wave_binning_pts	()		{return &_wave_binning_pts;};
-		const std::vector<int>*		point_borders_wave	()		{return &_point_borders_wave;};
-		const std::vector<int>*		coupled			()		{return &_coupled;};
+		const std::vector<int>* 	n_branch		()const		{return &_n_branch;};
+		const std::vector<int>*		n_cpls			()const		{return &_n_cpls;};
+		const std::vector<int>*		borders_waves		()const		{return &_borders_waves;};
+		const std::vector<int>*		point_to_wave		()const		{return &_point_to_wave;};
+		const std::vector<int>*		funcs_to_waves		()const		{return &_funcs_to_waves;};
+		const std::vector<int>*		iso_to_waves		()const		{return &_iso_to_waves;};
+		const std::vector<int>*		wave_binning_pts	()const		{return &_wave_binning_pts;};
+		const std::vector<int>*		point_borders_wave	()const		{return &_point_borders_wave;};
+		const std::vector<int>*		coupled			()const		{return &_coupled;};
 
-		const std::vector<double>*	upperLims		()		{return &_upperLims;};
-		const std::vector<double>*	lowerLims		()		{return &_lowerLims;};
-		const std::vector<double>*	binning			()		{return &_binning;};
-		const std::vector<double>*	t_binning		()		{return &_t_binning;};
+		const std::vector<double>*	upperLims		()const		{return &_upperLims;};
+		const std::vector<double>*	lowerLims		()const		{return &_lowerLims;};
+		const std::vector<double>*	binning			()const		{return &_binning;};
+		const std::vector<double>*	t_binning		()const		{return &_t_binning;};
 
 		// // PROPERTIES OF THE WAVES
-		int 				getNpar();
-		int 				getNiso();
-		std::string 			getWaveName(int i);
-		std::vector<int>	 	get_wave_functions(int wave);
-		std::vector<int>	 	get_wave_pars(int wave);
-		std::vector<int>	 	get_wave_const(int wave);
-		std::vector<int>	 	get_wave_isobars(int wave);
-		std::vector<int>	 	get_wave_iso_pars(int wave);
-		std::vector<int>	 	get_wave_iso_const(int wave);
+		int 				getNpar()				const;
+		int 				getNiso()				const;
+		std::string 			getWaveName(int i)			const;
+		std::vector<int>	 	get_wave_functions(int wave)		const;
+		std::vector<int>	 	get_wave_pars(int wave)			const;
+		std::vector<int>	 	get_wave_const(int wave)		const;
+		std::vector<int>	 	get_wave_isobars(int wave)		const;
+		std::vector<int>	 	get_wave_iso_pars(int wave)		const;
+		std::vector<int>	 	get_wave_iso_const(int wave)		const;
 
 		// // PROPERTIES OF THE FUNCTIONS
-		std::string 			getFunctionName(int i);
-		std::vector<int>	 	get_nPars();
-		std::vector<int>	 	get_nConst();
-		std::vector<int>	 	get_function_pars(int func);
-		std::vector<int>	 	get_function_const(int func);
-		std::vector<int>	 	get_function_waves(int func);
+		std::string 			getFunctionName(int i)			const;
+		std::vector<int>	 	get_nPars()				const;
+		std::vector<int>	 	get_nConst()				const;
+		std::vector<int>	 	get_function_pars(int func)		const;
+		std::vector<int>	 	get_function_const(int func)		const;
+		std::vector<int>	 	get_function_waves(int func)		const;
 
 		// // PROPERTIES OF THE ISOBARS
-		std::string 			getIsobarName(int i);
-		std::vector<int>	 	get_nParsIso();
-		std::vector<int>	 	get_nConstIso();
-		std::vector<int>	 	get_isobar_pars(int func);
-		std::vector<int>	 	get_isobar_const(int func);
-		std::vector<int>	 	get_isobar_waves(int func);
+		std::string 			getIsobarName(int i)			const;
+		std::vector<int>	 	get_nParsIso()				const;
+		std::vector<int>	 	get_nConstIso()				const;
+		std::vector<int>	 	get_isobar_pars(int func)		const;
+		std::vector<int>	 	get_isobar_const(int func)		const;
+		std::vector<int>	 	get_isobar_waves(int func)		const;
 
 		// // PROPERTIES OF THE PARAMETERS
-		std::string 			getParameterName(int i);
-		std::string 			getConstantName(int i);
-		std::string 			getIsoParName(int i);
-		std::string 			getIsoConstName(int i);
+		std::string 			getParameterName(int i)			const;
+		std::string 			getConstantName(int i)			const;
+		std::string 			getIsoParName(int i)			const;
+		std::string 			getIsoConstName(int i)			const;
 
 		// // POPERTIES OF THE BINNING & BRANCHING
-		int 				get_bin(double mass);
-		std::vector<int>	 	getFirstBranch();
+		int 				get_bin(double mass)			const;
+		std::vector<int>	 	getFirstBranch()			const;
 
 	// UPDATERS
 		void 				updateNftw();
@@ -174,10 +174,10 @@ class waveset {
 		void 				updateTprime(int tbin);
 
 	// INFO FUNCTIONS
-		std::string 			className();
-		bool 				checkConsistency();
-		void 				printStatus();
-		void 				printParameters();
+		std::string 			className		()const		{return "waveset";};
+		bool 				checkConsistency()			const;
+		void 				printStatus()				const;
+		void 				printParameters()			const;
 		void 				open_output(std::string filename ="chi2log.dat");
 		void 				close_output();
 

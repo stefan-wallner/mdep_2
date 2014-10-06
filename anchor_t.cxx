@@ -260,7 +260,7 @@ xdouble anchor_t::EvalBin(
 							int 								bin,
 							const std::complex<xdouble>					*cpl,
 							const xdouble	 						*par,
-							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval){
+							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
 	double mass = _waveset.get_m(bin); // Eval at bin center.
 	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl, par,iso_eval);
@@ -304,7 +304,7 @@ xdouble anchor_t::EvalBin(
 	};
 	return chi2;
 };
-template double anchor_t::EvalBin(int tbin,int bin,const std::complex<double> *cpl,const double *par,std::vector<std::vector<std::complex<double> > > &iso_eval);
+template double anchor_t::EvalBin(int tbin,int bin,const std::complex<double> *cpl,const double *par,std::vector<std::vector<std::complex<double> > > &iso_eval) const;
 //########################################################################################################################################################
 ///Returns f(m,...) - data[...] for each SDM entry in the fit
 template<typename xdouble>
@@ -314,7 +314,7 @@ std::vector<xdouble> anchor_t::delta(
 							double 								mass,
 							const std::complex<xdouble> 					*cpl,
 							const xdouble	 						*par,
-							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval){
+							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
 	std::vector<std::complex<xdouble> > ampls = _waveset.amps(mass, cpl, par, iso_eval);
 	std::vector<xdouble> del = std::vector<xdouble> (2*_waveset.nPoints()-1);
@@ -345,7 +345,7 @@ std::vector<xdouble> anchor_t::delta(
 	};
 	return del;
 };
-template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, const std::complex<double> *cpl, const double *par, std::vector<std::vector<std::complex<double> > > &iso_eval);
+template std::vector<double> anchor_t::delta(int tbin, int bin,double mass, const std::complex<double> *cpl, const double *par, std::vector<std::vector<std::complex<double> > > &iso_eval) const;
 //########################################################################################################################################################
 /*
 		┌───────────────────────────────────────┐
@@ -359,7 +359,7 @@ AandB<xdouble> anchor_t::get_AB(
 							int 								tbin,
 							const std::complex<xdouble>	 				*anchor_cpl,
 							const xdouble	 						*par,
-							const xdouble	 						*iso_par){
+							const xdouble	 						*iso_par)		const{
 
 
 
@@ -511,7 +511,7 @@ AandB<xdouble> anchor_t::get_AB(
 	};
 	return AB;
 };
-template AandB<double> anchor_t::get_AB(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
+template AandB<double> anchor_t::get_AB(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par) const;
 //########################################################################################################################################################
 ///Gets the best couplings without branchings
 template<typename xdouble>
@@ -519,7 +519,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(
 							int 								tbin,
 							const std::complex<xdouble>					*anchor_cpl,
 							const xdouble 							*par,
-							const xdouble 							*iso_par){
+							const xdouble 							*iso_par)		const{
 	int nCplAnc = (*_waveset.borders_waves())[0]; // Number of couplings for the anchor wave
 	int nNon = _waveset.nFtw() - nCplAnc;
 	std::vector<std::complex<xdouble> > cpl = std::vector<std::complex<xdouble> >(_waveset.nFtw());
@@ -546,7 +546,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCpl(
 	};
 	return cpl;
 };
-template std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
+template std::vector<std::complex<double> > anchor_t::getMinimumCpl(int tbin,const std::complex<double> *anchor_cpl, const double *par, const double *iso_par) const;
 //########################################################################################################################################################
 ///Calculated all non anchor couplings (no need for fitting)
 template<typename xdouble>
@@ -555,7 +555,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 							const std::complex<xdouble>	 				*branch,
 							const std::complex<xdouble>	 				*anchor_cpl,
 							const xdouble	 						*par,
-							const xdouble	 						*iso_par){
+							const xdouble	 						*iso_par)			const{
 
 	if (0==_waveset.nBranch()){ // Do not do the complicated stuff, when no branchings are used
 		return getMinimumCpl(tbin,anchor_cpl,par, iso_par);
@@ -672,21 +672,21 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 		return ccppll;
 	};
 };
-template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, const std::complex<double> *branch, const std::complex<double> *anchor_cpl, const double *par, const double *iso_par);
+template std::vector<std::complex<double> > anchor_t::getMinimumCplBra(int tbin, const std::complex<double> *branch, const std::complex<double> *anchor_cpl, const double *par, const double *iso_par) const;
 //########################################################################################################################################################
 ///Instantiate auto diff methods, if needed (Enable adouble operations, if the auto diff package is loaded)
 #ifdef ADOL_ON
 template adouble anchor_t::EvalCP(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
 template adouble anchor_t::EvalBranch(const std::complex<adouble> *branch, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
 template adouble anchor_t::EvalTbin(int tbin, const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
-template adouble anchor_t::EvalBin(int tbin,int bin,const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_par);
-template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, const std::complex<adouble> *cpl, const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_eval);
+template adouble anchor_t::EvalBin(int tbin,int bin,const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_par) const;
+template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, const std::complex<adouble> *cpl, const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_eval) const;
 template adouble anchor_t::EvalAutoCpl(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
 template adouble anchor_t::EvalAutoCplBranch(const std::complex<adouble> *bra, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
 template adouble anchor_t::EvalAutoCplTbin(int tbin, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
-template AandB<adouble> anchor_t::get_AB(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
-template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
-template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, const std::complex<adouble> *branch, const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par);
+template AandB<adouble> anchor_t::get_AB(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
+template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, const std::complex<adouble> *branch, const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
 //#######################################################################################################################################################
 ///Gets the gradient w.r.t. xx
 std::vector<double> anchor_t::Diff(
@@ -791,28 +791,9 @@ bool anchor_t::setParameter(
 	};
 };
 //########################################################################################################################################################
-///Returns paramters values
-std::vector<double> anchor_t::getParameters(){
-
-	return _parameters;
-};
-//########################################################################################################################################################
-///Gets parameter names
-std::vector<std::string> anchor_t::getParNames(){
-
-	return _parNames;
-};
-//########################################################################################################################################################
-///Get name of parameter
-std::string anchor_t::getParName(
-							int 						i){ 	// # of parameter
-
-	return _parNames[i];
-};
-//########################################################################################################################################################
 ///Gets the number for a given name, if the name does not exist, return -1
 int anchor_t::getParNumber(
-							std::string 					name){
+							std::string 					name)						const{
 
 	for (int i=0;i<_parNames.size();i++){
 		if (_parNames[i] == name){
@@ -900,7 +881,7 @@ std::vector<std::complex<double> > anchor_t::get_branchings(
 ///Gets the couplings-without-branchings from couplings-with-branchings and branchings
 std::vector<std::complex<double> > anchor_t::getUnbranchedCouplings(
 							std::vector<std::complex<double> >		&cpl,
-							std::vector<std::complex<double> >		&bra){
+							std::vector<std::complex<double> >		&bra)						const{
 	
 	std::vector<std::complex<double> > cpl_un(_waveset.nFtw());
 	for (int i=0;i<_waveset.nFtw();i++){
@@ -919,7 +900,7 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 							std::vector<std::complex<double> >		&cpl,
 							std::vector<double>				&par,
 							std::vector<std::complex<double> >		&bra,
-							std::vector<double>				&iso){
+							std::vector<double>				&iso)						const{
 
 	std::vector<std::complex<double> > cpl_all;
 	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
@@ -973,12 +954,6 @@ void anchor_t::branchCouplingsToOne(){
 	};
 };
 //########################################################################################################################################################
-///Class name
-std::string anchor_t::className(){
-
-	return "anchor_t";
-};
-//########################################################################################################################################################
 ///Set data points manually
 bool anchor_t::set_data(
 							int								tbin,
@@ -1027,22 +1002,6 @@ bool anchor_t::set_coma(
 		return true;
 	};
 	return false;
-};
-//########################################################################################################################################################
-///Returns the data for a t' and mass bin
-std::vector<double> anchor_t::get_data(
-							int 								tbin,
-							int 								bin){
-
-	return _data[tbin][bin];
-};
-//########################################################################################################################################################
-///Returns the coma for a t' and mass bin
-std::vector<std::vector<double> > anchor_t::get_coma(
-							int 								tbin,
-							int 								bin){
-
-	return _coma[tbin][bin];
 };
 //########################################################################################################################################################
 ///Loads the data for a t' bin from a file
@@ -1173,7 +1132,7 @@ void anchor_t::update_min_max_bin(){
 };
 //########################################################################################################################################################
 /// Prints the internal status
-void anchor_t::printStatus(){
+void anchor_t::printStatus()																const{
 	_waveset.printStatus();
 	std::cout<<std::endl<<"ANCHOR:"<<std::endl;
 	std::cout<<std::endl<<"PARAMETER NUMBERS:"<<std::endl;

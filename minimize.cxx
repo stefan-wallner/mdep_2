@@ -284,18 +284,6 @@ void minimize::fixPar(
 	};
 };
 //########################################################################################################################################################
-///Returns parameter status
-std::vector<bool> minimize::getReleased(){
-
-	return _released;
-};
-//########################################################################################################################################################
-///Gives the class name
-std::string minimize::className(){
-
-	return "minimize";
-};
-//########################################################################################################################################################
 ///Prints the internal status
 void minimize::printStatus(){ 
 
@@ -470,7 +458,7 @@ void minimize::loadFitterDefinitions(
 #endif//USE_YAML
 //########################################################################################################################################################
 ///Cube required by the MultiNest package
-void minimize::cube(					double						*in){
+void minimize::cube(					double						*in)						const{
 	
 	for (int i=0;i<_method.nTot();i++){
 		in[i] = (1-in[i])*(*_method.lower_parameter_limits())[i]+ in[i]*(*_method.upper_parameter_limits())[i];

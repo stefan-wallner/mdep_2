@@ -73,7 +73,7 @@ class anchor_t{
 								int 							bin,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
-								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval);
+								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval)			const;
 
 		template<typename xdouble>
 		std::vector<xdouble> delta(
@@ -82,7 +82,7 @@ class anchor_t{
 								double 							mass,
 								const std::complex<xdouble>	 			*cpl,
 								const xdouble	 					*par,
-								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval);
+								std::vector<std::vector<std::complex<xdouble> > > 	&iso_eval)			const;
 
 	// AUTO CPL METHODS
 		template<typename xdouble>
@@ -90,14 +90,14 @@ class anchor_t{
 								int 							tbin,
 								const std::complex<xdouble>	 			*anchor_cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCpl(
 								int 							tbin,
 								const std::complex<xdouble> 				*anchor_cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > getMinimumCplBra(
@@ -105,7 +105,7 @@ class anchor_t{
 								const std::complex<xdouble>	 			*branch,
 								const std::complex<xdouble> 				*anchor_cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 	// DERIVATIVES
 #ifdef ADOL_ON
 		std::vector<double> 				Diff(std::vector<double> &xx);
@@ -115,16 +115,13 @@ class anchor_t{
 		void 					setParameter(int i, double par);
 		bool 					setParameter(std::string name, double par);
 		void 					setParameters(std::vector<double> pars);
-		std::vector<double> 			getParameters();
-		std::vector<std::string>		getParNames();
-		std::string 				getParName(int i);
-		int 					getParNumber(std::string name);
+		int 					getParNumber(std::string name)		const;
 		void 					setParLimits(int i, double upper, double lower);
 		void					init_lower_limits(int n=-1);
 		void					init_upper_limits(int n=-1);
 		std::vector<std::complex<double> > 	get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
-		std::vector<std::complex<double> >	getUnbranchedCouplings(std::vector<std::complex<double> > &cpl, std::vector<std::complex<double> > &bra);
-		std::vector<std::complex<double> >	getAllCouplings(int tbin,std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
+		std::vector<std::complex<double> >	getUnbranchedCouplings(std::vector<std::complex<double> > &cpl, std::vector<std::complex<double> > &bra) const;
+		std::vector<std::complex<double> >	getAllCouplings(int tbin,std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso) const;
 		void 					branchCouplingsToOne();
 
 
@@ -132,8 +129,6 @@ class anchor_t{
 	// DATA HANDLING
 		bool 					set_data(int tbin, int bin, std::vector<double> data);
 		bool 					set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
-		std::vector<double> 			get_data(int tbin, int bin);
-		std::vector<std::vector<double> > 	get_coma(int tbin, int bin);
 		void 					loadData(int tbin, const char* dataFile);
 		void 					loadComa(int tbin, const char* comaFile);
 		void 					nullify();
@@ -144,18 +139,21 @@ class anchor_t{
 		bool					loadParameterValues(YAML::Node &waveset, YAML::Node &param);
 #endif//USE_YAML
 	// OTHER SETTERS & GETTERS
-		waveset* 				Waveset(){return &_waveset;};
-		bool					useBranch(){return _useBranch;};
-		int					nTot(){return _nTot;};
-		int					nPar(){return _nPar;};
-		int					nCpl(){return _nCpl;};
-		int					nBra(){return _nBra;};
-		int 					nIso(){return _nIso;};
-		int					nBrCplAnc(){return _nBrCplAnc;};
-		const std::vector<double>*		parameters(){return &_parameters;};
-		const std::vector<double>*		upper_parameter_limits(){return &_upper_parameter_limits;};
-		const std::vector<double>*		lower_parameter_limits(){return &_lower_parameter_limits;};
-		const std::vector<std::string>*		parNames(){return &_parNames;};
+		waveset* 				Waveset			()		{return &_waveset;};
+		bool					useBranch		()const		{return _useBranch;};
+		int					nTot			()const		{return _nTot;};
+		int					nPar			()const		{return _nPar;};
+		int					nCpl			()const		{return _nCpl;};
+		int					nBra			()const		{return _nBra;};
+		int 					nIso			()const		{return _nIso;};
+		int					nBrCplAnc		()const		{return _nBrCplAnc;};
+		const std::vector<double>*		parameters		()const		{return &_parameters;};
+		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
+		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
+		const std::vector<double>* 		get_data(int tbin, int bin)const	{return &_data[tbin][bin];};
+		const	std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
+
+		const std::vector<std::string>*		parNames		()const		{return &_parNames;};
 
 		int getNtotAnc();
 		int getNanc();
@@ -163,8 +161,8 @@ class anchor_t{
 
 
 	// OTHER METHODS
-		std::string 				className();
-		void 					printStatus();
+		std::string 				className		()const		{return "anchor_t";};
+		void 					printStatus()				const;
 		void 					set_is_ampl(bool is_ampl);
 		void 					setTbinning(std::vector<double> binning);
 		void 					update_n_cpls();

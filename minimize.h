@@ -40,11 +40,11 @@ class minimize{
 		void 			fixPar(int i);
 		void 			relPar(std::string name);
 		void 			fixPar(std::string name);
-		std::vector<bool> 	getReleased();
+		const std::vector<bool>*getReleased			()const		{return &_released;};
 
 
 	// Print routines
-		std::string 		className();
+		std::string 		className			()const		{return "minimize";};
 		void 			printStatus();
 
 	// Internal handlers
@@ -56,7 +56,7 @@ class minimize{
 		void 			finish_setUp();
 
 	// MULTINEST
-		void			cube(double* in);
+		void			cube(double* in)				const;
 
 #ifdef USE_YAML	
 		void 			loadFitterDefinitions(YAML::Node &waveset);

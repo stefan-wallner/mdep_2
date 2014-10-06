@@ -55,6 +55,8 @@ add_library(minimize SHARED minimize.cxx)
 add_executable(fitmd.exe fitmd.cc)
 add_executable(de_isobarring test_de-isobar.cc)
 
+add_executable(amplitude test_amplitude.cc)
+
 if ( use_multiNest )
   add_executable(multinest  multinest.cc)
 endif()
@@ -81,6 +83,7 @@ if ( use_auto_diff )
   target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(anchor_t /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(minimize /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
+  target_link_libraries(amplitude /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
 endif()
 
 if ( use_multiNest )
