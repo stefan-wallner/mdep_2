@@ -147,26 +147,13 @@ std::vector<std::complex<xdouble> > waveset::funcs(
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
 	int upPar=0;
 	int loPar=0;
-	int upConst=0;
-	int loConst=0;
-	std::vector<xdouble> act_par = std::vector<xdouble>(_maxNpars);
 	for (int func=0; func<_nFuncs; func++){
 		loPar = upPar;
 		upPar = _borders_par[func];
-		loConst = upConst;
-		upConst = _borders_const[func];
 		int pos=0;
 		if (m >= _funcLowerLims[func] and m < _funcUpperLims[func]){ // Only calculate needed functions
-			int nFunc = _funcs[func];
-			for (int i = loPar;i<upPar;i++){
-				act_par[pos]=par[i];
-				pos+=1;
-			};
-			for (int i = loConst; i<upConst;i++){
-				act_par[pos]=_const[i];
-				pos+=1;
-			};
-			f[func]=bw(m,act_par,nFunc,_L_func[func]);
+			const xdouble vars[] = {m,_t_prime};
+			f[func]=_amp_funcs[func]->Eval(vars,par+loPar);
 		}else{
 			f[func]=std::complex<xdouble>(0.,0.);
 		};
@@ -261,7 +248,9 @@ void waveset::add_func(
 							bool							is_t_dep){
 
 	_nFuncs+=1;
-	_funcs.push_back(i);// Add new
+	amplitude* new_amp = get_amplitude(i);
+	new_amp->setL(DEFAULT_L);
+	_amp_funcs.push_back(new_amp);
 	_L_func.push_back(DEFAULT_L);
 	int nPar = getNpars(i);
 	if (_maxNpars < nPar){
@@ -505,6 +494,22 @@ void waveset::setConst(
 	for (size_t j=0;j<_const_is_t.size();j++){
 		if (i == _const_is_t[j]){
 			std::cout<<"Warning: Trying to set _const["<<i<<"] which is t' and will be overwritten"<<std::endl;
+		};
+	};
+
+	int nConst =0;
+	for (size_t j =0;j<_nFuncs;j++){
+		nConst+=_amp_funcs[j]->nCon();
+		if (_amp_funcs[j]->nVar() > 1){
+			nConst+=1;
+		};
+		if(nConst > i){
+			nConst-=_amp_funcs[j]->nCon();
+			if(_amp_funcs[j]->nVar()>1){
+				nConst-=1;
+			};
+			_amp_funcs[j]->setCon(i-nConst,con);
+			break;
 		};
 	};
 };
@@ -1388,6 +1393,7 @@ void waveset::updateFuncSpin(){
 //				};
 //			};
 			_L_func[func] = L;
+			_amp_funcs[func]->setL(L);
 //		}else{
 //			std::cout <<"No wave for function "<<func<< " declared. No spin set." << std::endl;
 		};
@@ -1530,11 +1536,7 @@ void waveset::update_n_branch(){
 void waveset::updateTprime(
 							int 							tbin){
 
-	double tt = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
-//	std::cout<<"set t to: "<<tt<<std::endl;
-	for (size_t i = 0;i<_const_is_t.size();i++){
-		_const[_const_is_t[i]] = tt;
-	};
+	_t_prime = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
 };
 //########################################################################################################################################################
 ///Does some internal consistency checks.
@@ -1564,9 +1566,9 @@ bool waveset::checkConsistency()											const{
 		};
 
 	};
-	if( _nFuncs != _funcs.size()){
+	if( _nFuncs != _amp_funcs.size()){
 		nErr+=1;
-		std::cout << "Inconsistecy found: _nFuncs = "<<_nFuncs<<" does not match _funcs.size() = "<<_funcs.size()<<std::endl;
+		std::cout << "Inconsistecy found: _nFuncs = "<<_nFuncs<<" does not match _amp_funcs.size() = "<<_amp_funcs.size()<<std::endl;
 	};
 	for (size_t i=1;i<_borders_waves.size();i++){
 		if (_borders_waves[i] < _borders_waves[i-1]){
@@ -1680,8 +1682,11 @@ void waveset::printStatus()												const{
 	std::cout << "_funcNames" << std::endl;
 	print_vector(_funcNames);
 	std::cout<<std::endl;
-	std::cout << "_funcs"<<std::endl;
-	print_vector(_funcs);
+	std::cout<<"Functions:"<<std::endl;
+	for (size_t i=0;i<_nFuncs;i++){
+		_amp_funcs[i]->print();
+		std::cout<<std::endl;
+	};
 	std::cout << std::endl;
 	std::cout << "_borders_waves" << std::endl;
 	print_vector(_borders_waves);

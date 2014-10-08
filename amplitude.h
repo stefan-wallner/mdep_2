@@ -13,13 +13,13 @@ class amplitude {
 		virtual std::string 	type()									const		{return "constant_function";};
 		std::string		name()									const		{return _name;};
 
-		std::complex<double> Eval(const double* var)							const		{return Eval(var, _parameters, _constants);};
-		std::complex<double> Eval(const double* var, const double* par)					const		{return Eval(var, par, _constants);};
+		std::complex<double> Eval(const double* var)							const		{return Eval(var, &_parameters[0], &_constants[0]);};
+		std::complex<double> Eval(const double* var, const double* par)					const		{return Eval(var, par, &_constants[0]);};
 		virtual std::complex<double> Eval(const double* var, const double* par, const double* con)	const		{return std::complex<double>(1.,0.);};
 
 #ifdef ADOL_ON
-		std::complex<adouble> Eval(const adouble* var)							const		{return Eval(var, (adouble*)_parameters, (adouble*)_constants);};
-		std::complex<adouble> Eval(const adouble* var, const adouble* par)				const		{return Eval(var, par, (adouble*)_constants);};
+		std::complex<adouble> Eval(const adouble* var)							const		{return Eval(var, (adouble*)&_parameters[0], (adouble*)&_constants[0]);};
+		std::complex<adouble> Eval(const adouble* var, const adouble* par)				const		{return Eval(var, par, (adouble*)&_constants[0]);};
 		virtual std::complex<adouble> Eval(const adouble* var, const adouble* par, const adouble* con)	const		{return std::complex<adouble>(1.,0.);};
 #endif//ADOL_ON
 
@@ -36,8 +36,8 @@ class amplitude {
 		bool			setPars(const double* vals);
 		bool			setCons(const double* vals);
 
-		const double*		parameters()								const		{return _parameters;};
-		const double*		constants()								const		{return _constants;};
+		const std::vector<double>*parameters()								const		{return &_parameters;};
+		const std::vector<double>*constants()								const		{return &_constants;};
 	
 		double			getParameter(size_t n)							const;
 		double			getConstant(size_t n)							const;
@@ -54,26 +54,28 @@ class amplitude {
 		bool			setParName(size_t n, std::string name);
 		bool			setConName(size_t n, std::string name);
 
+		void			print()									const;
+
 	protected:
 
 		int 			_L;		// Spin, treat special here, since its essential
 
-		std::string*		_var_types;	// Type of the variables // Convention: {m, t',...}
-		std::string*		_par_types;	// Names of the parameters
-		std::string*		_con_types;	// Names of the constants
+		std::vector<std::string>_var_types;	// Type of the variables // Convention: {m, t',...}
+		std::vector<std::string>_par_types;	// Names of the parameters
+		std::vector<std::string>_con_types;	// Names of the constants
 
 		std::string		_name;		// Name of the functions
-		std::string*		_par_names;	// Names of the parameters
-		std::string*		_con_names;	// Names of the constants
+		std::vector<std::string>_par_names;	// Names of the parameters
+		std::vector<std::string>_con_names;	// Names of the constants
 
 		const size_t		_nVar;		// # of Variables
 		const size_t		_nPar;		// # of Paramters
 		const size_t		_nCon;		// # of Constants
 
-		const int		_funcId;	// Id # of the function type, to be cosistent with the old method
+		const int		_funcId;	// Id # of the function type, to be consistent with the old method
 
-		double*			_parameters;	// Paramters
-		double*			_constants;	// Constants
+		std::vector<double>	_parameters;	// Paramters
+		std::vector<double>	_constants;	// Constants
 
 };
 
@@ -85,6 +87,17 @@ amplitude::amplitude():_nVar(0),_nPar(0),_nCon(0),_funcId(-1){ // Id for constan
 amplitude::amplitude(size_t nVar, size_t nPar, size_t nCon, int funcId):_nVar(nVar), _nPar(nPar), _nCon(nCon), _funcId(funcId){
 
 		_name = "unnamed_constant_function";
+
+		_constants = std::vector<double>(nCon);
+		_parameters= std::vector<double>(nPar);
+
+		_var_types = std::vector<std::string>(nVar);
+
+		_par_types = std::vector<std::string>(nPar);
+		_par_names = std::vector<std::string>(nPar);
+
+		_con_types = std::vector<std::string>(nCon);
+		_con_names = std::vector<std::string>(nCon);
 };
 
 bool amplitude::setPar(size_t n, double val){
@@ -100,6 +113,7 @@ bool amplitude::setPar(size_t n, double val){
 bool amplitude::setCon(size_t n, double val){
 	if (n < _nCon){
 		_constants[n] = val;
+std::cout<<"set constant "<<_con_names[n]<<" of "<<type()<<" to "<<val<<"=="<<_constants[n]<<std::endl;
 		return true;
 	}else{
 		std::cerr << "Error: Can't set constant #"<<n<<" for "<<type()<<std::endl;		
@@ -186,6 +200,28 @@ bool amplitude::setConName(size_t n, std::string name){
 	};
 };
 
+void amplitude::print()					const{
+	std::cout<<type()<<": "<<name()<<" ("<<_funcId<<")"<<std::endl;
+	if(_nVar>0){
+		std::cout<<"  - variables: "<<std::endl;
+		for (size_t i=0;i<_nVar;i++){
+			std::cout<<"    - "<<_var_types[i]<<std::endl;
+		};
+	};
+	if(_nPar>0){
+		std::cout<<"  - parameters: "<<std::endl;
+		for (size_t i=0;i<_nPar;i++){
+			std::cout<<"    - "<<_par_types[i]<<": "<<_par_names[i]<<": "<<_parameters[i]<<std::endl;
+		};
+	};
+	if(_nCon<0){
+		std::cout<<"  - constants: "<<std::endl;
+		for (size_t i=0;i<_nCon;i++){
+			std::cout<<"    - "<<_con_types[i]<<": "<<_con_names[i]<<": "<<_constants[i]<<std::endl;
+		};
+	};
+};
+
 ////////	////////	END OF BASE CLASS DEFINITION	////////	BEGIN SPECIAL DEFINITIONS	/////////// 
 
 ////////	////////	constant_function 		///////////////////////////////////////////////////////////
@@ -217,14 +253,13 @@ breit_wigner::breit_wigner():amplitude(1,2,0,0){
 
 	_name = "unnamed_breit_wigner";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mass","width"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "width";
 
-	std::string par_names[2] = {"unnamed_mass","unnamed_width"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_width";
 };
 
 template <typename xdouble>
@@ -256,40 +291,39 @@ mass_dep_breit_wigner::mass_dep_breit_wigner():amplitude(1,2,2,1){
 
 	_name = "unnamed_mass_dep_breit_wigner";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mass","width"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "width";
 
-	std::string par_names[2] = {"unnamed_mass","unnamed_width"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_width";
 
-	std::string con_types[2] = {"m_Pi","m_Iso"};
-	_con_types = con_types;
+	_con_types[0] = "m_Pi";
+	_con_types[1] = "m_Iso";
 
-	std::string con_names[2] = {"m_Pi","m_Iso"};
-	_con_names=con_names;
+	_con_names[0] = "m_Pi";
+	_con_names[1] = "m_Iso";
 };
 
 template <typename xdouble>
 std::complex<xdouble> mass_dep_breit_wigner::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)	const{
-		xdouble m   = var[0];
+	xdouble m   = var[0];
 
-		xdouble m0  = par[0];
-		xdouble G0  = par[1];
+	xdouble m0  = par[0];
+	xdouble G0  = par[1];
 
-		xdouble mPi = con[0];
-		xdouble mIso= con[1];
+	xdouble mPi = con[0];
+	xdouble mIso= con[1];
 
-		xdouble q0 = breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso*mIso);
-		xdouble q  = breakupMomentumReal<xdouble>(m* m ,mPi*mPi,mIso*mIso);
-		xdouble Fl = barrierFactor<xdouble>(q,_L);
-		xdouble Fl0= barrierFactor<xdouble>(q0,_L);
+	xdouble q0 = breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso*mIso);
+	xdouble q  = breakupMomentumReal<xdouble>(m* m ,mPi*mPi,mIso*mIso);
+	xdouble Fl = barrierFactor<xdouble>(q,_L);
+	xdouble Fl0= barrierFactor<xdouble>(q0,_L);
 
-		xdouble G  = G0* m0/m * q*Fl*Fl/q0/Fl0/Fl0; //G0 * m0/m q*Fl^2/(q0*Fl0^2)
-		std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
-		return std::complex<xdouble>(m0*G0,0.)/denominator;	
+	xdouble G  = G0* m0/m * q*Fl*Fl/q0/Fl0/Fl0; //G0 * m0/m q*Fl^2/(q0*Fl0^2)
+	std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
+	return std::complex<xdouble>(m0*G0,0.)/denominator;	
 };
 
 ////////	////////	two_channel_breit_wigner	///////////////////////////////////////////////////////////
@@ -315,46 +349,49 @@ two_channel_breit_wigner::two_channel_breit_wigner():amplitude(1,2,4,2){
 
 	_name = "unnamed_two_channel_breit_wigner";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mass","width"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "width";
 
-	std::string par_names[2] = {"unnamed_mass","unnamed_width"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_width";
 
-	std::string con_types[4] = {"m_Pi","m_Iso1","m_Iso2","branching"};
-	_con_types = con_types;
+	_con_types[0] = "m_Pi";
+	_con_types[1] = "m_Iso1";
+	_con_types[2] = "m_Iso2";
+	_con_types[3] = "branching";
 
-	std::string con_names[4] = {"m_Pi","m_Iso1","m_Iso2","branching"};
-	_con_names=con_names;
+	_con_names[0] = "m_Pi";
+	_con_names[1] = "m_Iso1";
+	_con_names[2] = "m_Iso2";
+	_con_names[3] = "branching";
 };
 
 template <typename xdouble>
 std::complex<xdouble> two_channel_breit_wigner::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble m0    = par[0];
-		xdouble G0    = par[1];
+	xdouble m0    = par[0];
+	xdouble G0    = par[1];
 
-		xdouble mPi   = con[0];
-		xdouble mIso1 = con[1];
-		xdouble mIso2 = con[2];
-		xdouble X  = con[3];
+	xdouble mPi   = con[0];
+	xdouble mIso1 = con[1];
+	xdouble mIso2 = con[2];
+	xdouble X  = con[3];
 
-		xdouble R = 5.;
+	xdouble R = 5.;
 
-		xdouble psl1 = psl<xdouble>(m, mPi, mIso1, R, _L);
-		xdouble psl2 = psl<xdouble>(m, mPi, mIso2, R, _L);
+	xdouble psl1 = psl<xdouble>(m, mPi, mIso1, R, _L);
+	xdouble psl2 = psl<xdouble>(m, mPi, mIso2, R, _L);
 
-		xdouble psl10= psl<xdouble>(m0, mPi, mIso1, R, _L);
-		xdouble psl20= psl<xdouble>(m0, mPi, mIso2, R, _L);
+	xdouble psl10= psl<xdouble>(m0, mPi, mIso1, R, _L);
+	xdouble psl20= psl<xdouble>(m0, mPi, mIso2, R, _L);
 
-		xdouble G = G0 * m0/m * ((1-X) * psl1/psl10 + X * psl2/psl20);
+	xdouble G = G0 * m0/m * ((1-X) * psl1/psl10 + X * psl2/psl20);
 
-		std::complex<xdouble> denominator  = std::complex<xdouble>(m0*m0-m*m,-m0*G);
-		return std::complex<xdouble>(m0*G0,0)/denominator;
+	std::complex<xdouble> denominator  = std::complex<xdouble>(m0*m0-m*m,-m0*G);
+	return std::complex<xdouble>(m0*G0,0)/denominator;
 };
 
 ////////	////////	vandermeulen_phase_space	///////////////////////////////////////////////////////////
@@ -380,43 +417,40 @@ vandermeulen_phase_space::vandermeulen_phase_space():amplitude(1,1,2,3){
 
 	_name = "unnamed_vandermeulen_phase_space";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[1] = {"alpha"};
-	_par_types = par_types;
+	_par_types[0] = "alpha";
 
-	std::string par_names[1] = {"unnamed_alpha"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_alpha";
 
-	std::string con_types[2] = {"m_Pi","m_Iso"};
-	_con_types = con_types;
+	_con_types[0] = "m_Pi";
+	_con_types[1] = "m_Iso";
 
-	std::string con_names[2] = {"m_Pi","m_Iso"};
-	_con_names=con_names;
+	_con_names[0] = "m_Pi";
+	_con_names[1] = "m_Iso";
 };
 
 template <typename xdouble>
 std::complex<xdouble> vandermeulen_phase_space::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble alpha = par[0];
+	xdouble alpha = par[0];
 
-		xdouble mPi   = con[0];
-		xdouble mIso  = con[1];
+	xdouble mPi   = con[0];
+	xdouble mIso  = con[1];
 
-		xdouble ampor = mPi + mIso;
-		std::complex<xdouble> value;
+	xdouble ampor = mPi + mIso;
+	std::complex<xdouble> value;
 
-		if ( m > ampor){
-			xdouble S = m*m;
-			xdouble E = (S + mPi * mPi - mIso*mIso)/(2*m);
-			xdouble PSQ = E*E - mPi*mPi;
-			value = std::complex<xdouble>(exp(alpha*PSQ),0.);
-		}else{
-			value = std::complex<xdouble>(1.,0.);			
-		};
-		return value;
+	if ( m > ampor){
+		xdouble S = m*m;
+		xdouble E = (S + mPi * mPi - mIso*mIso)/(2*m);
+		xdouble PSQ = E*E - mPi*mPi;
+		value = std::complex<xdouble>(exp(alpha*PSQ),0.);
+	}else{
+		value = std::complex<xdouble>(1.,0.);			
+	};
+	return value;
 };
 
 ////////	////////	valera_dorofeev_background	///////////////////////////////////////////////////////////
@@ -442,31 +476,28 @@ valera_dorofeev_background::valera_dorofeev_background():amplitude(1,2,1,4){
 
 	_name = "unnamed_valera_dorofeev_background";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"alpha","beta"};
-	_par_types = par_types;
+	_par_types[0] = "alpha";
+	_par_types[1] = "beta";
 
-	std::string par_names[2] = {"unnamed_alpha","unnamed_beta"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_alpha";
+	_par_names[1] = "unnamed_beta";
 
-	std::string con_types[1] = {"m_0"};
-	_con_types = con_types;
+	_con_types[0] = "m_0";
 
-	std::string con_names[1] = {"m_0"};
-	_con_names=con_names;
+	_con_names[0] = "m_0";
 };
 
 template <typename xdouble>
 std::complex<xdouble> valera_dorofeev_background::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble alpha = par[0];
-		xdouble beta  = par[1];
+	xdouble alpha = par[0];
+	xdouble beta  = par[1];
 
-		xdouble m0    = con[0];		
-		return std::complex<xdouble>(pow((m-m0)/0.5,alpha)*exp(-beta*(m-m0-0.5)),0);
+	xdouble m0    = con[0];		
+	return std::complex<xdouble>(pow((m-m0)/0.5,alpha)*exp(-beta*(m-m0-0.5)),0);
 };
 
 ////////	////////	bowler_parametrization		///////////////////////////////////////////////////////////
@@ -492,27 +523,26 @@ bowler_parametrization::bowler_parametrization():amplitude(1,2,0,5){
 
 	_name = "unnamed_bowler_parametrization";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mass","width"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "width";
 
-	std::string par_names[2] = {"unnamed_mass","unnamed_width"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_width";
 };
 
 template <typename xdouble>
 std::complex<xdouble> bowler_parametrization::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble m0    = par[0];
-		xdouble G0    = par[1];
+	xdouble m0    = par[0];
+	xdouble G0    = par[1];
 
-		xdouble G = G0*	bowler_integral_table<xdouble>(m)/bowler_integral_table<xdouble>(m0) * m0/m;
-		std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
+	xdouble G = G0*	bowler_integral_table<xdouble>(m)/bowler_integral_table<xdouble>(m0) * m0/m;
+	std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
 
-		return std::complex<xdouble>(sqrt(m0*G0),0)/denominator;
+	return std::complex<xdouble>(sqrt(m0*G0),0)/denominator;
 };
 ////////	////////	flatte				///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,38 +567,39 @@ flatte::flatte():amplitude(1,3,2,6){
 
 	_name = "unnamed_flatte";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[3] = {"mass","g_1","g_2"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "g_1";
+	_par_types[2] = "g_2";
 
-	std::string par_names[3] = {"unnamed_mass","unnamed_g_1","unnamed_g_2"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_g_1";
+	_par_names[2] = "unnamed_g_2";
 
-	std::string con_types[2] = {"m_Pi","m_K"};
-	_con_types = con_types;
+	_con_types[0] = "m_Pi";
+	_con_types[1] = "m_K";
 
-	std::string con_names[2] = {"m_Pi","m_K"};
-	_con_names=con_names;
+	_con_names[0] = "m_Pi";
+	_con_names[1] = "m_K";
 };
 
 template <typename xdouble>
 std::complex<xdouble> flatte::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble m0    = par[0];
-		xdouble g1    = par[1];
-		xdouble g2    = par[2];
+	xdouble m0    = par[0];
+	xdouble g1    = par[1];
+	xdouble g2    = par[2];
 
-		xdouble mPi   = con[0];
-		xdouble mK    = con[1];
-		
-		xdouble qpp= breakupMomentumReal<xdouble>(m*m,mPi*mPi,mPi*mPi);
-		xdouble qKK= breakupMomentumReal<xdouble>(m*m,mK*mK,mK*mK);
+	xdouble mPi   = con[0];
+	xdouble mK    = con[1];
+	
+	xdouble qpp= breakupMomentumReal<xdouble>(m*m,mPi*mPi,mPi*mPi);
+	xdouble qKK= breakupMomentumReal<xdouble>(m*m,mK*mK,mK*mK);
 
-		std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-(g1*qpp*qpp + g2*qKK*qKK));
-		return std::complex<xdouble>(1,0)/denominator;
+	std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-(g1*qpp*qpp + g2*qKK*qKK));
+	return std::complex<xdouble>(1,0)/denominator;
 };
 
 ////////	////////	gaus				///////////////////////////////////////////////////////////
@@ -594,25 +625,23 @@ gaus::gaus():amplitude(1,2,0,9){
 
 	_name = "unnamed_gaus";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mu","sigma"};
-	_par_types = par_types;
+	_par_types[0] = "mu";
+	_par_types[1] = "sigma";
 
-	std::string par_names[2] = {"unnamed_mu","unnamed_sigma"};
-	_par_names = par_names;
-
+	_par_names[0] = "unnamed_mu";
+	_par_names[1] = "unnamed_sigma";
 };
 
 template <typename xdouble>
 std::complex<xdouble> gaus::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble m0    = par[0];
-		xdouble sig   = par[1];
+	xdouble m0    = par[0];
+	xdouble sig   = par[1];
 
-		return std::complex<xdouble>(exp(-(m-m0)*(m-m0)/2/sig/sig),0);
+	return std::complex<xdouble>(exp(-(m-m0)*(m-m0)/2/sig/sig),0);
 };
 ////////	////////	polynomial			///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -637,15 +666,19 @@ polynomial::polynomial():amplitude(1,5,0,10){
 
 	_name = "unnamed_polynomial";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[5] = {"c0","c1","c2","c3","c4"};
-	_par_types = par_types;
+	_par_types[0] = "c0";
+	_par_types[1] = "c1";
+	_par_types[2] = "c2";
+	_par_types[3] = "c3";
+	_par_types[4] = "c4";
 
-	std::string par_names[5] = {"unnamed_c0","unnamed_c1","unnamed_c2","unnamed_c3","unnamed_c4"};
-	_par_names = par_names;
-
+	_par_names[0] = "unnamed_c0";
+	_par_names[1] = "unnamed_c1";
+	_par_names[2] = "unnamed_c2";
+	_par_names[3] = "unnamed_c3";
+	_par_names[4] = "unnamed_c4";
 };
 
 template <typename xdouble>
@@ -685,46 +718,50 @@ mass_dep_bw_2::mass_dep_bw_2():amplitude(1,2,4,22){
 
 	_name = "unnamed_mass_dep_bw_2";
 
-	std::string var_types[1] = {"mass"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
 
-	std::string par_types[2] = {"mass","width"};
-	_par_types = par_types;
+	_par_types[0] = "mass";
+	_par_types[1] = "width";
 
-	std::string par_names[2] = {"unnamed_mass","unnamed_width"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_mass";
+	_par_names[1] = "unnamed_width";
 
-	std::string con_types[4] = {"m_Pi","m_Iso1","m_Iso2","branching"};
-	_con_types = con_types;
+	_con_types[0] = "m_Pi";
+	_con_types[1] = "m_Iso1";
+	_con_types[2] = "m_Iso2";
+	_con_types[3] = "branching";
 
-	std::string con_names[4] = {"m_Pi","m_Iso1","m_Iso2","branching"};
-	_con_names=con_names;
+	_con_names[0] = "m_Pi";
+	_con_names[1] = "m_Iso1";
+	_con_names[2] = "m_Iso2";
+	_con_names[3] = "branching";
+
 };
 
 template <typename xdouble>
 std::complex<xdouble> mass_dep_bw_2::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
+	xdouble m     = var[0];
 
-		xdouble m0    = par[0];
-		xdouble G0    = par[1];
+	xdouble m0    = par[0];
+	xdouble G0    = par[1];
 
-		xdouble mPi   = con[0];
-		xdouble mIso1 = con[1];
-		xdouble mIso2 = con[2];
-		xdouble X     = con[3];
+	xdouble mPi   = con[0];
+	xdouble mIso1 = con[1];
+	xdouble mIso2 = con[2];
+	xdouble X     = con[3];
 
-		xdouble q1 = breakupMomentumReal<xdouble>(m*m,mPi*mPi,mIso1*mIso1);
-		xdouble q10= breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso1*mIso1);
-		xdouble q2 = breakupMomentumReal<xdouble>(m*m,mPi*mPi,mIso2*mIso2);
-		xdouble q20= breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso2*mIso2);
-		xdouble Fl1= barrierFactor<xdouble>(q1,_L);
-		xdouble Fl10=barrierFactor<xdouble>(q10,_L);
-		xdouble Fl2= barrierFactor<xdouble>(q2,_L);
-		xdouble Fl20=barrierFactor<xdouble>(q20,_L);	
+	xdouble q1 = breakupMomentumReal<xdouble>(m*m,mPi*mPi,mIso1*mIso1);
+	xdouble q10= breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso1*mIso1);
+	xdouble q2 = breakupMomentumReal<xdouble>(m*m,mPi*mPi,mIso2*mIso2);
+	xdouble q20= breakupMomentumReal<xdouble>(m0*m0,mPi*mPi,mIso2*mIso2);
+	xdouble Fl1= barrierFactor<xdouble>(q1,_L);
+	xdouble Fl10=barrierFactor<xdouble>(q10,_L);
+	xdouble Fl2= barrierFactor<xdouble>(q2,_L);
+	xdouble Fl20=barrierFactor<xdouble>(q20,_L);	
 
-		xdouble G  = G0 * m0/m* ((1-X)*q1*Fl1*Fl1/q10/Fl10/Fl10 + X* q2*Fl2*Fl2/q20/Fl20/Fl20);
-		std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
-		return std::complex<xdouble>(m0*G0,0.)/denominator;	
+	xdouble G  = G0 * m0/m* ((1-X)*q1*Fl1*Fl1/q10/Fl10/Fl10 + X* q2*Fl2*Fl2/q20/Fl20/Fl20);
+	std::complex<xdouble> denominator = std::complex<xdouble>(m0*m0-m*m,-m0*G);
+	return std::complex<xdouble>(m0*G0,0.)/denominator;	
 };
 
 ////////	////////	t_dependent_background		///////////////////////////////////////////////////////////
@@ -750,44 +787,83 @@ t_dependent_background::t_dependent_background():amplitude(2,4,3,101){
 
 	_name = "unnamed_t_dependent_background";
 
-	std::string var_types[2] = {"mass","t'"};
-	_var_types = var_types;
+	_var_types[0] = "mass";
+	_var_types[1] = "t'";
 
-	std::string par_types[4] = {"b","c0","c1","c2"};
-	_par_types = par_types;
+	_par_types[0] = "b";
+	_par_types[1] = "c0";
+	_par_types[2] = "c1";
+	_par_types[3] = "c2";
 
-	std::string par_names[4] = {"unnamed_b","unnamed_c0","unnamed_c1","unnamed_c2"};
-	_par_names = par_names;
+	_par_names[0] = "unnamed_b";
+	_par_names[1] = "unnamed_c0";
+	_par_names[2] = "unnamed_c1";
+	_par_names[3] = "unnamed_c2";
 
-	std::string con_types[3] = {"m_0","m_Pi","mIso"};
-	_con_types = con_types;
+	_con_types[0] = "m_0";
+	_con_types[1] = "m_Pi";
+	_con_types[2] = "m_Iso";
 
-	std::string con_names[3] = {"m_0","m_Pi","mIso"};
-	_con_names = con_names;
+	_con_names[0] = "m_0";
+	_con_names[1] = "m_Pi";
+	_con_names[2] = "m_Iso";
 };
 
 template <typename xdouble>
 std::complex<xdouble> t_dependent_background::template_eval(const xdouble* var, const xdouble* par, const xdouble* con)const{
-		xdouble m     = var[0];
-		xdouble tPrime= var[1];
+	xdouble m     = var[0];
+	xdouble tPrime= var[1];
 
-		xdouble b     = par[0];
-		xdouble c0    = par[1];
-		xdouble c1    = par[2];
-		xdouble c2    = par[3];
+	xdouble b     = par[0];
+	xdouble c0    = par[1];
+	xdouble c1    = par[2];
+	xdouble c2    = par[3];
 
-		xdouble m0    = con[0];
-		xdouble mPi   = con[1];
-		xdouble mIso  = con[2];
+	xdouble m0    = con[0];
+	xdouble mPi   = con[1];
+	xdouble mIso  = con[2];
 
 
-		xdouble PSQ = 0.;
-		xdouble mpor = mPi + mIso;		
-		if (m > mpor){
-			xdouble E = (m*m +mPi*mPi - mIso*mIso)/(2*m);
-			PSQ = E*E - mPi*mPi;
-		};
-		return std::complex<xdouble>(pow(m-0.5,b)*exp(PSQ*(c0+c1*tPrime+c2*tPrime*tPrime)),0.);
+	xdouble PSQ = 0.;
+	xdouble mpor = mPi + mIso;		
+	if (m > mpor){
+		xdouble E = (m*m +mPi*mPi - mIso*mIso)/(2*m);
+		PSQ = E*E - mPi*mPi;
+	};
+	return std::complex<xdouble>(pow(m-0.5,b)*exp(PSQ*(c0+c1*tPrime+c2*tPrime*tPrime)),0.);
 };
 // End of special definitions
+
+amplitude* get_amplitude(int id){
+	amplitude* ret_amp;
+	if (id==-1){
+		ret_amp = new constant_function();
+	}else if (id==0){
+		ret_amp = new breit_wigner();
+	}else if (id==1){
+		ret_amp = new mass_dep_breit_wigner();
+	}else if (id==2){
+		ret_amp = new two_channel_breit_wigner();
+	}else if(id==3){
+		ret_amp = new vandermeulen_phase_space();
+	}else if(id==4){
+		ret_amp = new valera_dorofeev_background();
+	}else if (id==5){
+		ret_amp = new bowler_parametrization();
+	}else if (id ==6){
+		ret_amp = new flatte();
+	}else if (id == 9){
+		ret_amp = new gaus();
+	}else if (id==10){
+		ret_amp = new polynomial();
+	}else if(id == 22){
+		ret_amp = new mass_dep_bw_2();
+	}else if(id == 101){
+		ret_amp = new t_dependent_background();
+	}else{
+		std::cerr<<"amplitude id not defined"<<std::endl;
+		ret_amp = new amplitude();
+	};
+	return ret_amp;
+};
 #endif//BREIT_WIGNERS_WEIT_BRIGNERS

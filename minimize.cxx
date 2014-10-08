@@ -136,14 +136,14 @@ void minimize::initCouplings(){
 	std::cout<<"Couplings and branchings found"<<std::endl;
 	std::cout<<"Setting automatic limits for couplings and branchings"<<std::endl;
 	for (int i=0;i<_method.nCpl();i++){
-		double val = max((*_method.parameters())[2*i]*(*_method.parameters())[2*i],(*_method.parameters())[2*i+1]*(*_method.parameters())[2*i+1]);
+		double val = std::max((*_method.parameters())[2*i]*(*_method.parameters())[2*i],(*_method.parameters())[2*i+1]*(*_method.parameters())[2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(2*i  ,3*val,-3*val);
 		_method.setParLimits(2*i+1,3*val,-3*val);
 	};
 	int par_bef = 2*_method.nCpl() +_method.nPar();
 	for (int i=0;i<_method.nBra();i++){
-		double val = max((*_method.parameters())[par_bef+2*i]*(*_method.parameters())[par_bef+2*i],(*_method.parameters())[par_bef+2*i+1]*(*_method.parameters())[par_bef+2*i+1]);
+		double val = std::max((*_method.parameters())[par_bef+2*i]*(*_method.parameters())[par_bef+2*i],(*_method.parameters())[par_bef+2*i+1]*(*_method.parameters())[par_bef+2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(par_bef+2*i  ,3*val,-3*val);
 		_method.setParLimits(par_bef+2*i+1,3*val,-3*val);

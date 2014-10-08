@@ -151,7 +151,7 @@ class anchor_t{
 		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
 		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
 		const std::vector<double>* 		get_data(int tbin, int bin)const	{return &_data[tbin][bin];};
-		const	std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
+		const std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
 
 		const std::vector<std::string>*		parNames		()const		{return &_parNames;};
 

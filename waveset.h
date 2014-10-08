@@ -9,6 +9,8 @@
 #include "yaml-cpp/yaml.h"
 #endif//USE_YAML
 
+#include"amplitude.h"
+
 class waveset {
 	public:
 
@@ -182,6 +184,7 @@ class waveset {
 		void 				close_output();
 
 	protected:
+		double					_t_prime;		// Four momentum transfer
 	// WAVES
 		int 					_nWaves; 		// Number of waves
 		std::vector<std::string> 		_waveNames;
@@ -200,7 +203,7 @@ class waveset {
 		int 					_nPar; 			// Number of parameters
 		int 					_nFuncs; 		// Number of functions
 		std::vector<std::string> 		_funcNames;
-		std::vector<int> 			_funcs; 		// Defined functions (the int gives the number of the parametrization in 'breitWigners.h')
+		std::vector<amplitude*>			_amp_funcs;		// Defined amplitude functions
 		std::vector<int> 			_borders_waves; 	// Tells, which entries in funcs to waves belong to which wave
 		int 					_maxNpars;		// maximum Number of parameters a BW function has
 		std::vector<double> 			_funcUpperLims; 	// Mass limits for each function

@@ -31,6 +31,9 @@ int main(int argc, char* argv[]){
 	int nBra = Chi2.method()->Waveset()->nBranch();
 	int nTot = Chi2.method()->getNtotAnc();
 	int nIso = Chi2.method()->Waveset()->getNiso();
+
+	Chi2.printStatus();
+
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 	
 	std::cout<<"--------init-------"<<std::endl;

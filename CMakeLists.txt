@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 set(CMAKE_CXX_FLAGS "-O3")
 project (Mdep)
 
-set(use_auto_diff ON) 
+set(use_auto_diff OFF) 
 set(use_YAML ON)
 set(use_multiNest ON)
 
