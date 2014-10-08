@@ -43,9 +43,6 @@ tdepBKG(1++)0+_rho_pi_S:
    value: 0.139
  - name: mR
    value: 0.770
- - name: t
-   value: 0.00
- t_dependent: Yes
 
 cohBKG(1++)0+_f0(980)_pi_P:
  parametrization: 3
@@ -148,9 +145,6 @@ tdepBKG(2++)1+_rho_pi_D:
    value: 0.139
  - name: mR
    value: 0.77
- - name: t
-   value: 0.00
- t_dependent: Yes
 
 cohBKG(2++)2+_rho_pi_D:
  parametrization: 3
@@ -211,9 +205,6 @@ tdepBKG(2-+)0+_f2_pi_S:
    value: 0.139
  - name: mf2
    value: 1.275
- - name: t
-   value: 0.00
- t_dependent: Yes
 
 tdepBKG(2-+)0+_rho_pi_F:
  parametrization: 101
@@ -233,9 +224,6 @@ tdepBKG(2-+)0+_rho_pi_F:
    value: 0.139
  - name: mR
    value: 0.770
- - name: t
-   value: 0.00
- t_dependent: Yes 
 
 cohBKG(2-+)1+_f2_pi_S:
  parametrization: 3

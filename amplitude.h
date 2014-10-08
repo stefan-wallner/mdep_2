@@ -113,7 +113,6 @@ bool amplitude::setPar(size_t n, double val){
 bool amplitude::setCon(size_t n, double val){
 	if (n < _nCon){
 		_constants[n] = val;
-std::cout<<"set constant "<<_con_names[n]<<" of "<<type()<<" to "<<val<<"=="<<_constants[n]<<std::endl;
 		return true;
 	}else{
 		std::cerr << "Error: Can't set constant #"<<n<<" for "<<type()<<std::endl;		
@@ -214,7 +213,7 @@ void amplitude::print()					const{
 			std::cout<<"    - "<<_par_types[i]<<": "<<_par_names[i]<<": "<<_parameters[i]<<std::endl;
 		};
 	};
-	if(_nCon<0){
+	if(_nCon>0){
 		std::cout<<"  - constants: "<<std::endl;
 		for (size_t i=0;i<_nCon;i++){
 			std::cout<<"    - "<<_con_types[i]<<": "<<_con_names[i]<<": "<<_constants[i]<<std::endl;
@@ -253,7 +252,7 @@ breit_wigner::breit_wigner():amplitude(1,2,0,0){
 
 	_name = "unnamed_breit_wigner";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "width";
@@ -291,7 +290,7 @@ mass_dep_breit_wigner::mass_dep_breit_wigner():amplitude(1,2,2,1){
 
 	_name = "unnamed_mass_dep_breit_wigner";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "width";
@@ -349,7 +348,7 @@ two_channel_breit_wigner::two_channel_breit_wigner():amplitude(1,2,4,2){
 
 	_name = "unnamed_two_channel_breit_wigner";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "width";
@@ -417,7 +416,7 @@ vandermeulen_phase_space::vandermeulen_phase_space():amplitude(1,1,2,3){
 
 	_name = "unnamed_vandermeulen_phase_space";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "alpha";
 
@@ -476,7 +475,7 @@ valera_dorofeev_background::valera_dorofeev_background():amplitude(1,2,1,4){
 
 	_name = "unnamed_valera_dorofeev_background";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "alpha";
 	_par_types[1] = "beta";
@@ -523,7 +522,7 @@ bowler_parametrization::bowler_parametrization():amplitude(1,2,0,5){
 
 	_name = "unnamed_bowler_parametrization";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "width";
@@ -567,7 +566,7 @@ flatte::flatte():amplitude(1,3,2,6){
 
 	_name = "unnamed_flatte";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "g_1";
@@ -625,7 +624,7 @@ gaus::gaus():amplitude(1,2,0,9){
 
 	_name = "unnamed_gaus";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "x";
 
 	_par_types[0] = "mu";
 	_par_types[1] = "sigma";
@@ -666,7 +665,7 @@ polynomial::polynomial():amplitude(1,5,0,10){
 
 	_name = "unnamed_polynomial";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "x";
 
 	_par_types[0] = "c0";
 	_par_types[1] = "c1";
@@ -718,7 +717,7 @@ mass_dep_bw_2::mass_dep_bw_2():amplitude(1,2,4,22){
 
 	_name = "unnamed_mass_dep_bw_2";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 
 	_par_types[0] = "mass";
 	_par_types[1] = "width";
@@ -787,7 +786,7 @@ t_dependent_background::t_dependent_background():amplitude(2,4,3,101){
 
 	_name = "unnamed_t_dependent_background";
 
-	_var_types[0] = "mass";
+	_var_types[0] = "m";
 	_var_types[1] = "t'";
 
 	_par_types[0] = "b";

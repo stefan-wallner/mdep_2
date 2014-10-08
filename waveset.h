@@ -43,9 +43,9 @@ class waveset {
 
 	// SET UP WAVESET
 		// // WAVES AND FUNCTIONS
-		void 				add_wave();
-		void 				add_func(int i, bool ist_t_dep = false);
-		void 				add_iso(int i);
+		size_t 				add_wave();
+		size_t 				add_func(int i);
+		size_t 				add_iso(int i);
 
 		// // SET AMPLITUDE DEFINITIONS
 		void 				add_func_to_wave(int wave, int func);
@@ -202,7 +202,6 @@ class waveset {
 		std::vector<int> 			_funcs_to_waves; 	// Tells, which function is to be coupled to the wave (the blocks for each wave are encoded in '_borders_waves')
 		int 					_nPar; 			// Number of parameters
 		int 					_nFuncs; 		// Number of functions
-		std::vector<std::string> 		_funcNames;
 		std::vector<amplitude*>			_amp_funcs;		// Defined amplitude functions
 		std::vector<int> 			_borders_waves; 	// Tells, which entries in funcs to waves belong to which wave
 		int 					_maxNpars;		// maximum Number of parameters a BW function has
@@ -226,10 +225,6 @@ class waveset {
 	// PARAMETERS & CONSTANTS
 		std::vector<std::string> 		_parNames;
 		std::vector<int> 			_borders_par; 		// Tells, which paramters belong to which function
-		std::vector<std::string>		_constNames;
-		std::vector<int>			_borders_const;		// Tells, which constants belong to which function
-		std::vector<double> 			_const; 		// Values for the constants in the functions
-		std::vector<int> 			_const_is_t; 		// List of constants, that are t' actually (will then be set automatically)
 		std::vector<std::string> 		_iso_parNames;
 		std::vector<int> 			_iso_borders_par; 	// Tells, which isobar parameters belong to which isobar
 		std::vector<std::string> 		_iso_constNames;

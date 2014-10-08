@@ -223,7 +223,7 @@ template std::vector<std::vector<std::complex<adouble> > > waveset::iso_funcs(co
 #endif//ADOL_ON
 //########################################################################################################################################################
 ///Adds a wave, increases the internal definitions
-void waveset::add_wave(){
+size_t waveset::add_wave(){
 
 	_nWaves+=1;
 	size_t nBor = _borders_waves.size();
@@ -240,12 +240,12 @@ void waveset::add_wave(){
 	_L_iso.push_back(DEFAULT_L);
 	_wave_n_binning.push_back(-1);
 	_wave_binning_pts.push_back(-1);
+	return _nWaves;
 };
 //########################################################################################################################################################
 ///Adds a function - Sets internal definitions accordingly
-void waveset::add_func(
-							int 							i, 	// # of function
-							bool							is_t_dep){
+size_t waveset::add_func(
+							int 							i){ 	// # of function
 
 	_nFuncs+=1;
 	amplitude* new_amp = get_amplitude(i);
@@ -265,30 +265,16 @@ void waveset::add_func(
 //		std::cout<<nUp<<"::::"<<nParNon<<std::endl;
 		_borders_par.push_back(nUp+nParNon);
 	};
-	nBor = _borders_const.size();
-	if (nBor == 0){
-		_borders_const.push_back(nPar-nParNon);
-	}else{
-		int nUp = _borders_const[nBor-1];
-		_borders_const.push_back(nUp+nPar - nParNon);
-	};
-	_funcNames.push_back("unnamed_function");
 	_funcUpperLims.push_back(UPPER_MASS_LIMIT);
 	_funcLowerLims.push_back(LOWER_MASS_LIMIT);
 	for (int pn=0; pn<nParNon; pn++){
 		_parNames.push_back("unnamed_parameter");
 	};
-	for (int pn=0;pn<nPar-nParNon;pn++){
-		_constNames.push_back("unnamed_constant");
-		_const.push_back(0.);
-	};
-	if (is_t_dep){
-		_const_is_t.push_back(_borders_const[_borders_const.size()-1]-1);
-	};
+	return _amp_funcs.size();
 };
 //########################################################################################################################################################
 ///Adds a new isobar, sets the internal definitions accordingly
-void waveset::add_iso(
+size_t waveset::add_iso(
 							int 							i){ 	// # of function for isobar
 	_nIso+=1;
 	_isos.push_back(i);
@@ -323,6 +309,7 @@ void waveset::add_iso(
 	_L_iso_func.push_back(DEFAULT_L);
 	_iso_binning_pts.push_back(-1);
 	_iso_n_binning.push_back(-1);
+	return _isos.size();
 };
 //########################################################################################################################################################
 ///Adds a function without an isobar to a wave
@@ -490,24 +477,11 @@ void waveset::setConst(
 							int 							i, 	// # of const
 							double 							con){
 
-	_const[i] = con;
-	for (size_t j=0;j<_const_is_t.size();j++){
-		if (i == _const_is_t[j]){
-			std::cout<<"Warning: Trying to set _const["<<i<<"] which is t' and will be overwritten"<<std::endl;
-		};
-	};
-
 	int nConst =0;
 	for (size_t j =0;j<_nFuncs;j++){
 		nConst+=_amp_funcs[j]->nCon();
-		if (_amp_funcs[j]->nVar() > 1){
-			nConst+=1;
-		};
 		if(nConst > i){
 			nConst-=_amp_funcs[j]->nCon();
-			if(_amp_funcs[j]->nVar()>1){
-				nConst-=1;
-			};
 			_amp_funcs[j]->setCon(i-nConst,con);
 			break;
 		};
@@ -547,7 +521,7 @@ void waveset::setFunctionName(
 							int 							i, 	// # of function
 							std::string 						name){
 
-	_funcNames[i] = name;
+	_amp_funcs[i]->setFunctionName(name);
 };
 //########################################################################################################################################################
 ///Simple setter for paremeter name
@@ -562,7 +536,15 @@ void waveset::setConstantName(
 							int 							i, 	// # of constant
 							std::string 						name){
 
-	_constNames[i] = name;
+	int nConst =0;
+	for (size_t j =0;j<_nFuncs;j++){
+		nConst+=_amp_funcs[j]->nCon();
+		if(nConst > i){
+			nConst-=_amp_funcs[j]->nCon();
+			_amp_funcs[j]->setConName(i-nConst,name);
+			break;
+		};
+	};
 };
 //########################################################################################################################################################
 ///Simple setter for isobar names
@@ -694,15 +676,10 @@ std::map<std::string,int> waveset::loadFunctions(
 				if (0==fMap[fName]){
 					fMap[fName]=fCount;
 					int nParam = param[fName]["parametrization"].as<int>();
-					int nPar = getNparsNonConst(nParam);
-					int nCon = getNpars(nParam)-getNparsNonConst(nParam);
-					bool isTdep = false;
-					if (param[fName]["t_dependent"]){
-						if (param[fName]["t_dependent"].as<bool>()){
-							isTdep = true;
-						};
-					};
-					add_func(nParam,isTdep);
+					size_t newf = add_func(nParam)-1;
+					int nPar = _amp_funcs[newf]->nPar();
+					int nCon = _amp_funcs[newf]->nCon();
+					_amp_funcs[newf]->print();
 					setFunctionName(fCount-1,fName);
 					fCount++;
 					int nParDef = param[fName]["parameters"].size();
@@ -713,21 +690,19 @@ std::map<std::string,int> waveset::loadFunctions(
 							pCount++;
 						};
 					}else{
-						std::cerr<<"Error: Number of defined parameters does not match required number for "<<fName<<std::endl;
+						std::cerr<<"Error: Number of defined parameters ("<<nParDef<<") does not match required number for "<<fName<<" ("<<nPar<<")"<<std::endl;
 					};
 					int nConDef = param[fName]["constants"].size();
-					if(nConDef == nCon or (nConDef == nCon-1 and isTdep)){
+					if(nConDef == nCon){
 						for (int con=0;con<nCon;con++){
 							std::string cName = param[fName]["constants"][con]["name"].as<std::string>();
 							setConstantName(cCount ,cName);
-							if (con < nCon -1 or not isTdep){
-								double value  = param[fName]["constants"][con]["value"].as<double>();
-								setConst(cCount,value);
-							};
+							double value  = param[fName]["constants"][con]["value"].as<double>();
+							setConst(cCount,value);
 							cCount++;
 						};
 					}else{
-						std::cerr<<"Error: Number of defined constants does not match required number for "<<fName<<std::endl;
+						std::cerr<<"Error: Number of defined constants ("<<nConDef<<") does not match required number for "<<fName<<" ("<<nCon<<")"<<std::endl;
 					};
 				};
 			}else{
@@ -1098,7 +1073,7 @@ std::vector<int> waveset::get_wave_iso_const(
 std::string waveset::getFunctionName(
 							int 							i)	const{
 
-	return _funcNames[i];
+	return _amp_funcs[i]->name();
 };
 //########################################################################################################################################################
 ///Gets the numbers of parameters for each func
@@ -1118,11 +1093,9 @@ std::vector<int> waveset::get_nPars()											const{
 std::vector<int> waveset::get_nConst()											const{
 
 	std::vector<int> nConst;
-	nConst.push_back(_borders_const[0]);
-	int i_max = _borders_const.size();
-	for (size_t i=1;i<i_max;i++){
-		int diff = _borders_const[i]-_borders_const[i-1];
-		nConst.push_back(diff);
+	for (size_t f=0;f<_nFuncs;f++){
+		int nnn = _amp_funcs[f]->nCon();
+		nConst.push_back(nnn);
 	};
 	return nConst;
 };
@@ -1150,19 +1123,15 @@ std::vector<int> waveset::get_function_pars(
 std::vector<int> waveset::get_function_const(
 							int 							func)	const{
 
-	std::vector<int> consts;
-	if (_borders_const.size()==0){
-		return consts;
+	int before = 0;
+	for (int i =0;i<func-1;i++){
+		before+=_amp_funcs[i]->nCon();
 	};
-	int upper = _borders_const[func];
-	int lower = 0;
-	if (func >0){
-		lower = _borders_const[func-1];
+	std::vector<int> ret;
+	for (size_t i=0; i<_amp_funcs[func]->nCon();i++){
+		ret.push_back(before+i);
 	};
-	for (int nnn=lower;nnn<upper;nnn++){
-		consts.push_back(nnn);
-	};
-	return consts;
+	return ret;
 };
 //########################################################################################################################################################
 ///Get the waves that employ the function number 'func'
@@ -1281,7 +1250,14 @@ std::string waveset::getParameterName(
 std::string waveset::getConstantName(
 							int 							i)	const{ 	// # of constant
 
-	return _constNames[i];
+	int nConst =0;
+	for (size_t j =0;j<_nFuncs;j++){
+		nConst+=_amp_funcs[j]->nCon();
+		if(nConst > i){
+			nConst-=_amp_funcs[j]->nCon();
+			return _amp_funcs[j]->getConName(i-nConst);
+		};
+	};
 };
 //########################################################################################################################################################
 ///Simple getter for isobar parameter names
@@ -1547,9 +1523,9 @@ bool waveset::checkConsistency()											const{
 		nErr+=1;
 		std::cout<< "Inconsistency found: _nWaves does not match _waveNames.size()"<<std::endl;
 	};
-	if(_nFuncs != _funcNames.size()){
+	if(_nFuncs != _amp_funcs.size()){
 		nErr+=1;
-		std::cout << "Inconsistency found: _nFuncs does not match _funcNames.size()"<<std::endl;
+		std::cout << "Inconsistency found: _nFuncs does not match _amp_funcs.size()"<<std::endl;
 	};
 	if (_parNames.size() >0){
 		int maxPar = _borders_par.back();
@@ -1557,14 +1533,6 @@ bool waveset::checkConsistency()											const{
 			nErr+=1;
 			std::cout << "Inconsistency found: _parNames.size() does not match _borders_par.back()"<<std::endl;
 		};
-	};
-	if (_constNames.size() !=0){
-		int maxConst = _borders_const.back();
-		if(_constNames.size() != maxConst){
-			nErr+=1;
-			std::cout << "Inconsistency found: _constNames.size() does not match _borders_const.back()"<<std::endl;
-		};
-
 	};
 	if( _nFuncs != _amp_funcs.size()){
 		nErr+=1;
@@ -1580,12 +1548,6 @@ bool waveset::checkConsistency()											const{
 		if (_borders_par[i] < _borders_par[i-1]){
 			nErr+=1;
 			std::cout << "Inconsistency found: _borders_par[] is not sorted"<<std::endl;
-		};
-	};
-	for (size_t i=1;i<_borders_const.size();i++){
-		if (_borders_const[i] < _borders_const[i-1]){
-			nErr+=1;
-			std::cout << "Inconsistency found: _borders_const[] is not sorted"<<std::endl;
 		};
 	};
 	for (size_t i=0;i<_funcs_to_waves.size();i++){
@@ -1679,10 +1641,7 @@ void waveset::printStatus()												const{
 	std::cout << std::endl;
 	std::cout << "_nFuncs: " << _nFuncs<<std::endl;
 	std::cout << std::endl;
-	std::cout << "_funcNames" << std::endl;
-	print_vector(_funcNames);
-	std::cout<<std::endl;
-	std::cout<<"Functions:"<<std::endl;
+	std::cout<<"FUNCTIONS:"<<std::endl;
 	for (size_t i=0;i<_nFuncs;i++){
 		_amp_funcs[i]->print();
 		std::cout<<std::endl;
@@ -1735,18 +1694,6 @@ void waveset::printStatus()												const{
 	std::cout << std::endl;
 	std::cout << "_borders_par" << std::endl;
 	print_vector(_borders_par);
-	std::cout << std::endl;
-	std::cout << "_constNames" << std::endl;
-	print_vector(_constNames);
-	std::cout << std::endl;
-	std::cout << "_borders_const" << std::endl;
-	print_vector(_borders_const);
-	std::cout << std::endl;
-	std::cout << "_const" << std::endl;
-	print_vector(_const);
-	std::cout << std::endl;
-	std::cout<<std::endl<<"_const_is_t"<<std::endl;
-	print_vector(_const_is_t);
 	std::cout<<std::endl<<"_iso_parNames"<<std::endl;
 	print_vector(_iso_parNames);
 	std::cout << std::endl;
@@ -1807,7 +1754,7 @@ void waveset::printParameters()												const{
 			}else{
 				std::cout << "├─";
 			};
-			std::cout << _funcNames[func]<<" #"<< func_count  << std::endl;
+			std::cout << _amp_funcs[func]->name()<<" #"<< func_count  << std::endl;
 			func_count++;
 			std::vector<int> pars = get_function_pars(func);
 			std::vector<int> cons = get_function_const(func);
@@ -1839,7 +1786,7 @@ void waveset::printParameters()												const{
 				}else{
 					std::cout <<"├─";
 				};
-				std::cout<< _constNames[con]<<std::endl;
+				std::cout<< getConstantName(con)<<std::endl;
 			};
 
 		};

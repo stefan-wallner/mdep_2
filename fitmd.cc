@@ -33,6 +33,7 @@ int main(int argc, char* argv[]){
 	int nIso = Chi2.method()->Waveset()->getNiso();
 
 	Chi2.printStatus();
+	Chi2.method()->Waveset()->printParameters();
 
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 	
