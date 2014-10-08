@@ -14,7 +14,6 @@ waveset::waveset():
 	_nWaves(0),
 	_nFuncs(0),
 	_globalPs(0),
-	_maxNpars(0),
 	_nPar(0),
 	_nFtw(0),
 	_nPoints(0),
@@ -37,7 +36,6 @@ waveset::waveset(
 	_nWaves(0),
 	_nFuncs(0),
 	_globalPs(0),
-	_maxNpars(0),
 	_nPar(0),
 	_nFtw(0),
 	_nPoints(0),
@@ -93,7 +91,7 @@ waveset::waveset(
 ///Gives the amplitudes for all waves and isobar-mass bins
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::amps(
-							double 							m,
+							const xdouble 						*m,
 							const std::complex<xdouble>	 			*cpl,
 							const xdouble	 					*par,
 							std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi)		const{
@@ -109,7 +107,7 @@ std::vector<std::complex<xdouble> > waveset::amps(
 		int n_iso_bin = _wave_binning_pts[wave];
 		loBor = upBor;
 		upBor = _borders_waves[wave];
-		if (m >= _lowerLims[wave] and m<_upperLims[wave]){
+		if (m[0] >= _lowerLims[wave] and m[0]<_upperLims[wave]){
 			if(-1==n_iso_bin){
 				std::complex<xdouble> amp(0.,0.);
 				for (int nFunc = loBor; nFunc<upBor; nFunc++){
@@ -136,12 +134,12 @@ std::vector<std::complex<xdouble> > waveset::amps(
 	};
 	return ampl;
 };
-template std::vector<std::complex<double> > waveset::amps(double m, const std::complex<double> *cpl,const double *par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi) const;
+template std::vector<std::complex<double> > waveset::amps(const double *m, const std::complex<double> *cpl,const double *par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi) const;
 //########################################################################################################################################################
 ///Returns the function values at m3pi = m and shape parameters par
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::funcs(
-							double 							m,
+							const xdouble 						*m, // Contains also other possible variables
 							const xdouble	 					*par)			const{
 
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
@@ -151,9 +149,8 @@ std::vector<std::complex<xdouble> > waveset::funcs(
 		loPar = upPar;
 		upPar = _borders_par[func];
 		int pos=0;
-		if (m >= _funcLowerLims[func] and m < _funcUpperLims[func]){ // Only calculate needed functions
-			const xdouble vars[] = {m,_t_prime};
-			f[func]=_amp_funcs[func]->Eval(vars,par+loPar);
+		if (m[0] >= _funcLowerLims[func] and m[0] < _funcUpperLims[func]){ // Only calculate needed functions
+			f[func]=_amp_funcs[func]->Eval(m,par+loPar);
 		}else{
 			f[func]=std::complex<xdouble>(0.,0.);
 		};
@@ -161,7 +158,7 @@ std::vector<std::complex<xdouble> > waveset::funcs(
 	};
 	return f;
 };
-template std::vector<std::complex<double> > waveset::funcs(double m,const double *par) const;
+template std::vector<std::complex<double> > waveset::funcs(const double *m,const double *par) const;
 //########################################################################################################################################################
 ///Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
 template<typename xdouble>
@@ -205,12 +202,12 @@ template std::vector<std::vector<std::complex<double> > > waveset::iso_funcs(con
 //########################################################################################################################################################
 ///Gives a vector with phase space factors for each wave at m3pi = m
 std::vector<double> waveset::phase_space(
-								double 							m)		const{
+								const double 							*m)		const{
 
-	double global_ps = phaseSpace(m,_globalPs,0,0.);
+	double global_ps = phaseSpace(m[0],_globalPs,0,0.);
 	std::vector<double> ps = std::vector<double>(_nWaves);
 	for(int wave=0;wave<_nWaves;wave++){
-		ps[wave]=global_ps*phaseSpace(m,_wavePs[wave],0,0.);
+		ps[wave]=global_ps*phaseSpace(m[0],_wavePs[wave],0,0.);
 	};
 	return ps;
 };
@@ -250,26 +247,17 @@ size_t waveset::add_func(
 	_nFuncs+=1;
 	amplitude* new_amp = get_amplitude(i);
 	new_amp->setL(DEFAULT_L);
+	int nParNon=new_amp->nPar();
 	_amp_funcs.push_back(new_amp);
-	_L_func.push_back(DEFAULT_L);
-	int nPar = getNpars(i);
-	if (_maxNpars < nPar){
-		_maxNpars = nPar;
-	};
-	int nParNon=getNparsNonConst(i);
 	size_t nBor = _borders_par.size();
 	if (nBor == 0){
 		_borders_par.push_back(nParNon);
 	}else{
 		int nUp = _borders_par[nBor-1];
-//		std::cout<<nUp<<"::::"<<nParNon<<std::endl;
 		_borders_par.push_back(nUp+nParNon);
 	};
 	_funcUpperLims.push_back(UPPER_MASS_LIMIT);
 	_funcLowerLims.push_back(LOWER_MASS_LIMIT);
-	for (int pn=0; pn<nParNon; pn++){
-		_parNames.push_back("unnamed_parameter");
-	};
 	return _amp_funcs.size();
 };
 //########################################################################################################################################################
@@ -528,7 +516,62 @@ void waveset::setFunctionName(
 void waveset::setParameterName(
 							int 							i, 	// # of parameter
 							std::string 						name){
-	_parNames[i] = name;
+
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_funcs[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_funcs[f]->nPar();			
+			_amp_funcs[f]->setParName(i-pCount,name);
+			break;
+		};
+	};
+};
+//########################################################################################################################################################
+///Simple setter for paremeter 
+bool waveset::setPar(
+							int 							i, 	// # of parameter
+							double 							val){
+
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_funcs[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_funcs[f]->nPar();			
+			return _amp_funcs[f]->setPar(i-pCount,val);
+		};
+	};
+	return false;
+};
+//########################################################################################################################################################
+///Simple getter for paremeter 
+double waveset::getPar(
+							int 							i)		const{ 	// # of parameter
+
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_funcs[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_funcs[f]->nPar();			
+			return _amp_funcs[f]->getParameter(i-pCount);
+		};
+	};
+	return std::numeric_limits<double>::quiet_NaN();
+};
+//########################################################################################################################################################
+///Simple getter for constant 
+double waveset::getCon(
+							int 							i)		const{ 	// # of const
+
+	int cCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		cCount+=_amp_funcs[f]->nCon();
+		if (cCount>i){
+			cCount-=_amp_funcs[f]->nCon();			
+			return _amp_funcs[f]->getConstant(i-cCount);
+		};
+	};
+	return std::numeric_limits<double>::quiet_NaN();
 };
 //########################################################################################################################################################
 ///Simple setter for constant name
@@ -687,6 +730,8 @@ std::map<std::string,int> waveset::loadFunctions(
 						for(int par=0;par<nPar;par++){
 							std::string pName = param[fName]["parameters"][par]["name"].as<std::string>();
 							setParameterName(pCount,pName);
+							double value = param[fName]["parameters"][par]["value"].as<double>();
+							setPar(pCount,value);
 							pCount++;
 						};
 					}else{
@@ -1243,7 +1288,14 @@ std::vector<int> waveset::get_isobar_waves(
 std::string waveset::getParameterName(
 							int 							i)	const{ 	// # of paramter
 
-	return _parNames[i];
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_funcs[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_funcs[f]->nPar();			
+			return _amp_funcs[f]->getParName(i-pCount);
+		};
+	};
 };
 //########################################################################################################################################################
 ///Simple getter for constant names
@@ -1363,15 +1415,7 @@ void waveset::updateFuncSpin(){
 		int i_max = waves.size();
 		if (i_max >0){
 			int L = _L[waves[0]];
-//			for (int i=1;i<i_max;i++){
-//				if (_L[waves[i]] != L){
-//					std::cout << "Warning: Spins for the same function differ for different waves: _L["<< waves[0] <<"] = "<<_L[waves[0]] <<" != _L[" << waves[i] << "] = "<<_L[waves[i]]<<std::endl;
-//				};
-//			};
-			_L_func[func] = L;
 			_amp_funcs[func]->setL(L);
-//		}else{
-//			std::cout <<"No wave for function "<<func<< " declared. No spin set." << std::endl;
 		};
 	};
 };
@@ -1509,10 +1553,18 @@ void waveset::update_n_branch(){
 };
 //########################################################################################################################################################
 ///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t'
-void waveset::updateTprime(
+double waveset::updateTprime(
 							int 							tbin){
 
 	_t_prime = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
+	return _t_prime;
+};
+//########################################################################################################################################################
+///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t'
+double waveset::getTprime(
+							int 							tbin)		const{
+
+	return _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
 };
 //########################################################################################################################################################
 ///Does some internal consistency checks.
@@ -1526,13 +1578,6 @@ bool waveset::checkConsistency()											const{
 	if(_nFuncs != _amp_funcs.size()){
 		nErr+=1;
 		std::cout << "Inconsistency found: _nFuncs does not match _amp_funcs.size()"<<std::endl;
-	};
-	if (_parNames.size() >0){
-		int maxPar = _borders_par.back();
-		if (_parNames.size() != maxPar){
-			nErr+=1;
-			std::cout << "Inconsistency found: _parNames.size() does not match _borders_par.back()"<<std::endl;
-		};
 	};
 	if( _nFuncs != _amp_funcs.size()){
 		nErr+=1;
@@ -1650,15 +1695,11 @@ void waveset::printStatus()												const{
 	std::cout << "_borders_waves" << std::endl;
 	print_vector(_borders_waves);
 	std::cout<<std::endl;
-	std::cout<<"_maxNpars: "<<_maxNpars<<std::endl;
-	std::cout<<std::endl;
 	std::cout << "_funcUpperLims" << std::endl;
 	print_vector(_funcUpperLims);
 	std::cout << "_funcLowerLims" << std::endl;
 	print_vector(_funcLowerLims);
 	std::cout << std::endl;
-	std::cout<<"_L_func"<<std::endl;
-	print_vector(_L_func);
 	std::cout<<std::endl<<std::endl<<"ISOBARS: "<<std::endl;
 	std::cout<<std::endl<<"_iso_to_waves"<<std::endl;
 	print_vector(_iso_to_waves);
@@ -1689,8 +1730,6 @@ void waveset::printStatus()												const{
 	std::cout<<std::endl<<"_L_iso_func"<<std::endl;
 	print_vector(_L_iso_func);
 	std::cout<<std::endl<<std::endl<<"PARAMETERS & CONSTANTS: "<<std::endl;
-	std::cout << "_parNames" << std::endl;
-	print_vector(_parNames);
 	std::cout << std::endl;
 	std::cout << "_borders_par" << std::endl;
 	print_vector(_borders_par);
@@ -1771,7 +1810,7 @@ void waveset::printParameters()												const{
 				}else{
 					std::cout <<"├─";
 				};
-				std::cout<< _parNames[par]<<std::endl;
+				std::cout<< getParameterName(par)<<": "<<getPar(par)<<std::endl;
 			};
 			k_max = cons.size();
 			for (size_t k=0;k<k_max;k++){
@@ -1786,7 +1825,7 @@ void waveset::printParameters()												const{
 				}else{
 					std::cout <<"├─";
 				};
-				std::cout<< getConstantName(con)<<std::endl;
+				std::cout<< getConstantName(con)<<": "<<getCon(con)<<std::endl;
 			};
 
 		};

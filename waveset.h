@@ -24,14 +24,14 @@ class waveset {
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > amps(
-								double 							m,
+								const xdouble 						*m,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
 								std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi) 	const;
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > funcs(
-								double 							m,
+								const xdouble 						*m,
 								const xdouble 						*par) 		const;
 
 		template<typename xdouble>
@@ -39,7 +39,7 @@ class waveset {
 								const xdouble 						*par) 		const;
 
 		std::vector<double> phase_space(
-								double 							m) 		const;
+								const double 						*m) 		const;
 
 	// SET UP WAVESET
 		// // WAVES AND FUNCTIONS
@@ -144,6 +144,9 @@ class waveset {
 		std::vector<int>	 	get_function_pars(int func)		const;
 		std::vector<int>	 	get_function_const(int func)		const;
 		std::vector<int>	 	get_function_waves(int func)		const;
+		bool				setPar(int par, double val);
+		double				getPar(int par)				const;
+		double				getCon(int con)				const;
 
 		// // PROPERTIES OF THE ISOBARS
 		std::string 			getIsobarName(int i)			const;
@@ -173,7 +176,8 @@ class waveset {
 		void 				handle_branchings(int wave, int func);
 		void 				update_n_cpls();
 		void 				update_n_branch();
-		void 				updateTprime(int tbin);
+		double 				updateTprime(int tbin);
+		double 				getTprime(int tbin)			const;
 
 	// INFO FUNCTIONS
 		std::string 			className		()const		{return "waveset";};
@@ -204,10 +208,8 @@ class waveset {
 		int 					_nFuncs; 		// Number of functions
 		std::vector<amplitude*>			_amp_funcs;		// Defined amplitude functions
 		std::vector<int> 			_borders_waves; 	// Tells, which entries in funcs to waves belong to which wave
-		int 					_maxNpars;		// maximum Number of parameters a BW function has
 		std::vector<double> 			_funcUpperLims; 	// Mass limits for each function
 		std::vector<double> 			_funcLowerLims; 	// ''	''	''	''
-		std::vector<int> 			_L_func; 		// Gives the spin of for each function
 
 	// ISOBARS
 		std::vector<int> 			_iso_to_waves; 		// Couples isobars to waves (-1 -> no isobar paramtrization -> Standard mdep fit)
@@ -223,7 +225,6 @@ class waveset {
 		std::vector<int> 			_iso_binning_pts; 	// Number of isobar bins for each wave (no isobar -> -1)
 
 	// PARAMETERS & CONSTANTS
-		std::vector<std::string> 		_parNames;
 		std::vector<int> 			_borders_par; 		// Tells, which paramters belong to which function
 		std::vector<std::string> 		_iso_parNames;
 		std::vector<int> 			_iso_borders_par; 	// Tells, which isobar parameters belong to which isobar

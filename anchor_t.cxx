@@ -316,7 +316,8 @@ std::vector<xdouble> anchor_t::delta(
 							const xdouble	 						*par,
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
-	std::vector<std::complex<xdouble> > ampls = _waveset.amps(mass, cpl, par, iso_eval);
+	xdouble var[] = {mass, _waveset.getTprime(tbin)};
+	std::vector<std::complex<xdouble> > ampls = _waveset.amps(var, cpl, par, iso_eval);
 	std::vector<xdouble> del = std::vector<xdouble> (2*_waveset.nPoints()-1);
 	std::complex<xdouble> divider = std::complex<xdouble>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
 	if(_is_ampl){
@@ -369,10 +370,10 @@ AandB<xdouble> anchor_t::get_AB(
 	AandB<xdouble> AB(2*nNon);
 	std::vector<xdouble> lines = std::vector<xdouble>(2*_waveset.nPoints()-2,0.); 							//// >>>>  _waveset.nPoints()
 	for(int bin=_waveset.minBin();bin<_waveset.maxBin();bin++){
-		double m = _waveset.get_m(bin);
-		std::vector<std::complex<xdouble> > func = _waveset.funcs(m,par);
+		double var[] = {_waveset.get_m(bin),_waveset.getTprime(tbin)};
+		std::vector<std::complex<xdouble> > func = _waveset.funcs(var,par);
 
-		std::vector<double> phase = _waveset.phase_space(m);
+		std::vector<double> phase = _waveset.phase_space(var);
 		std::complex<xdouble> ampAnc = std::complex<xdouble>(0.,0.);
 		for(int i=0;i<nCplAnc;i++){
 			ampAnc+= anchor_cpl[i]*func[(*_waveset.funcs_to_waves())[i]]*phase[0];
@@ -1426,7 +1427,7 @@ void anchor_t::write_plots(
 							std::vector<std::complex<double> >			&bra,
 							std::vector<double> 					&iso){
 
-	_waveset.updateTprime(tbin);
+	double tprime = _waveset.updateTprime(tbin);
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_waveset.has_isobars()){
@@ -1437,7 +1438,8 @@ void anchor_t::write_plots(
 	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,&cpl_all[0],&par[0],&iso[0])<<std::endl;//[0]//
 	for (int bin=0;bin<_waveset.nBins();bin++){
 		double mass = _waveset.get_m(bin);
-		std::vector<std::complex<double> > amplitudes = _waveset.amps(mass,&cpl_all[0],&par[0],iso_eval);
+		double var[] = {mass, tprime};
+		std::vector<std::complex<double> > amplitudes = _waveset.amps(var,&cpl_all[0],&par[0],iso_eval);
 		std::complex<double> ancAmp = amplitudes[0];
 		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
 		for (int i=1; i<_waveset.nPoints(); i++){

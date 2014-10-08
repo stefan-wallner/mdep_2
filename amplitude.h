@@ -3,6 +3,7 @@
 #include<string>
 #include<complex>
 #include<iostream>
+#include<limits>
 #include"amplitude_functions.h"
 
 class amplitude {
@@ -196,6 +197,24 @@ bool amplitude::setConName(size_t n, std::string name){
 	}else{
 		std::cerr<<"Error: Can't set _con_names["<<n<<"] for "<<type()<<std::endl;
 		return false;
+	};
+};
+
+double amplitude::getParameter(size_t n)		const{
+	if(n<_nPar){
+		return _parameters[n];
+	}else{
+		std::cerr<<"Error: Can't get _parameters["<<n<<"] for "<<type()<<std::endl;
+		return std::numeric_limits<double>::quiet_NaN();
+	};
+};
+
+double amplitude::getConstant(size_t n)			const{
+	if(n<_nCon){
+		return _constants[n];
+	}else{
+		std::cerr<<"Error: Can't get _contants["<<n<<"] for "<<type()<<std::endl;
+		return std::numeric_limits<double>::quiet_NaN();
 	};
 };
 
