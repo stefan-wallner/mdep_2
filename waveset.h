@@ -176,7 +176,6 @@ class waveset {
 		void 				handle_branchings(int wave, int func);
 		void 				update_n_cpls();
 		void 				update_n_branch();
-		double 				updateTprime(int tbin);
 		double 				getTprime(int tbin)			const;
 
 	// INFO FUNCTIONS
@@ -188,7 +187,6 @@ class waveset {
 		void 				close_output();
 
 	protected:
-		double					_t_prime;		// Four momentum transfer
 	// WAVES
 		int 					_nWaves; 		// Number of waves
 		std::vector<std::string> 		_waveNames;
@@ -216,6 +214,7 @@ class waveset {
 		int 					_nIso; 			// Number of isobars
 		std::vector<std::string> 		_iso_funcNames;
 		std::vector<int> 			_isos; 			// Isobar paramterizations
+		std::vector<amplitude*>			_amp_isos;		// Isobar parametrizations
 		int 					_maxNparsIso; 		// Maximum number of parameters for one isobar
 		int 					_maxBinIso; 		// Maximum number of bins for one isobar
 		std::vector<int> 			_iso_n_binning; 	// Tells, which isobar binning to use for the waves

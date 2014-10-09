@@ -191,7 +191,7 @@ std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
 			};
 			for(int bin=0;bin<nBins;bin++){
 				double m = (_iso_binnings[nBinning][bin]+_iso_binnings[nBinning][bin+1])/2;
-				f[iso][bin]=bw(m,act_par,nFunc,_L_iso[iso]);
+				f[iso][bin]=_amp_isos[iso]->Eval(&m,par+loPar,&_iso_const[0]+loConst);
 			};
 		};
 		return f;
@@ -266,11 +266,14 @@ size_t waveset::add_iso(
 							int 							i){ 	// # of function for isobar
 	_nIso+=1;
 	_isos.push_back(i);
+	amplitude* new_amp = get_amplitude(i);
+	new_amp->setL(DEFAULT_L);
+	int nParNon = new_amp->nPar();
+	_amp_isos.push_back(new_amp);
 	int nPar = getNpars(i);
 	if (_maxNparsIso < nPar){
 		_maxNparsIso = nPar;
 	};
-	int nParNon=getNparsNonConst(i);
 	size_t nBor = _iso_borders_par.size();
 	if (nBor == 0){
 		_iso_borders_par.push_back(nParNon);
@@ -1550,14 +1553,6 @@ void waveset::update_n_branch(){
 	};
 	_n_branch = n_branch;
 	_nBranch = act_branch;
-};
-//########################################################################################################################################################
-///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t'
-double waveset::updateTprime(
-							int 							tbin){
-
-	_t_prime = _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
-	return _t_prime;
 };
 //########################################################################################################################################################
 ///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t'

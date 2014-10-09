@@ -31,41 +31,41 @@ class anchor_t{
 		xdouble EvalCP(
 								const std::complex<xdouble>	 			*cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalBranch(
 								const std::complex<xdouble>				*branch,
 								const std::complex<xdouble>	 			*cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalAutoCpl(
 								const std::complex<xdouble>	 			*cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalAutoCplBranch(
 								const std::complex<xdouble>				*bra,
 								const std::complex<xdouble>				*cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalAutoCplTbin(
 								int 							tbin,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
-								const xdouble	 					*iso_par);
+								const xdouble	 					*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalTbin(
 								int 							tbin,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
-								const xdouble						*iso_par);
+								const xdouble						*iso_par)			const;
 
 		template<typename xdouble>
 		xdouble EvalBin(
