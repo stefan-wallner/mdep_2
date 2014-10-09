@@ -24,14 +24,14 @@ class waveset {
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > amps(
-								const xdouble 						*m,
+								const double 						*m,
 								const std::complex<xdouble> 				*cpl,
 								const xdouble	 					*par,
 								std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi) 	const;
 
 		template<typename xdouble>
 		std::vector<std::complex<xdouble> > funcs(
-								const xdouble 						*m,
+								const double 						*m,
 								const xdouble 						*par) 		const;
 
 		template<typename xdouble>
@@ -147,6 +147,9 @@ class waveset {
 		bool				setPar(int par, double val);
 		double				getPar(int par)				const;
 		double				getCon(int con)				const;
+		bool				setIsoPar(int par, double val);
+		double				getIsoPar(int par)			const;
+		double				getIsoCon(int con)			const;
 
 		// // PROPERTIES OF THE ISOBARS
 		std::string 			getIsobarName(int i)			const;
@@ -176,7 +179,7 @@ class waveset {
 		void 				handle_branchings(int wave, int func);
 		void 				update_n_cpls();
 		void 				update_n_branch();
-		double 				getTprime(int tbin)			const;
+		std::vector<double>		getVar(double m, int tbin)		const;
 
 	// INFO FUNCTIONS
 		std::string 			className		()const		{return "waveset";};
@@ -212,10 +215,7 @@ class waveset {
 	// ISOBARS
 		std::vector<int> 			_iso_to_waves; 		// Couples isobars to waves (-1 -> no isobar paramtrization -> Standard mdep fit)
 		int 					_nIso; 			// Number of isobars
-		std::vector<std::string> 		_iso_funcNames;
-		std::vector<int> 			_isos; 			// Isobar paramterizations
 		std::vector<amplitude*>			_amp_isos;		// Isobar parametrizations
-		int 					_maxNparsIso; 		// Maximum number of parameters for one isobar
 		int 					_maxBinIso; 		// Maximum number of bins for one isobar
 		std::vector<int> 			_iso_n_binning; 	// Tells, which isobar binning to use for the waves
 		std::vector<std::vector<double> >	_iso_binnings;		// Gives different isobar binnings
@@ -225,11 +225,7 @@ class waveset {
 
 	// PARAMETERS & CONSTANTS
 		std::vector<int> 			_borders_par; 		// Tells, which paramters belong to which function
-		std::vector<std::string> 		_iso_parNames;
 		std::vector<int> 			_iso_borders_par; 	// Tells, which isobar parameters belong to which isobar
-		std::vector<std::string> 		_iso_constNames;
-		std::vector<int> 			_iso_borders_const; 	// Tells, which isobar constants belong to which isobar
-		std::vector<double> 			_iso_const; 		// Give the isobar constants
 
 	// PHASE SPACE
 		int					_globalPs; 		// Assume only ONE global PS and   //Also assume ps that does not depend on the isobar mass

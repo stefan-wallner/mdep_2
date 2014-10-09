@@ -25,6 +25,7 @@ int main(){
 	Chi2.Waveset()->setFunctionName(1,"isobar_3pi");
 	Chi2.Waveset()->add_iso(10);
 //	Chi2.Waveset()->add_iso(10);
+	Chi2.Waveset()->set_iso_const(0,1.);
 	Chi2.Waveset()->setIsobarName(0,"iso1");
 //	Chi2.Waveset()->setIsobarName(1,"iso2");
 	Chi2.Waveset()->add_func_to_wave(0,0);

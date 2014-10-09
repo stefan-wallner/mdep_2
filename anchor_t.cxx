@@ -55,7 +55,7 @@ anchor_t::anchor_t(
 ///Evaluate Chi2 with the internal _parameters (Call the oter operator)
 double anchor_t::operator()(){
 
-	return (*this)(&_parameters[0]);
+	return (*this)(&parameters()[0]);
 };
 //########################################################################################################################################################
 ///Evaluate Chi2 with the paramters xx
@@ -311,8 +311,8 @@ std::vector<xdouble> anchor_t::delta(
 							const xdouble	 						*par,
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
-	xdouble var[] = {mass, _waveset.getTprime(tbin)};
-	std::vector<std::complex<xdouble> > ampls = _waveset.amps(var, cpl, par, iso_eval);
+	std::vector<double> var = _waveset.getVar(mass,tbin);
+	std::vector<std::complex<xdouble> > ampls = _waveset.amps(&var[0], cpl, par, iso_eval);
 	std::vector<xdouble> del = std::vector<xdouble> (2*_waveset.nPoints()-1);
 	std::complex<xdouble> divider = std::complex<xdouble>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
 	if(_is_ampl){
@@ -365,10 +365,10 @@ AandB<xdouble> anchor_t::get_AB(
 	AandB<xdouble> AB(2*nNon);
 	std::vector<xdouble> lines = std::vector<xdouble>(2*_waveset.nPoints()-2,0.); 							//// >>>>  _waveset.nPoints()
 	for(int bin=_waveset.minBin();bin<_waveset.maxBin();bin++){
-		double var[] = {_waveset.get_m(bin),_waveset.getTprime(tbin)};
-		std::vector<std::complex<xdouble> > func = _waveset.funcs(var,par);
+		std::vector<double> var = _waveset.getVar(_waveset.get_m(bin),tbin);
+		std::vector<std::complex<xdouble> > func = _waveset.funcs(&var[0],par);
 
-		std::vector<double> phase = _waveset.phase_space(var);
+		std::vector<double> phase = _waveset.phase_space(&var[0]);
 		std::complex<xdouble> ampAnc = std::complex<xdouble>(0.,0.);
 		for(int i=0;i<nCplAnc;i++){
 			ampAnc+= anchor_cpl[i]*func[(*_waveset.funcs_to_waves())[i]]*phase[0];
@@ -677,9 +677,9 @@ template adouble anchor_t::EvalBranch(const std::complex<adouble> *branch, const
 template adouble anchor_t::EvalTbin(int tbin, const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par) const;
 template adouble anchor_t::EvalBin(int tbin,int bin,const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_par) const;
 template std::vector<adouble> anchor_t::delta(int tbin, int bin,double mass, const std::complex<adouble> *cpl, const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_eval) const;
-template adouble anchor_t::EvalAutoCpl(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par);
-template adouble anchor_t::EvalAutoCplBranch(const std::complex<adouble> *bra, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
-template adouble anchor_t::EvalAutoCplTbin(int tbin, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par);
+template adouble anchor_t::EvalAutoCpl(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par)const;
+template adouble anchor_t::EvalAutoCplBranch(const std::complex<adouble> *bra, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par)const;
+template adouble anchor_t::EvalAutoCplTbin(int tbin, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par)const;
 template AandB<adouble> anchor_t::get_AB(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCpl(int tbin,const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
 template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin, const std::complex<adouble> *branch, const std::complex<adouble> *anchor_cpl, const adouble *par, const adouble *iso_par) const;
@@ -752,10 +752,36 @@ void anchor_t::setParameter(
 							int 						i, 	// # of parameter
 							double 						par){
 
-	if(_parameters.size() < _nTot){
-		_parameters = std::vector<double>(_nTot,0.);
+	if(_parameters.size() < 2*(_nCpl+_nBra)){
+		_parameters = std::vector<double>(2*(_nCpl+_nBra),0.);
 	};
-	_parameters[i] = par;
+	if (i<2*_nCpl){
+		_parameters[i] = par;
+	}else if(i<2*_nCpl+_nPar){
+		_waveset.setPar(i-2*_nCpl,par);
+	}else if(i<2*_nCpl+_nPar+2*_nBra){
+		_parameters[i-_nPar] = par;
+	}else if(i<2*_nCpl+_nPar+2*_nBra+_nIso){
+		_waveset.setIsoPar(i-2*_nCpl-_nPar-2*_nBra,par);
+	}else{
+		std::cerr<<"Error: Can't set parameter #"<<i<<std::endl;
+	};
+};
+//#######################################################################################################################################################
+double anchor_t::getParameter(size_t i)															const{
+
+	if(i<2*_nCpl){
+		return _parameters[i];
+	}else if(i<2*_nCpl+_nPar){
+		return _waveset.getPar(i-2*_nCpl);
+	}else if(i<2*_nCpl+_nPar+2*_nBra){
+		return _parameters[i-_nPar];
+	}else if(i<2*_nCpl+_nPar+2*_nBra+_nIso){
+		return _waveset.getIsoPar(i-2*_nCpl-_nPar-2*_nBra);
+	}else{
+		std::cerr<<"Error: Can't get parameter #"<<i<<std::endl;
+		return std::numeric_limits<double>::quiet_NaN();
+	};
 };
 //#######################################################################################################################################################
 ///Set internal parameters
@@ -763,10 +789,22 @@ void anchor_t::setParameters(
 							std::vector<double> 				pars){
 
 	if(pars.size()>=_nTot){
-		_parameters = pars;
+		for (size_t i=0;i<_nTot;i++){
+			setParameter(i,pars[i]);
+		};
 	}else{
 		std::cerr<<"Error: Input pars.size() too small"<<std::endl;
 	};
+};
+//#######################################################################################################################################################
+///Get parameters
+const std::vector<double> anchor_t::parameters()													const{
+
+	std::vector<double> par(_nTot);
+	for (size_t i=0;i<_nTot;i++){
+		par[i] = getParameter(i);
+	};
+	return par;
 };
 //#######################################################################################################################################################
 ///Set a single parameter by name
@@ -835,9 +873,9 @@ void anchor_t::init_upper_limits(int n){
 //########################################################################################################################################################
 ///Calculates some initial values for the branchigs
 std::vector<std::complex<double> > anchor_t::get_branchings(
-							std::vector<std::complex<double> > 		&cpl,
-							std::vector<double> 				&par,
-							std::vector<double> &iso_par){
+							const std::vector<std::complex<double> > 	&cpl,
+							const std::vector<double> 			&par,
+							const std::vector<double> 			&iso_par){
 
 	// Gets branchings as follows:
 	//	- Take Anchor cpls to get couplings for each t-bin
@@ -875,8 +913,8 @@ std::vector<std::complex<double> > anchor_t::get_branchings(
 //########################################################################################################################################################
 ///Gets the couplings-without-branchings from couplings-with-branchings and branchings
 std::vector<std::complex<double> > anchor_t::getUnbranchedCouplings(
-							std::vector<std::complex<double> >		&cpl,
-							std::vector<std::complex<double> >		&bra)						const{
+							const std::vector<std::complex<double> >	&cpl,
+							const std::vector<std::complex<double> >	&bra)						const{
 	
 	std::vector<std::complex<double> > cpl_un(_waveset.nFtw());
 	for (int i=0;i<_waveset.nFtw();i++){
@@ -892,10 +930,10 @@ std::vector<std::complex<double> > anchor_t::getUnbranchedCouplings(
 ///Gets all couplings for one t' bin (.size() = _waveset.nFtw()) for different input formats
 std::vector<std::complex<double> > anchor_t::getAllCouplings(
 							int						tbin,
-							std::vector<std::complex<double> >		&cpl,
-							std::vector<double>				&par,
-							std::vector<std::complex<double> >		&bra,
-							std::vector<double>				&iso)						const{
+							const std::vector<std::complex<double> >	&cpl,
+							const std::vector<double>			&par,
+							const std::vector<std::complex<double> >	&bra,
+							const std::vector<double>			&iso)						const{
 
 	std::vector<std::complex<double> > cpl_all;
 	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
@@ -941,8 +979,8 @@ void anchor_t::branchCouplingsToOne(){
 			int nCpl = (*_waveset.n_cpls())[i];
 			if (nCpl <= _nBrCplAnc){
 				for (int tbin =0;tbin<_waveset.nTbin();tbin++){
-					_parameters[2*_nBrCplAnc*tbin+2*nCpl ]=1.;
-					_parameters[2*_nBrCplAnc*tbin+2*nCpl+1]=0.;
+					setParameter(2*_nBrCplAnc*tbin+2*nCpl  ,1.);
+					setParameter(2*_nBrCplAnc*tbin+2*nCpl+1,0.);
 				};
 			};
 		};
@@ -1379,14 +1417,14 @@ void anchor_t::write_plots(
 							std::string						filename,
 							int							tbin){
 
-	write_plots(filename,tbin,_parameters);
+	write_plots(filename,tbin,parameters());
 };
 //########################################################################################################################################################
 ///Write plots with the usual parameter ordering
 void anchor_t::write_plots(
 							std::string						filename,
 							int							tbin,
-							std::vector<double>					&param){
+							const std::vector<double>				&param){
 
 	std::vector<std::complex<double> > cpl(_nCpl);
 	std::vector<double> par(_nPar);	
@@ -1416,12 +1454,12 @@ void anchor_t::write_plots(
 void anchor_t::write_plots(
 							std::string						filename,
 							int 							tbin,
-							std::vector<std::complex<double> >			&cpl,
-							std::vector<double>					&par,
-							std::vector<std::complex<double> >			&bra,
-							std::vector<double> 					&iso){
+							const std::vector<std::complex<double> >		&cpl,
+							const std::vector<double>				&par,
+							const std::vector<std::complex<double> >		&bra,
+							const std::vector<double> 				&iso){
 
-	double tprime = _waveset.getTprime(tbin);
+	double tprime = _waveset.getVar(0.,tbin)[1];
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_waveset.has_isobars()){

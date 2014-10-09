@@ -18,7 +18,6 @@ waveset::waveset():
 	_nFtw(0),
 	_nPoints(0),
 	_nIso(0),
-	_maxNparsIso(0),
 	_maxBinIso(0),
 	_nBranch(0),
 	_nTbin(1),
@@ -40,7 +39,6 @@ waveset::waveset(
 	_nFtw(0),
 	_nPoints(0),
 	_nIso(0),
-	_maxNparsIso(0),
 	_maxBinIso(0),
 	_nBranch(0),
 	_nTbin(1),
@@ -91,7 +89,7 @@ waveset::waveset(
 ///Gives the amplitudes for all waves and isobar-mass bins
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::amps(
-							const xdouble 						*m,
+							const double 						*m,
 							const std::complex<xdouble>	 			*cpl,
 							const xdouble	 					*par,
 							std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi)		const{
@@ -139,7 +137,7 @@ template std::vector<std::complex<double> > waveset::amps(const double *m, const
 ///Returns the function values at m3pi = m and shape parameters par
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::funcs(
-							const xdouble 						*m, // Contains also other possible variables
+							const double 						*m, // Contains also other possible variables
 							const xdouble	 					*par)			const{
 
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
@@ -163,35 +161,20 @@ template std::vector<std::complex<double> > waveset::funcs(const double *m,const
 ///Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
 template<typename xdouble>
 std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
-							const xdouble	  						*par)		const{
+							const xdouble	  						*par)			const{
 
 	if (_has_isobars){
 		std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
 		int upPar=0;
 		int loPar=0;
-		int upConst=0;
-		int loConst=0;
-		std::vector<xdouble> act_par = std::vector<xdouble>(_maxNparsIso);
 		for (int iso=0;iso<_nIso;iso++){
 			loPar = upPar;
 			upPar = _iso_borders_par[iso];
-			loConst = upConst;
-			upConst = _iso_borders_const[iso];
 			int nBins = _iso_binning_pts[iso];
 			int nBinning = _iso_n_binning[iso];
-			int pos=0;
-			int nFunc = _isos[iso];
-			for (int i= loPar;i<upPar;i++){
-				act_par[pos]=par[i];
-				pos++;
-			};
-			for (int i=loConst;i<upConst;i++){
-				act_par[pos]=_iso_const[i];
-				pos++;
-			};
 			for(int bin=0;bin<nBins;bin++){
 				double m = (_iso_binnings[nBinning][bin]+_iso_binnings[nBinning][bin+1])/2;
-				f[iso][bin]=_amp_isos[iso]->Eval(&m,par+loPar,&_iso_const[0]+loConst);
+				f[iso][bin]=_amp_isos[iso]->Eval(&m,par+loPar);
 			};
 		};
 		return f;
@@ -214,8 +197,8 @@ std::vector<double> waveset::phase_space(
 //########################################################################################################################################################
 ///Enable Auto-diff, if needed
 #ifdef ADOL_ON
-template std::vector<std::complex<adouble> > waveset::amps(double m, const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &funcEvals2pi) const;
-template std::vector<std::complex<adouble> > waveset::funcs(double m,const adouble *par) const;
+template std::vector<std::complex<adouble> > waveset::amps(const double* m, const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &funcEvals2pi) const;
+template std::vector<std::complex<adouble> > waveset::funcs(const double* m,const adouble *par) const;
 template std::vector<std::vector<std::complex<adouble> > > waveset::iso_funcs(const adouble *par) const;
 #endif//ADOL_ON
 //########################################################################################################################################################
@@ -265,15 +248,11 @@ size_t waveset::add_func(
 size_t waveset::add_iso(
 							int 							i){ 	// # of function for isobar
 	_nIso+=1;
-	_isos.push_back(i);
 	amplitude* new_amp = get_amplitude(i);
 	new_amp->setL(DEFAULT_L);
 	int nParNon = new_amp->nPar();
+	int nPar = nParNon + new_amp->nCon();
 	_amp_isos.push_back(new_amp);
-	int nPar = getNpars(i);
-	if (_maxNparsIso < nPar){
-		_maxNparsIso = nPar;
-	};
 	size_t nBor = _iso_borders_par.size();
 	if (nBor == 0){
 		_iso_borders_par.push_back(nParNon);
@@ -282,25 +261,9 @@ size_t waveset::add_iso(
 //		std::cout<<nUp<<"::::"<<nParNon<<std::endl;
 		_iso_borders_par.push_back(nUp+nParNon);
 	};
-	nBor = _iso_borders_const.size();
-	if (nBor == 0){
-		_iso_borders_const.push_back(nPar-nParNon);
-	}else{
-		int nUp = _iso_borders_const[nBor-1];
-		_iso_borders_const.push_back(nUp+nPar - nParNon);
-	};
-	_iso_funcNames.push_back("unnamed_function");
-	for (int pn=0; pn<nParNon; pn++){
-		_iso_parNames.push_back("unnamed_parameter");
-	};
-	for (int pn=0;pn<nPar-nParNon;pn++){
-		_iso_constNames.push_back("unnamed_constant");
-		_iso_const.push_back(0.);
-	};
-	_L_iso_func.push_back(DEFAULT_L);
 	_iso_binning_pts.push_back(-1);
 	_iso_n_binning.push_back(-1);
-	return _isos.size();
+	return _amp_isos.size();
 };
 //########################################################################################################################################################
 ///Adds a function without an isobar to a wave
@@ -484,7 +447,16 @@ void waveset::set_iso_const(
 							int 							con, 	// # of const
 							double 							value){
 
-	_iso_const[con] = value;
+	int cCount =0;
+	for (size_t i =0;i<_nIso;i++){
+		cCount+=_amp_isos[i]->nCon();
+		if(cCount>con){
+			cCount-=_amp_isos[i]->nCon();
+			_amp_isos[i]->setCon(con-cCount,value);
+			break;
+		};
+	};
+
 };
 
 //########################################################################################################################################################
@@ -577,6 +549,52 @@ double waveset::getCon(
 	return std::numeric_limits<double>::quiet_NaN();
 };
 //########################################################################################################################################################
+///Simple setter for paremeter 
+bool waveset::setIsoPar(
+							int 							i, 	// # of parameter
+							double 							val){
+
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_isos[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_isos[f]->nPar();			
+			return _amp_isos[f]->setPar(i-pCount,val);
+		};
+	};
+	return false;
+};
+//########################################################################################################################################################
+///Simple getter for paremeter 
+double waveset::getIsoPar(
+							int 							i)		const{ 	// # of parameter
+
+	int pCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		pCount+=_amp_isos[f]->nPar();
+		if (pCount>i){
+			pCount-=_amp_isos[f]->nPar();			
+			return _amp_isos[f]->getParameter(i-pCount);
+		};
+	};
+	return std::numeric_limits<double>::quiet_NaN();
+};
+//########################################################################################################################################################
+///Simple getter for constant 
+double waveset::getIsoCon(
+							int 							i)		const{ 	// # of const
+
+	int cCount = 0;
+	for (size_t f=0;f<_nFuncs;f++){
+		cCount+=_amp_isos[f]->nCon();
+		if (cCount>i){
+			cCount-=_amp_isos[f]->nCon();			
+			return _amp_isos[f]->getConstant(i-cCount);
+		};
+	};
+	return std::numeric_limits<double>::quiet_NaN();
+};
+//########################################################################################################################################################
 ///Simple setter for constant name
 void waveset::setConstantName(
 							int 							i, 	// # of constant
@@ -598,7 +616,7 @@ void waveset::setIsobarName(
 							int 							i,	// # of isobar
 							std::string 						name){
 
-	_iso_funcNames[i]=name;
+	_amp_isos[i]->setFunctionName(name);
 };
 //########################################################################################################################################################
 ///Simple setter for isopar parameter names
@@ -606,14 +624,30 @@ void waveset::setIsoParName(
 							int 							i,	// # of isobar parameter
 							std::string 						name){
 
-	 _iso_parNames[i]=name;
+	int pCount =0;
+	for(size_t iso=0;iso<_nIso;iso++){
+		pCount+=_amp_isos[iso]->nPar();
+		if(pCount>i){
+			pCount-=_amp_isos[iso]->nPar();
+			_amp_isos[iso]->setParName(i-pCount,name);
+			break;
+		};
+	};
 };
 //########################################################################################################################################################
 ///Simple setter for isobar constant names
 void waveset::setIsoConstName(
 							int 							i,	// # of isobar constant
 							std::string 						name){
-	_iso_constNames[i]=name;
+	int cCount=0;
+	for (size_t iso;iso<_nIso;iso++){
+		cCount+=_amp_isos[iso]->nCon();
+		if (cCount>i){
+			cCount-=_amp_isos[iso]->nCon();
+			_amp_isos[iso]->setConName(i-cCount,name);
+			break;
+		};
+	};
 };
 //########################################################################################################################################################
 ///Sets the binning in m3pi
@@ -761,13 +795,8 @@ std::map<std::string,int> waveset::loadFunctions(
 					if (0==fMap[iName]){ // Write isobars also in the fMap
 						fMap[iName]=iCount;
 						int nParam = param[iName]["parametrization"].as<int>();
-						int nPar = getNparsNonConst(nParam);
-						int nCon = getNpars(nParam)-getNparsNonConst(nParam);
-						if (param[iName]["t_dependent"]){
-							if (param[iName]["t_dependent"].as<bool>()){
-								std::cerr<<"Error: Tryig to set t' dependent isobar parametrization. Not supportet at the moment"<<std::endl;
-							};
-						};
+						int nPar = _amp_isos[iCount-1]->nPar();
+						int nCon = _amp_isos[iCount-1]->nCon();
 						add_iso(nParam);
 						setIsobarName(iCount-1,iName);
 						iCount++;
@@ -1203,7 +1232,8 @@ std::vector<int> waveset::get_function_waves(
 std::string waveset::getIsobarName(
 							int 							i)	const{
 
-	return _iso_funcNames[i];
+	return _amp_isos[i]->name();
+
 };
 //########################################################################################################################################################
 ///Gets the numbers of paramters for each isobar
@@ -1223,11 +1253,8 @@ std::vector<int> waveset::get_nParsIso()										const{
 std::vector<int> waveset::get_nConstIso()										const{
 
 	std::vector<int> nConst;
-	nConst.push_back(_iso_borders_const[0]);
-	int i_max = _iso_borders_const.size();
-	for (size_t i=1;i<i_max;i++){
-		int diff = _iso_borders_const[i]-_iso_borders_const[i-1];
-		nConst.push_back(diff);
+	for (size_t iso=0;iso<_nIso;iso++){
+		nConst.push_back(_amp_isos[iso]->nCon());
 	};
 	return nConst;
 };
@@ -1256,16 +1283,12 @@ std::vector<int> waveset::get_isobar_const(
 							int 							func)	const{
 
 	std::vector<int> consts;
-	if(0==_iso_borders_const.size()){
-		return consts;
+	int cCount=0;
+	for(int iso=0;iso<func-1;iso++){
+		cCount+=_amp_isos[iso]->nCon();
 	};
-	int upper = _iso_borders_const[func];
-	int lower =0;
-	if (func>0){
-		lower = _iso_borders_const[func];
-	};
-	for (int i=lower;i<upper;i++){
-		consts.push_back(i);
+	for(int con=0;con<_amp_isos[func]->nCon();con++){
+		consts.push_back(cCount+con);
 	};
 	return consts;
 };
@@ -1319,13 +1342,27 @@ std::string waveset::getConstantName(
 std::string waveset::getIsoParName(
 							int 							i)	const{ 	// # of isobar paramter
 
-	return  _iso_parNames[i];
+	int pCount =0;
+	for(size_t iso=0;iso<_nIso;iso++){
+		pCount+=_amp_isos[iso]->nPar();
+		if(pCount>i){
+			pCount-=_amp_isos[iso]->nPar();
+			return _amp_isos[iso]->getParName(i-pCount);
+		};
+	};
 };
 //########################################################################################################################################################
 ///Simple getter for isobar constant names
 std::string waveset::getIsoConstName(
 							int 							i)	const{ 	// # of isobar constant
-	return _iso_constNames[i];
+	int cCount=0;
+	for (size_t iso;iso<_nIso;iso++){
+		cCount+=_amp_isos[iso]->nCon();
+		if (cCount>i){
+			cCount-=_amp_isos[iso]->nCon();
+			return _amp_isos[iso]->getConName(i-cCount);
+		};
+	};
 };
 //########################################################################################################################################################
 ///Gets the mass bin for a certain m3Pi
@@ -1430,7 +1467,7 @@ void waveset::updateIsobar(){
 		std::vector<int> isos = get_wave_isobars(wave);
 		for (int niso=0;niso<isos.size();niso++){
 			int iso = isos[niso];
-			_L_iso_func[iso]     =_L_iso[wave];
+			_amp_isos[iso]->setL(_L_iso[wave]);
 			_iso_binning_pts[iso]=_wave_binning_pts[wave];
 			_iso_n_binning[iso]  =_wave_n_binning[wave];
 		};
@@ -1556,10 +1593,14 @@ void waveset::update_n_branch(){
 };
 //########################################################################################################################################################
 ///Sets the value for t' fot the corresponding t' bin [tbin] for each constant that is t'
-double waveset::getTprime(
+std::vector<double> waveset::getVar(
+							double							m,
 							int 							tbin)		const{
 
-	return _t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3;
+	std::vector<double> vec(2);
+	vec[0] = m;
+	vec[1] = (_t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3);
+	return vec;
 };
 //########################################################################################################################################################
 ///Does some internal consistency checks.
@@ -1701,13 +1742,11 @@ void waveset::printStatus()												const{
 	std::cout << std::endl;
 	std::cout<<std::endl<<"_nIso: "<<_nIso<<std::endl;
 	std::cout << std::endl;
-	std::cout<<std::endl<<"_iso_funcNames"<<std::endl;
-	print_vector(_iso_funcNames);
-	std::cout << std::endl;
 	std::cout<<std::endl<<"_isos"<<std::endl;
-	print_vector(_isos);
-	std::cout << std::endl;
-	std::cout<<std::endl<<"_maxNparsIso: "<<_maxNparsIso<<"; _maxBinIso: "<<_maxBinIso<<std::endl;
+	std::cout<<"ISOBARS:"<<std::endl;
+	for(size_t i=0;i<_nIso;i++){
+		_amp_isos[i]->print();
+	};
 	std::cout << std::endl;
 	std::cout<<std::endl<<"_iso_n_binning"<<std::endl;
 	print_vector(_iso_n_binning);
@@ -1719,29 +1758,12 @@ void waveset::printStatus()												const{
 	std::cout<<std::endl<<"_point_borders_wave"<<std::endl;
 	print_vector(_point_borders_wave);
 	std::cout << std::endl;
-	std::cout<<std::endl<<"_L_iso_func"<<std::endl;
-	print_vector(_L_iso_func);
-	std::cout << std::endl;
-	std::cout<<std::endl<<"_L_iso_func"<<std::endl;
-	print_vector(_L_iso_func);
 	std::cout<<std::endl<<std::endl<<"PARAMETERS & CONSTANTS: "<<std::endl;
 	std::cout << std::endl;
 	std::cout << "_borders_par" << std::endl;
 	print_vector(_borders_par);
-	std::cout<<std::endl<<"_iso_parNames"<<std::endl;
-	print_vector(_iso_parNames);
-	std::cout << std::endl;
 	std::cout<<std::endl<<"_iso_borders_par"<<std::endl;
 	print_vector(_iso_borders_par);
-	std::cout << std::endl;
-	std::cout<<std::endl<<"_iso_constNames"<<std::endl;
-	print_vector(_iso_constNames);
-	std::cout<<std::endl;
-	std::cout<<std::endl<<"_iso_borders_const"<<std::endl;
-	print_vector(_iso_borders_const);
-	std::cout<<std::endl;
-	std::cout<<std::endl<<"_iso_const"<<std::endl;
-	print_vector(_iso_const);
 	std::cout<<std::endl<<std::endl<<"PHASE SPACE: "<<std::endl;
 	std::cout<<"_globalPs: "<<_globalPs<<std::endl;
 	std::cout << std::endl;
@@ -1833,7 +1855,7 @@ void waveset::printParameters()												const{
 				}else{
 					std::cout << "├─";
 				};
-				std::cout << _iso_funcNames[iso]<<" #"<< iso_count  << std::endl;
+				std::cout << _amp_isos[iso]->name()<<" #"<< iso_count  << std::endl;
 				iso_count++;
 				std::vector<int> pars = get_isobar_pars(iso);
 				std::vector<int> cons = get_isobar_const(iso);
@@ -1850,7 +1872,7 @@ void waveset::printParameters()												const{
 					}else{
 						std::cout <<"├─";
 					};
-					std::cout<< _iso_parNames[par]<<std::endl;
+					std::cout<< getIsoParName(par)<<std::endl;
 				};
 				k_max = cons.size();
 				for (size_t k=0;k<k_max;k++){
@@ -1865,7 +1887,7 @@ void waveset::printParameters()												const{
 					}else{
 						std::cout <<"├─";
 					};
-					std::cout<< _iso_constNames[con]<<std::endl;
+					std::cout<< getIsoConstName(con)<<std::endl;
 				};
 
 			};

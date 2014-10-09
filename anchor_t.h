@@ -119,9 +119,9 @@ class anchor_t{
 		void 					setParLimits(int i, double upper, double lower);
 		void					init_lower_limits(int n=-1);
 		void					init_upper_limits(int n=-1);
-		std::vector<std::complex<double> > 	get_branchings(std::vector<std::complex<double> > &cpl,std::vector<double> &par, std::vector<double> &iso_par);
-		std::vector<std::complex<double> >	getUnbranchedCouplings(std::vector<std::complex<double> > &cpl, std::vector<std::complex<double> > &bra) const;
-		std::vector<std::complex<double> >	getAllCouplings(int tbin,std::vector<std::complex<double> > &cpl, std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso) const;
+		std::vector<std::complex<double> > 	get_branchings(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par);
+		std::vector<std::complex<double> >	getUnbranchedCouplings(const std::vector<std::complex<double> > &cpl,const std::vector<std::complex<double> > &bra) const;
+		std::vector<std::complex<double> >	getAllCouplings(int tbin,const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
 		void 					branchCouplingsToOne();
 
 
@@ -147,13 +147,16 @@ class anchor_t{
 		int					nBra			()const		{return _nBra;};
 		int 					nIso			()const		{return _nIso;};
 		int					nBrCplAnc		()const		{return _nBrCplAnc;};
-		const std::vector<double>*		parameters		()const		{return &_parameters;};
+		const std::vector<double>		parameters		()const;
 		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
 		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
 		const std::vector<double>* 		get_data(int tbin, int bin)const	{return &_data[tbin][bin];};
 		const std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
 
 		const std::vector<std::string>*		parNames		()const		{return &_parNames;};
+
+		std::vector<double>			getParameters		()const;
+		double					getParameter(size_t i)	const;
 
 		int getNtotAnc();
 		int getNanc();
@@ -174,8 +177,8 @@ class anchor_t{
 
 	// PLOTTING
 		void					write_plots(std::string filename, int tbin);
-		void					write_plots(std::string filename, int tbin, std::vector<double> &paramters);
-		void					write_plots(std::string filename, int tbin,std::vector<std::complex<double> >&cpl,std::vector<double> &par, std::vector<std::complex<double> > &bra, std::vector<double> &iso);
+		void					write_plots(std::string filename, int tbin,const std::vector<double> &paramters);
+		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso);
 	protected:
 		// WAVESET
 		waveset									_waveset;		// The waveset used
@@ -190,7 +193,7 @@ class anchor_t{
 		int 									_nBrCplAnc;		// Number of couplings with branchings in the anchor wave
 
 		// PARAMETERS AND DATA
-		std::vector<double>							_parameters; 		// Acutal paramters (2*_nCpl,_nPar,2*_nBra) - these are 'all' parameters!!!
+		std::vector<double>							_parameters; 		// Acutal paramters (2*_nCpl,_nPar,2*_nBra,_nIso) - these are 'all' parameters!!!
 		std::vector<double> 							_upper_parameter_limits;// Paramters limits
 		std::vector<double> 							_lower_parameter_limits;
 		std::vector<std::string> 						_parNames; 		// Name of each parameter

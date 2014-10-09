@@ -95,14 +95,14 @@ void minimize::initCouplings(){
 	std::vector<std::complex<double> > couplings(_method.nCpl());
 	std::vector<double> par(_method.nPar());
 	for (int i=0;i<_method.nCpl();i++){
-		couplings[i] = std::complex<double>((*_method.parameters())[2*i],(*_method.parameters())[2*i+1]);
+		couplings[i] = std::complex<double>(_method.parameters()[2*i],_method.parameters()[2*i+1]);
 	};
 	for (int i=0;i<_method.nPar();i++){
-		par[i] = (*_method.parameters())[2*_method.nCpl()+i];
+		par[i] = _method.parameters()[2*_method.nCpl()+i];
 	};
 	std::vector<double> iso_par(_method.nIso());
 	for (int i=0;i<_method.nIso();i++){
-		iso_par[i] = (*_method.parameters())[2*_method.nCpl()+_method.nPar()+2*_method.nBra()+i];
+		iso_par[i] = _method.parameters()[2*_method.nCpl()+_method.nPar()+2*_method.nBra()+i];
 	};
 	std::cout << "Total with _method.EvalAutoCpl() (For consistency check): "<< _method.EvalAutoCpl(&couplings[0],&par[0],&iso_par[0])<<std::endl;
 	_method.setUseBranch(true);
@@ -136,14 +136,14 @@ void minimize::initCouplings(){
 	std::cout<<"Couplings and branchings found"<<std::endl;
 	std::cout<<"Setting automatic limits for couplings and branchings"<<std::endl;
 	for (int i=0;i<_method.nCpl();i++){
-		double val = std::max((*_method.parameters())[2*i]*(*_method.parameters())[2*i],(*_method.parameters())[2*i+1]*(*_method.parameters())[2*i+1]);
+		double val = std::max(_method.parameters()[2*i]*_method.parameters()[2*i],_method.parameters()[2*i+1]*_method.parameters()[2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(2*i  ,3*val,-3*val);
 		_method.setParLimits(2*i+1,3*val,-3*val);
 	};
 	int par_bef = 2*_method.nCpl() +_method.nPar();
 	for (int i=0;i<_method.nBra();i++){
-		double val = std::max((*_method.parameters())[par_bef+2*i]*(*_method.parameters())[par_bef+2*i],(*_method.parameters())[par_bef+2*i+1]*(*_method.parameters())[par_bef+2*i+1]);
+		double val = std::max(_method.parameters()[par_bef+2*i]*_method.parameters()[par_bef+2*i],_method.parameters()[par_bef+2*i+1]*_method.parameters()[par_bef+2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(par_bef+2*i  ,3*val,-3*val);
 		_method.setParLimits(par_bef+2*i+1,3*val,-3*val);
@@ -238,7 +238,7 @@ void minimize::relPar(
 		_released[i] = true;
 		reload_par_definitions(i);
 	}else{
-		std::cout<<_method.nTot()<<" "<<(*_method.parameters()).size()<<" "<<_released.size()<<std::endl;
+		std::cout<<_method.nTot()<<" "<<_method.parameters().size()<<" "<<_released.size()<<std::endl;
 		std::cerr<<"Error: _released is not initialized."<<std::endl;
 	};
 };
@@ -251,7 +251,7 @@ void minimize::fixPar(
 		_released[i] = false;
 		reload_par_definitions(i);
 	}else{
-		std::cout<<_method.nTot()<<" "<<(*_method.parameters()).size()<<" "<<_released.size()<<std::endl;
+		std::cout<<_method.nTot()<<" "<<_method.parameters().size()<<" "<<_released.size()<<std::endl;
 		std::cerr<<"Error: _released is not initialized."<<std::endl;
 	};
 };
@@ -338,22 +338,22 @@ void minimize::reload_par_definitions(
 		uLim = mara_peter;
 		oLim = mara_peter+1;
 	};
-	if((*_method.lower_parameter_limits()).size() != (*_method.parameters()).size()){
-		_method.init_lower_limits((*_method.parameters()).size());
+	if((*_method.lower_parameter_limits()).size() != _method.parameters().size()){
+		_method.init_lower_limits(_method.parameters().size());
 	};
-	if((*_method.upper_parameter_limits()).size() != (*_method.parameters()).size()){
-		_method.init_upper_limits((*_method.parameters()).size());
+	if((*_method.upper_parameter_limits()).size() != _method.parameters().size()){
+		_method.init_upper_limits(_method.parameters().size());
 	};
 	if(_init){
 		for(int i=uLim;i<oLim;i++){
 			if(_released[i]){
 				if((*_method.lower_parameter_limits())[i] < (*_method.upper_parameter_limits())[i]){
-					_min->SetLimitedVariable(i,(*_method.parNames())[i],(*_method.parameters())[i],_step_sizes[i],(*_method.lower_parameter_limits())[i],(*_method.upper_parameter_limits())[i]);
+					_min->SetLimitedVariable(i,(*_method.parNames())[i],_method.parameters()[i],_step_sizes[i],(*_method.lower_parameter_limits())[i],(*_method.upper_parameter_limits())[i]);
 				}else{
-					_min->SetVariable(i,(*_method.parNames())[i],(*_method.parameters())[i],_step_sizes[i]);
+					_min->SetVariable(i,(*_method.parNames())[i],_method.parameters()[i],_step_sizes[i]);
 				};
 			}else{
-				_min->SetFixedVariable(i,(*_method.parNames())[i],(*_method.parameters())[i]);
+				_min->SetFixedVariable(i,(*_method.parNames())[i],_method.parameters()[i]);
 			};
 		};
 	};
@@ -362,8 +362,8 @@ void minimize::reload_par_definitions(
 ///Initializes the fitter
 bool minimize::initialize(std::string s1, std::string s2){ 
 
-	if ((*_method.parameters()).size()<_method.nTot()){
-		std::cout<<"(*_method.parameters()).size() < _method.nTot(). Abort initialize(initialization."<<std::endl;
+	if (_method.parameters().size()<_method.nTot()){
+		std::cout<<"_method.parameters().size() < _method.nTot(). Abort initialize(initialization."<<std::endl;
 		return false;
 	};
 	if ((*_method.parNames()).size()<_method.nTot()){
@@ -416,9 +416,9 @@ void minimize::setRandomBra(){
 void minimize::finish_setUp(){
 
 	std::vector<int> first_branch = _method.Waveset()->getFirstBranch();
-	if (_released.size() != (*_method.parameters()).size()){
+	if (_released.size() != _method.parameters().size()){
 	//		std::cout<<"Warning: No paramter status set, releasing couplings, fixing all others."<<std::endl;
-		std::vector<bool> std_rel((*_method.parameters()).size(),false);
+		std::vector<bool> std_rel(_method.parameters().size(),false);
 		for (int i=0;i<2*_method.nCpl();i++){
 			std_rel[i]=true;
 		};
@@ -446,7 +446,7 @@ void minimize::loadFitterDefinitions(
 	int nPar = _method.Waveset()->getNpar();
 	int nCpl = _method.getNanc();
 	for (int par = 0;par<nPar;par++){
-		setStepSize(2*nCpl+par,std::max(_minStepSize, 0.0001*fabs((*_method.parameters())[2*nCpl+par])));
+		setStepSize(2*nCpl+par,std::max(_minStepSize, 0.0001*fabs(_method.parameters()[2*nCpl+par])));
 	};
 	if (waveset["real_anchor_cpl"]){ /// Also include this here, so no extra method is necessary
 		if(waveset["real_anchor_cpl"].as<bool>()){
