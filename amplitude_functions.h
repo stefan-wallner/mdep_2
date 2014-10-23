@@ -123,4 +123,240 @@ xdouble bowler_integral_table(xdouble m){
 		return 0.;
 	};
 };
+
+/// Basic class definition for the functor class //////////////////////////////////////////////////////////////
+
+class amplitude {
+	public:
+		amplitude();
+		amplitude(size_t nVar, size_t nPar, size_t nCon, int funcId);
+
+		virtual std::string 	type()									const		{return "constant_function";};
+		std::string		name()									const		{return _name;};
+
+		std::complex<double> Eval(const double* var)							const		{return Eval(var, &_parameters[0], &_constants[0]);};
+		std::complex<double> Eval(const double* var, const double* par)					const		{return Eval(var, par, &_constants[0]);};
+		virtual std::complex<double> Eval(const double* var, const double* par, const double* con)	const		{return std::complex<double>(1.,0.);};
+
+#ifdef ADOL_ON
+		std::complex<adouble> Eval(const double* var, const adouble* par)				const		{return Eval(var, par, (adouble*)&_constants[0]);};
+		virtual std::complex<adouble> Eval(const double* var, const adouble* par, const adouble* con)	const		{return std::complex<adouble>(1.,0.);};
+#endif//ADOL_ON
+
+		size_t 			nVar()									const		{return _nVar;};
+		size_t 			nPar()									const		{return _nPar;};
+		size_t 			nCon()									const		{return _nCon;};
+
+		int			L()									const		{return _L;};
+		void			setL(int L)										{_L=L;};
+
+		bool 			setPar(size_t n, double val);
+		bool 			setCon(size_t n, double val);
+
+		bool			setPars(const double* vals);
+		bool			setCons(const double* vals);
+
+		const std::vector<double>*parameters()								const		{return &_parameters;};
+		const std::vector<double>*constants()								const		{return &_constants;};
+	
+		double			getParameter(size_t n)							const;
+		double			getConstant(size_t n)							const;
+
+		std::string		getVarType(size_t n)							const;					
+		std::string		getParType(size_t n)							const;
+		std::string		getConType(size_t n)							const;
+		std::string		getParName(size_t n)							const;
+		std::string		getConName(size_t n)							const;
+
+		int			getFuncId()								const		{return _funcId;};
+
+		void			setFunctionName(std::string name)							{_name = name;};
+		bool			setParName(size_t n, std::string name);
+		bool			setConName(size_t n, std::string name);
+
+		void			print()									const;
+
+	protected:
+
+		int 			_L;		// Spin, treat special here, since its essential
+
+		std::vector<std::string>_var_types;	// Type of the variables // Convention: {m, t',...}
+		std::vector<std::string>_par_types;	// Names of the parameters
+		std::vector<std::string>_con_types;	// Names of the constants
+
+		std::string		_name;		// Name of the functions
+		std::vector<std::string>_par_names;	// Names of the parameters
+		std::vector<std::string>_con_names;	// Names of the constants
+
+		const size_t		_nVar;		// # of Variables
+		const size_t		_nPar;		// # of Paramters
+		const size_t		_nCon;		// # of Constants
+
+		const int		_funcId;	// Id # of the function type, to be consistent with the old method
+
+		std::vector<double>	_parameters;	// Paramters
+		std::vector<double>	_constants;	// Constants
+
+};
+
+amplitude::amplitude():_nVar(0),_nPar(0),_nCon(0),_funcId(-1){ // Id for constant function is -1
+
+		_name = "unnamed_constant_function";
+};
+
+amplitude::amplitude(size_t nVar, size_t nPar, size_t nCon, int funcId):_nVar(nVar), _nPar(nPar), _nCon(nCon), _funcId(funcId){
+
+		_name = "unnamed_constant_function";
+
+		_constants = std::vector<double>(nCon);
+		_parameters= std::vector<double>(nPar);
+
+		_var_types = std::vector<std::string>(nVar);
+
+		_par_types = std::vector<std::string>(nPar);
+		_par_names = std::vector<std::string>(nPar);
+
+		_con_types = std::vector<std::string>(nCon);
+		_con_names = std::vector<std::string>(nCon);
+};
+
+bool amplitude::setPar(size_t n, double val){
+	if (n < _nPar){
+		_parameters[n] = val;
+		return true;
+	}else{
+		std::cerr << "Error: Can't set parameter #"<<n<<" for "<<type()<<std::endl;		
+		return false;
+	};
+};
+
+bool amplitude::setCon(size_t n, double val){
+	if (n < _nCon){
+		_constants[n] = val;
+		return true;
+	}else{
+		std::cerr << "Error: Can't set constant #"<<n<<" for "<<type()<<std::endl;		
+		return false;
+	};
+};
+
+bool amplitude::setPars(const double* vals){
+	bool ret = true;
+	for (size_t iii =0;iii<_nPar;iii++){
+		if (not setPar(iii,vals[iii])){
+			ret = false;
+		};
+	};
+	return ret;
+};
+
+bool amplitude::setCons(const double* vals){
+	bool ret = true;
+	for (size_t iii =0;iii<_nCon;iii++){
+		if (not setCon(iii,vals[iii])){
+			ret = false;
+		};
+	};
+	return ret;
+};
+
+std::string amplitude::getVarType(size_t n)		const{
+	if (n<_nVar){
+		return _var_types[n];
+	}else{
+		std::cerr <<"Error: getVarType(...): _nVar  = "<<_nVar<<" < "<<n<<std::endl;
+		return "index_out_of_range";
+	};
+};
+std::string amplitude::getParType(size_t n)		const{
+	if (n<_nPar){
+		return _par_types[n];
+	}else{
+		std::cerr <<"Error: getParType(...): _nPar  = "<<_nPar<<" < "<<n<<std::endl;
+		return "index_out_of_range";
+	};
+};
+std::string amplitude::getConType(size_t n)		const{
+	if (n<_nCon){
+		return _con_types[n];
+	}else{
+		std::cerr <<"Error: getConType(...): _nCon  = "<<_nCon<<" < "<<n<<std::endl;
+		return "index_out_of_range";
+	};
+};
+std::string amplitude::getParName(size_t n)		const{
+	if (n<_nPar){
+		return _par_names[n];
+	}else{
+		std::cerr <<"Error: getParName(...): _nPar  = "<<_nPar<<" < "<<n<<std::endl;
+		return "index_out_of_range";
+	};
+};
+std::string amplitude::getConName(size_t n)		const{
+	if (n<_nCon){
+		return _con_names[n];
+	}else{
+		std::cerr <<"Error: getConName(...): _nCon  = "<<_nCon<<" < "<<n<<std::endl;
+		return "index_out_of_range";
+	};
+};
+bool amplitude::setParName(size_t n, std::string name){
+	if(n<_nPar){
+		_par_names[n] = name;
+		return true;
+	}else{
+		std::cerr<<"Error: Can't set _par_names["<<n<<"] for "<<type()<<std::endl;
+		return false;
+	};
+};
+bool amplitude::setConName(size_t n, std::string name){
+	if(n<_nCon){
+		_con_names[n] = name;
+		return true;
+	}else{
+		std::cerr<<"Error: Can't set _con_names["<<n<<"] for "<<type()<<std::endl;
+		return false;
+	};
+};
+
+double amplitude::getParameter(size_t n)		const{
+	if(n<_nPar){
+		return _parameters[n];
+	}else{
+		std::cerr<<"Error: Can't get _parameters["<<n<<"] for "<<type()<<std::endl;
+		return std::numeric_limits<double>::quiet_NaN();
+	};
+};
+
+double amplitude::getConstant(size_t n)			const{
+	if(n<_nCon){
+		return _constants[n];
+	}else{
+		std::cerr<<"Error: Can't get _contants["<<n<<"] for "<<type()<<std::endl;
+		return std::numeric_limits<double>::quiet_NaN();
+	};
+};
+
+void amplitude::print()					const{
+	std::cout<<type()<<": "<<name()<<" ("<<_funcId<<")"<<std::endl;
+	if(_nVar>0){
+		std::cout<<"  - variables: "<<std::endl;
+		for (size_t i=0;i<_nVar;i++){
+			std::cout<<"    - "<<_var_types[i]<<std::endl;
+		};
+	};
+	if(_nPar>0){
+		std::cout<<"  - parameters: "<<std::endl;
+		for (size_t i=0;i<_nPar;i++){
+			std::cout<<"    - "<<_par_types[i]<<": "<<_par_names[i]<<": "<<_parameters[i]<<std::endl;
+		};
+	};
+	if(_nCon>0){
+		std::cout<<"  - constants: "<<std::endl;
+		for (size_t i=0;i<_nCon;i++){
+			std::cout<<"    - "<<_con_types[i]<<": "<<_con_names[i]<<": "<<_constants[i]<<std::endl;
+		};
+	};
+};
+
 #endif//AMP_FUNCTIONS_CILLY_BO

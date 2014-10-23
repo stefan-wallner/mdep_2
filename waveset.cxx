@@ -32,6 +32,7 @@ waveset::waveset():
 ///Constructror from YAML files
 waveset::waveset(
 							std::string 						card):
+
 	_nWaves(0),
 	_nFuncs(0),
 	_globalPs(0),
@@ -92,7 +93,7 @@ std::vector<std::complex<xdouble> > waveset::amps(
 							const double 						*m,
 							const std::complex<xdouble>	 			*cpl,
 							const xdouble	 					*par,
-							std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi)		const{
+							std::vector<std::vector<std::complex<xdouble> > > 	&funcEvals2pi)				const{
 
 	std::vector<std::complex<xdouble> > funcEval = funcs(m,par); // Evalulated BW-functions
 	std::vector<std::complex<xdouble> > ampl = std::vector<std::complex<xdouble> >(_nPoints,std::complex<xdouble>(0.,0.)); // Vector of final amplitudes
@@ -138,7 +139,7 @@ template std::vector<std::complex<double> > waveset::amps(const double *m, const
 template<typename xdouble>
 std::vector<std::complex<xdouble> > waveset::funcs(
 							const double 						*m, // Contains also other possible variables
-							const xdouble	 					*par)			const{
+							const xdouble	 					*par)					const{
 
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
 	int upPar=0;
@@ -161,7 +162,7 @@ template std::vector<std::complex<double> > waveset::funcs(const double *m,const
 ///Evaluates the isobar paramterizations at ALL masses, so they do not have to be recalculated each time
 template<typename xdouble>
 std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
-							const xdouble	  						*par)			const{
+							const xdouble	  					*par		)			const{
 
 	if (_has_isobars){
 		std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
@@ -185,7 +186,7 @@ template std::vector<std::vector<std::complex<double> > > waveset::iso_funcs(con
 //########################################################################################################################################################
 ///Gives a vector with phase space factors for each wave at m3pi = m
 std::vector<double> waveset::phase_space(
-								const double 							*m)		const{
+								const double 					*m)					const{
 
 	double global_ps = phaseSpace(m[0],_globalPs,0,0.);
 	std::vector<double> ps = std::vector<double>(_nWaves);

@@ -31,6 +31,7 @@ anchor_t::anchor_t():
 ///Constructror from YAML files
 anchor_t::anchor_t(
 							std::string 						card):
+
 	_waveset(card),
 	_is_ampl(false),
 	_nOut(1000),
@@ -686,14 +687,14 @@ template std::vector<std::complex<adouble> > anchor_t::getMinimumCplBra(int tbin
 //#######################################################################################################################################################
 ///Gets the gradient w.r.t. xx
 std::vector<double> anchor_t::Diff(
-							std::vector<double> 				&xx){
+							std::vector<double> 				&xx)						const{
 
 	return Diff(&xx[0]);
 };
 //#######################################################################################################################################################
 ///Gets the gradient w.r.t. xx
 std::vector<double> anchor_t::Diff(
-							const double 					*xx){
+							const double 					*xx)						const{
 
 	int nTape = 0;
 	double x[_nTot];
@@ -875,7 +876,7 @@ void anchor_t::init_upper_limits(int n){
 std::vector<std::complex<double> > anchor_t::get_branchings(
 							const std::vector<std::complex<double> > 	&cpl,
 							const std::vector<double> 			&par,
-							const std::vector<double> 			&iso_par){
+							const std::vector<double> 			&iso_par)					const{
 
 	// Gets branchings as follows:
 	//	- Take Anchor cpls to get couplings for each t-bin
@@ -1415,7 +1416,7 @@ void anchor_t::update_is_active(){
 ///Writes plots with the internal _parameters
 void anchor_t::write_plots(
 							std::string						filename,
-							int							tbin){
+							int							tbin)					const{
 
 	write_plots(filename,tbin,parameters());
 };
@@ -1424,7 +1425,7 @@ void anchor_t::write_plots(
 void anchor_t::write_plots(
 							std::string						filename,
 							int							tbin,
-							const std::vector<double>				&param){
+							const std::vector<double>				&param)					const{
 
 	std::vector<std::complex<double> > cpl(_nCpl);
 	std::vector<double> par(_nPar);	
@@ -1457,7 +1458,7 @@ void anchor_t::write_plots(
 							const std::vector<std::complex<double> >		&cpl,
 							const std::vector<double>				&par,
 							const std::vector<std::complex<double> >		&bra,
-							const std::vector<double> 				&iso){
+							const std::vector<double> 				&iso)					const{
 
 	double tprime = _waveset.getVar(0.,tbin)[1];
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);

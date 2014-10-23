@@ -108,8 +108,8 @@ class anchor_t{
 								const xdouble	 					*iso_par)			const;
 	// DERIVATIVES
 #ifdef ADOL_ON
-		std::vector<double> 				Diff(std::vector<double> &xx);
-		std::vector<double> 				Diff(const double* xx);
+		std::vector<double> 				Diff(std::vector<double> &xx)								const;
+		std::vector<double> 				Diff(const double* xx)									const;
 #endif//ADOL_ON
 	// PARAMETER HANDLING
 		void 					setParameter(int i, double par);
@@ -119,7 +119,7 @@ class anchor_t{
 		void 					setParLimits(int i, double upper, double lower);
 		void					init_lower_limits(int n=-1);
 		void					init_upper_limits(int n=-1);
-		std::vector<std::complex<double> > 	get_branchings(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par);
+		std::vector<std::complex<double> > 	get_branchings(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par) const;
 		std::vector<std::complex<double> >	getUnbranchedCouplings(const std::vector<std::complex<double> > &cpl,const std::vector<std::complex<double> > &bra) const;
 		std::vector<std::complex<double> >	getAllCouplings(int tbin,const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
 		void 					branchCouplingsToOne();
@@ -165,7 +165,7 @@ class anchor_t{
 
 	// OTHER METHODS
 		std::string 				className		()const		{return "anchor_t";};
-		void 					printStatus()				const;
+		void 					printStatus()		const;
 		void 					set_is_ampl(bool is_ampl);
 		void 					setTbinning(std::vector<double> binning);
 		void 					update_n_cpls();
@@ -176,9 +176,9 @@ class anchor_t{
 #endif//STORE_ACTIVE
 
 	// PLOTTING
-		void					write_plots(std::string filename, int tbin);
-		void					write_plots(std::string filename, int tbin,const std::vector<double> &paramters);
-		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso);
+		void					write_plots(std::string filename, int tbin) const;
+		void					write_plots(std::string filename, int tbin,const std::vector<double> &paramters) const;
+		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
 	protected:
 		// WAVESET
 		waveset									_waveset;		// The waveset used
