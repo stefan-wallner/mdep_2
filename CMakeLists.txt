@@ -75,7 +75,6 @@ target_link_libraries(fitmd.exe minimize)
 target_link_libraries(de_isobarring anchor_t)
 
 #link ROOT
-#target_link_libraries(minimize /nfs/mnemosyne/sys/slc6/sw/root/x86-64/5.34.20/root/lib/libMathCore.so.5.34 )
 target_link_libraries(minimize ${ROOT_LIBS} )
 
 #link YAML

@@ -6,9 +6,7 @@
 #include<string>
 #include<limits>
 
-#include"cholesky.h"
-
-#include"invert33.h"
+#include"matrix_utilities.h"
 
 #ifdef ADOL_ON
 #include "adolc/adolc.h"

@@ -6,10 +6,7 @@
 #include"../chi_squared/breitWigners.h"
 #include"yaml-cpp/yaml.h"
 #include"currentDateTime.h"
-#include"AB.h"
-#include"invert33.h"
-#include"cholesky.h"
-
+#include"matrix_utilities.h"
 
 
 //std::string C="../13w_11t_testload.yaml";

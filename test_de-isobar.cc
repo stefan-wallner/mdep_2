@@ -4,8 +4,7 @@
 #include"anchor_t.h"
 
 
-#include"invert33.h"
-#include"cholesky.h"
+#include"matrix_utilities.h"
 
 int main(){
 	anchor_t Chi2 = anchor_t();

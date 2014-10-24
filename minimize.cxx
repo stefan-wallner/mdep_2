@@ -15,7 +15,7 @@
 #include "adolc/adolc.h"
 #endif//ADOL_ON
 
-#include"invert33.h"
+#include"matrix_utilities.h"
 
 minimize::minimize(): 
 	_method(), 
