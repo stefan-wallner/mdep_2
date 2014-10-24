@@ -1550,9 +1550,10 @@ void waveset::update_n_cpls(){
 	int max_cpl = 0;
 	std::vector<int> brs;
 	std::vector<int> their_cpls;
-	for (int i=i;i<_coupled.size();i++){
+	for (int i=0;i<_coupled.size();i++){
 		if (_coupled[i] ==-1){
 			new_cpl.push_back(max_cpl);
+//std::cout<<"-1: "<<max_cpl<<std::endl;
 			max_cpl++;
 		}else{
 			bool already = false;
@@ -1567,10 +1568,17 @@ void waveset::update_n_cpls(){
 				new_cpl.push_back(max_cpl);
 				brs.push_back(_coupled[i]);
 				their_cpls.push_back(max_cpl);
+//std::cout<<_coupled[i]<<": "<<max_cpl<<std::endl;
 				max_cpl++;
 			};
 		};
 	};
+/*
+print_vector(_coupled);
+std::cout<<"getting_set"<<std::endl;
+std::cout<<max_cpl<<std::endl;
+std::cin.ignore();
+*/
 	_nBrCpl = max_cpl;
 	_n_cpls = new_cpl;
 };

@@ -108,7 +108,7 @@ void minimize::initCouplings(){
 	_method.setUseBranch(true);
 	if (_method.nBra()>0){
 		std::vector<std::complex<double> > bra = _method.get_branchings(couplings,par,iso_par);
-		// branchCouplingsToOne(); // Set all coubled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
+		// branchCouplingsToOne(); // Set all coupled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
 		for (unsigned int i=0;i<bra.size();i++){ // Set found branchings
 			setParameter(2*_method.nCpl()+_method.nPar()+2*i ,bra[i].real());
 			setParameter(2*_method.nCpl()+_method.nPar()+2*i+1,bra[i].imag());

@@ -656,9 +656,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 	//		les_as.push_back(ABprime.A[i][i]);
 	//	};
 	//	print_vector(les_as);
-
 		std::vector<xdouble> D = cholesky::cholesky_solve(ABprime.A,ABprime.B);
-
 		for (int i=_nBrCplAnc;i<_waveset.nBrCpl();i++){
 			int irel = i-_nBrCplAnc;
 			ccppll[i] = std::complex<xdouble>(-D[2*irel]/2,-D[2*irel+1]/2);
