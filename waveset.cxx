@@ -1,7 +1,6 @@
 #include<iostream>
 #include"waveset.h"
-#include"../chi_squared/breitWigners.h"
-#include"../chi_squared/phaseSpace.h"
+#include"phaseSpace.h"
 
 #include"invert33.h"
 

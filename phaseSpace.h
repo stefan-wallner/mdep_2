@@ -2,7 +2,7 @@
 #define PHASESPACE_UTLRA_KEK
 
 #include <complex>
-#include "breitWigners.h" // Barrier factors and breakup momentum are defined in 'breitWigners.h'
+#include "amplitude_functions.h" // Barrier factors and breakup momentum are defined in 'breitWigners.h'
 #include "tabulated_integrals.h" // Tabulated phase-space integrals
 
 double phaseSpace(double m3Pi, int mode=0, int L=0, double m_isobar=1.){
