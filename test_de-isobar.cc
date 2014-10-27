@@ -47,10 +47,10 @@ int main(){
 	Chi2.Waveset()->setWaveIsobarBinning(1,0);
 	std::vector<double> data;
 	std::vector<std::vector<double> > coma;
-	for (int i=0;i<2*Chi2.Waveset()->nPoints()-1;i++){
+	for (size_t i=0;i<2*Chi2.Waveset()->nPoints()-1;i++){
 		data.push_back(1.);
 		std::vector<double> comaLine;
-		for (int j=0;j<2*Chi2.Waveset()->nPoints()-1;j++){
+		for (size_t j=0;j<2*Chi2.Waveset()->nPoints()-1;j++){
 			if(i==j){
 				comaLine.push_back(1.);
 			}else{
@@ -63,7 +63,7 @@ int main(){
 	for (int i=0;i<11;i++){
 		data[i] = data_c[i];
 	};
-	for (int bin=0;bin<Chi2.Waveset()->nBins();bin++){
+	for (size_t bin=0;bin<Chi2.Waveset()->nBins();bin++){
 		if (not Chi2.set_data(0,bin,data)){
 			std::cout<<"data wrong"<<std::endl;
 		};
@@ -99,7 +99,7 @@ int main(){
 	std::vector<double> inver = cholesky::cholesky_solve(AB.A,AB.B);
 	print_vector(AB.B);
 	std::cout<<std::endl;
-	for (int i=0;i<inver.size();i++){
+	for (size_t i=0;i<inver.size();i++){
 		inver[i]*=-.5;
 	};
 	print_vector(inver);

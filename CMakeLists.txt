@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.8)
-set(CMAKE_CXX_FLAGS "-O3")
-project (Mdep)
 
+project (Mdep)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder")
 set(use_auto_diff ON) 
 set(use_YAML ON)
 set(use_multiNest ON)

@@ -101,7 +101,7 @@ std::vector<std::complex<xdouble> > waveset::amps(
 	int upBor=0; // Upper limit for function number
 	int loBor=0; // Lower limit for function number
 	int amplcount=0;
-	for (int wave =0;wave<_nWaves;wave++){
+	for (size_t wave =0;wave<_nWaves;wave++){
 		int n_iso_bin = _wave_binning_pts[wave];
 		loBor = upBor;
 		upBor = _borders_waves[wave];
@@ -143,10 +143,9 @@ std::vector<std::complex<xdouble> > waveset::funcs(
 	std::vector<std::complex<xdouble> > f = std::vector<std::complex<xdouble> >(_nFuncs);
 	int upPar=0;
 	int loPar=0;
-	for (int func=0; func<_nFuncs; func++){
+	for (size_t func=0; func<_nFuncs; func++){
 		loPar = upPar;
 		upPar = _borders_par[func];
-		int pos=0;
 		if (m[0] >= _funcLowerLims[func] and m[0] < _funcUpperLims[func]){ // Only calculate needed functions
 			f[func]=_amp_funcs[func]->Eval(m,par+loPar);
 		}else{
@@ -167,7 +166,7 @@ std::vector<std::vector<std::complex<xdouble> > > waveset::iso_funcs(
 		std::vector<std::vector<std::complex<xdouble> > > f = std::vector<std::vector<std::complex<xdouble> > >(_nIso,std::vector<std::complex<xdouble> >(_maxBinIso,std::complex<xdouble>(0.,0.)));
 		int upPar=0;
 		int loPar=0;
-		for (int iso=0;iso<_nIso;iso++){
+		for (size_t iso=0;iso<_nIso;iso++){
 			loPar = upPar;
 			upPar = _iso_borders_par[iso];
 			int nBins = _iso_binning_pts[iso];
@@ -189,7 +188,7 @@ std::vector<double> waveset::phase_space(
 
 	double global_ps = phaseSpace(m[0],_globalPs,0,0.);
 	std::vector<double> ps = std::vector<double>(_nWaves);
-	for(int wave=0;wave<_nWaves;wave++){
+	for(size_t wave=0;wave<_nWaves;wave++){
 		ps[wave]=global_ps*phaseSpace(m[0],_wavePs[wave],0,0.);
 	};
 	return ps;
@@ -251,7 +250,7 @@ size_t waveset::add_iso(
 	amplitude* new_amp = get_amplitude(i);
 	new_amp->setL(DEFAULT_L);
 	int nParNon = new_amp->nPar();
-	int nPar = nParNon + new_amp->nCon();
+//	int nPar = nParNon + new_amp->nCon();
 	_amp_isos.push_back(new_amp);
 	size_t nBor = _iso_borders_par.size();
 	if (nBor == 0){
@@ -271,7 +270,7 @@ void waveset::add_func_to_wave(
 							int 							wave,
 							int 							func){
 
-	int border = _borders_waves[wave];
+	size_t border = _borders_waves[wave];
 	std::vector<int> new_relations;
 	std::vector<int> new_relations_iso;
 	size_t nRel = _funcs_to_waves.size();
@@ -289,7 +288,7 @@ void waveset::add_func_to_wave(
 	};
 	_funcs_to_waves=new_relations;
 	_iso_to_waves=new_relations_iso;
-	for (int i=wave;i<_nWaves;i++){
+	for (size_t i=wave;i<_nWaves;i++){
 		_borders_waves[i]+=1;
 	};
 	updateFuncLims();
@@ -305,7 +304,7 @@ void waveset::add_funcs_to_wave(
 							int 							func,
 							int 							func2){ // func2 == isobar
 
-	int border = _borders_waves[wave];
+	size_t border = _borders_waves[wave];
 	std::vector<int> new_relations;
 	std::vector<int> new_relations_iso;
 	size_t nRel = _funcs_to_waves.size();
@@ -325,7 +324,7 @@ void waveset::add_funcs_to_wave(
 	};
 	_funcs_to_waves=new_relations;
 	_iso_to_waves=new_relations_iso;
-	for (int i=wave;i<_nWaves;i++){
+	for (size_t i=wave;i<_nWaves;i++){
 		_borders_waves[i]+=1;
 	};
 	updateFuncLims();
@@ -465,7 +464,7 @@ void waveset::add_isobar_binning(
 							std::vector<double> 					binning){
 
 	_iso_binnings.push_back(binning);
-	int nnew = binning.size()-1;
+	size_t nnew = binning.size()-1;
 	if (_maxBinIso<nnew){
 		_maxBinIso=nnew;
 	};
@@ -640,7 +639,7 @@ void waveset::setIsoConstName(
 							int 							i,	// # of isobar constant
 							std::string 						name){
 	int cCount=0;
-	for (size_t iso;iso<_nIso;iso++){
+	for (size_t iso=0;iso<_nIso;iso++){
 		cCount+=_amp_isos[iso]->nCon();
 		if (cCount>i){
 			cCount-=_amp_isos[iso]->nCon();
@@ -658,8 +657,6 @@ void waveset::setBinning(
 	_nBins = binning.size()-1;
 	_mMin = binning[0];
 	_mMax = binning[_nBins];
-	int minBin = 0;
-	int maxBin = _nBins-1;
 	update_min_max_bin();
 };
 //########################################################################################################################################################
@@ -914,7 +911,7 @@ void waveset::loadBranchings(
 
 	int nWaves = waveset["waves"].size();
 	std::vector<int> fixed_branchings;
-	int nBr=0;
+//	int nBr=0;
 	int nBranch = waveset["branchings"].size();
 	for (int i=0;i<nBranch;i++){
 		std::vector<int> wave_numbers;
@@ -943,7 +940,7 @@ void waveset::loadBranchings(
 		if (wave_numbers.size()<2){
 			std::cerr<<"Error: Branching definition with less than two waves encountered."<<std::endl;
 		}else{
-			for (int cplto = 1; cplto < wave_numbers.size(); cplto++){
+			for (size_t cplto = 1; cplto < wave_numbers.size(); cplto++){
 				couple_funcs(wave_numbers[0],wave_numbers[cplto]);
 			};
 		};
@@ -1013,7 +1010,7 @@ void waveset::loadIsoBinnings(
 #endif//USE_YAML
 //########################################################################################################################################################
 ///Returns the number of parameters (without branchings or couplings)
-int waveset::getNpar()													const{
+size_t waveset::getNpar()												const{
 
 	if (0==_borders_par.size()){
 		return 0;
@@ -1022,9 +1019,9 @@ int waveset::getNpar()													const{
 };
 //########################################################################################################################################################
 ///Returns the number of parameters for isobars
-int waveset::getNiso()													const{
+size_t waveset::getNiso()												const{
 
-	int siz = _iso_borders_par.size();
+	size_t siz = _iso_borders_par.size();
 	if (0==siz){
 		return 0;
 	};
@@ -1054,7 +1051,7 @@ std::vector<int> waveset::get_wave_functions(
 	for (int nnn = lower;nnn<upper;nnn++){
 		int coil = _funcs_to_waves[nnn];
 		bool already = false;
-		for (int aaa=0;aaa<wafe.size();aaa++){
+		for (size_t aaa=0;aaa<wafe.size();aaa++){
 			if (wafe[aaa] == coil){
 				already = true;
 				break;
@@ -1107,7 +1104,7 @@ std::vector<int> waveset::get_wave_isobars(
 	std::vector<int> isos;
 	for (int i=lower;i<upper;i++){
 		bool already = false;
-		for (int aaa=0;aaa<isos.size();aaa++){
+		for (size_t aaa=0;aaa<isos.size();aaa++){
 			if (isos[aaa]==_iso_to_waves[i]){
 				already = false;
 				break;
@@ -1126,7 +1123,7 @@ std::vector<int> waveset::get_wave_iso_pars(
 
 	std::vector<int> isos = get_wave_isobars(wave);
 	std::vector<int> pars;
-	for (int i=0;i<isos.size();i++){
+	for (size_t i=0;i<isos.size();i++){
 		std::vector<int> isopars = get_isobar_pars(isos[i]);
 		pars.insert(pars.end(),isopars.begin(),isopars.end());
 	};
@@ -1139,7 +1136,7 @@ std::vector<int> waveset::get_wave_iso_const(
 
 	std::vector<int> isos = get_wave_isobars(wave);
 	std::vector<int> consts;
-	for (int i=0;i<isos.size();i++){
+	for (size_t i=0;i<isos.size();i++){
 		std::vector<int> isoconst = get_isobar_const(isos[i]);
 		consts.insert(consts.end(),isoconst.begin(),isoconst.end());
 	};
@@ -1216,9 +1213,9 @@ std::vector<int> waveset::get_function_waves(
 							int 							func)	const{
 
 	std::vector<int> waves;
-	for (int wave=0;wave<_nWaves;wave++){
+	for (size_t wave=0;wave<_nWaves;wave++){
 		std::vector<int> funcs = get_wave_functions(wave);
-		int i_max = funcs.size();
+		size_t i_max = funcs.size();
 		for (size_t i=0;i<i_max;i++){
 			if (funcs[i] == func){
 				waves.push_back(wave);
@@ -1287,7 +1284,7 @@ std::vector<int> waveset::get_isobar_const(
 	for(int iso=0;iso<func-1;iso++){
 		cCount+=_amp_isos[iso]->nCon();
 	};
-	for(int con=0;con<_amp_isos[func]->nCon();con++){
+	for(size_t con=0;con<_amp_isos[func]->nCon();con++){
 		consts.push_back(cCount+con);
 	};
 	return consts;
@@ -1298,9 +1295,9 @@ std::vector<int> waveset::get_isobar_waves(
 							int 							iso)	const{
 
 	std::vector<int> waves;
-	for (int i=0;i<_nWaves;i++){
+	for (size_t i=0;i<_nWaves;i++){
 		std::vector<int> isos = get_wave_isobars(i);
-		for (int ff=0; ff<isos.size();ff++){
+		for (size_t ff=0; ff<isos.size();ff++){
 			if(iso==isos[ff]){
 				waves.push_back(i);
 				break;
@@ -1322,6 +1319,9 @@ std::string waveset::getParameterName(
 			return _amp_funcs[f]->getParName(i-pCount);
 		};
 	};
+	std::cerr<<"Error: Parameter #"<<i<<" does not exist"<<std::endl;
+	return "not_used";
+
 };
 //########################################################################################################################################################
 ///Simple getter for constant names
@@ -1336,6 +1336,8 @@ std::string waveset::getConstantName(
 			return _amp_funcs[j]->getConName(i-nConst);
 		};
 	};
+	std::cerr<<"Error: Constant #"<<i<<" does not exist"<<std::endl;
+	return "not_used";
 };
 //########################################################################################################################################################
 ///Simple getter for isobar parameter names
@@ -1350,26 +1352,30 @@ std::string waveset::getIsoParName(
 			return _amp_isos[iso]->getParName(i-pCount);
 		};
 	};
+	std::cerr<<"Error: Isobar Parameter #"<<i<<" does not exist"<<std::endl;
+	return "not_used";
 };
 //########################################################################################################################################################
 ///Simple getter for isobar constant names
 std::string waveset::getIsoConstName(
 							int 							i)	const{ 	// # of isobar constant
 	int cCount=0;
-	for (size_t iso;iso<_nIso;iso++){
+	for (size_t iso=0;iso<_nIso;iso++){
 		cCount+=_amp_isos[iso]->nCon();
 		if (cCount>i){
 			cCount-=_amp_isos[iso]->nCon();
 			return _amp_isos[iso]->getConName(i-cCount);
 		};
 	};
+	std::cerr<<"Error: Isobar Constant #"<<i<<" does not exist"<<std::endl;
+	return "not_used";
 };
 //########################################################################################################################################################
 ///Gets the mass bin for a certain m3Pi
 int waveset::get_bin(
 							double 							mass)	const{
 
-	for(int i=0;i<_nBins;i++){
+	for(size_t i=0;i<_nBins;i++){
 		if (_binning[i] <= mass and _binning[i+1]>mass){
 			return i;
 		};
@@ -1383,13 +1389,13 @@ std::vector<int> waveset::getFirstBranch()										const{
 
 	std::vector<int> firstBranch;
 	int maxBranch = -1;
-	for (int i=0;i<_coupled.size();i++){
+	for (size_t i=0;i<_coupled.size();i++){
 		if (_coupled[i] > maxBranch){
 			maxBranch = _n_branch[i];
 		};
 	};
 	for (int i=0;i<maxBranch+1;i++){
-		for (int j=0;j<_coupled.size();j++){
+		for (size_t j=0;j<_coupled.size();j++){
 			if (_coupled[j] == i){
 				firstBranch.push_back(_n_branch[j]);
 				break;
@@ -1410,8 +1416,8 @@ void waveset::updateNpoints(){
 
 	int nnn = 0;
 	std::vector<int> point_to_wave;
-	_point_borders_wave=std::vector<int>(0);
-	for (int wave=0;wave<_nWaves;wave++){
+	_point_borders_wave=std::vector<size_t>(0);
+	for (size_t wave=0;wave<_nWaves;wave++){
 		int plus = abs(_wave_binning_pts[wave]);
 		nnn+=plus;
 		_point_borders_wave.push_back(nnn);
@@ -1426,11 +1432,11 @@ void waveset::updateNpoints(){
 ///Updates the mass limits for the funtions from the mass limits for the waves
 void waveset::updateFuncLims(){
 
-	for (int func=0;func<_nFuncs;func++){
+	for (size_t func=0;func<_nFuncs;func++){
 			double upper =  LOWER_MASS_LIMIT;// This is exchanged (upper <-> LOWER), since
 			double lower =  UPPER_MASS_LIMIT;// the smallest mass region is wanted
 			std::vector<int> waves = get_function_waves(func);
-			int i_max = waves.size();
+			size_t i_max = waves.size();
 			for (size_t i=0;i<i_max;i++){
 				int wave = waves[i];
 				double waveUpper = _upperLims[wave];
@@ -1450,7 +1456,7 @@ void waveset::updateFuncLims(){
 //Updates the function spin according to their corresponding wave spin (if there is a mistake (different spins for the same function), nothing will happen)
 void waveset::updateFuncSpin(){
 
-	for (int func=0;func<_nFuncs;func++){
+	for (size_t func=0;func<_nFuncs;func++){
 		std::vector<int> waves = get_function_waves(func);
 		int i_max = waves.size();
 		if (i_max >0){
@@ -1463,9 +1469,9 @@ void waveset::updateFuncSpin(){
 ///Updates the internal definitions for the isobar paramterizations
 void waveset::updateIsobar(){
 
-	for (int wave =0;wave<_nWaves	;wave++){
+	for (size_t wave =0;wave<_nWaves;wave++){
 		std::vector<int> isos = get_wave_isobars(wave);
-		for (int niso=0;niso<isos.size();niso++){
+		for (size_t niso=0;niso<isos.size();niso++){
 			int iso = isos[niso];
 			_amp_isos[iso]->setL(_L_iso[wave]);
 			_iso_binning_pts[iso]=_wave_binning_pts[wave];
@@ -1521,7 +1527,7 @@ void waveset::handle_branchings(
 							int 							wave,
 							int 							func){
 
-	int border = _borders_waves[wave]-1;
+	size_t border = _borders_waves[wave]-1;
 	std::vector<int> coupled;
 	std::vector<int> n_branch;
 	size_t nRel = _coupled.size();
@@ -1546,18 +1552,17 @@ void waveset::handle_branchings(
 ///Updates the number of couplings
 void waveset::update_n_cpls(){
 
-	std::vector<int> new_cpl;
+	std::vector<size_t> new_cpl;
 	int max_cpl = 0;
 	std::vector<int> brs;
 	std::vector<int> their_cpls;
-	for (int i=0;i<_coupled.size();i++){
+	for (size_t i=0;i<_coupled.size();i++){
 		if (_coupled[i] ==-1){
 			new_cpl.push_back(max_cpl);
-//std::cout<<"-1: "<<max_cpl<<std::endl;
 			max_cpl++;
 		}else{
 			bool already = false;
-			for (int j=0;j<brs.size();j++){
+			for (size_t j=0;j<brs.size();j++){
 				if(brs[j] == _coupled[i]){
 					new_cpl.push_back(their_cpls[j]);
 					already = true;
@@ -1568,17 +1573,10 @@ void waveset::update_n_cpls(){
 				new_cpl.push_back(max_cpl);
 				brs.push_back(_coupled[i]);
 				their_cpls.push_back(max_cpl);
-//std::cout<<_coupled[i]<<": "<<max_cpl<<std::endl;
 				max_cpl++;
 			};
 		};
 	};
-/*
-print_vector(_coupled);
-std::cout<<"getting_set"<<std::endl;
-std::cout<<max_cpl<<std::endl;
-std::cin.ignore();
-*/
 	_nBrCpl = max_cpl;
 	_n_cpls = new_cpl;
 };
@@ -1588,7 +1586,7 @@ void waveset::update_n_branch(){
 
 	std::vector<int> n_branch;
 	int act_branch = 0;
-	for (int i=0;i<_coupled.size();i++){
+	for (size_t i=0;i<_coupled.size();i++){
 		if (_coupled[i] == -1){
 			n_branch.push_back(-1);
 		}else{
@@ -1640,7 +1638,7 @@ bool waveset::checkConsistency()											const{
 		};
 	};
 	for (size_t i=0;i<_funcs_to_waves.size();i++){
-		if (_funcs_to_waves[i] > _nFuncs-1){
+		if (_funcs_to_waves[i] > (int)_nFuncs-1){
 			nErr+=1;
 			std::cout << "Inconsistency found: Function with number "<<_funcs_to_waves[i]<< " does not exist"<<std::endl;
 		};
@@ -1667,11 +1665,11 @@ bool waveset::checkConsistency()											const{
 			std::cout<<"Inconsistency found: First wave is de-isobarred"<<std::endl;
 		};
 	};
-	for (int iso=0;iso<_nIso;iso++){
+	for (size_t iso=0;iso<_nIso;iso++){
 		std::vector<int> waves = get_isobar_waves(iso);
 		if(waves.size()>0){
 			int binn = _wave_n_binning[waves[0]];
-			for (int wave=1;wave<waves.size();wave++){
+			for (size_t wave=1;wave<waves.size();wave++){
 				if (_wave_n_binning[waves[wave]] != binn){
 					nErr++;
 					std::cout<<"Inconsistency found: Different binnings for the same isobar"<<std::endl;
@@ -1803,14 +1801,14 @@ void waveset::printParameters()												const{
 
 	int func_count = 0;
 	int iso_count =0;
-	for (int i=0;i<_nWaves;i++){
+	for (size_t i=0;i<_nWaves;i++){
 		std::cout<<"────────────────────────────────────────────────"<<std::endl;
 		std::cout<< _waveNames[i]<<std::endl;
 		std::cout<<"┬───────────────────────────────────────────────"<<std::endl;
 		std::vector<int> funcs = get_wave_functions(i);
 		std::vector<int> isos  = get_wave_isobars(i);
-		int j_max = funcs.size();
-		int is_max= isos.size();
+		size_t j_max = funcs.size();
+		size_t is_max= isos.size();
 		for (size_t j=0;j<j_max;j++){
 			int func = funcs[j];
 			if (j==funcs.size()-1 and 0==is_max){
@@ -1822,7 +1820,7 @@ void waveset::printParameters()												const{
 			func_count++;
 			std::vector<int> pars = get_function_pars(func);
 			std::vector<int> cons = get_function_const(func);
-			int k_max = pars.size();
+			size_t k_max = pars.size();
 			for(size_t k=0;k<k_max;k++){
 				int par = pars[k];
 				if (j==funcs.size()-1 and 0==is_max){
@@ -1856,7 +1854,7 @@ void waveset::printParameters()												const{
 		};
 		if (is_max > 0){
 			std::cout<<"│ISOBARS:"<<std::endl;
-			for (int is=0;is<is_max;is++){
+			for (size_t is=0;is<is_max;is++){
 				int iso = isos[is];
 				if ( isos.size()-1==is){
 					std::cout<<"└─";
@@ -1867,7 +1865,7 @@ void waveset::printParameters()												const{
 				iso_count++;
 				std::vector<int> pars = get_isobar_pars(iso);
 				std::vector<int> cons = get_isobar_const(iso);
-				int k_max = pars.size();
+				size_t k_max = pars.size();
 				for(size_t k=0;k<k_max;k++){
 					int par = pars[k];
 					if (is==isos.size()-1){

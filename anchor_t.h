@@ -113,7 +113,7 @@ class anchor_t{
 		std::vector<double> 				Diff(const double* xx)									const;
 #endif//ADOL_ON
 	// PARAMETER HANDLING
-		void 					setParameter(int i, double par);
+		void 					setParameter(size_t i, double par);
 		bool 					setParameter(std::string name, double par);
 		void 					setParameters(std::vector<double> pars);
 		int 					getParNumber(std::string name)		const;
@@ -142,12 +142,12 @@ class anchor_t{
 	// OTHER SETTERS & GETTERS
 		waveset* 				Waveset			()		{return &_waveset;};
 		bool					useBranch		()const		{return _useBranch;};
-		int					nTot			()const		{return _nTot;};
-		int					nPar			()const		{return _nPar;};
-		int					nCpl			()const		{return _nCpl;};
-		int					nBra			()const		{return _nBra;};
-		int 					nIso			()const		{return _nIso;};
-		int					nBrCplAnc		()const		{return _nBrCplAnc;};
+		size_t					nTot			()const		{return _nTot;};
+		size_t					nPar			()const		{return _nPar;};
+		size_t					nCpl			()const		{return _nCpl;};
+		size_t					nBra			()const		{return _nBra;};
+		size_t 					nIso			()const		{return _nIso;};
+		size_t					nBrCplAnc		()const		{return _nBrCplAnc;};
 		const std::vector<double>		parameters		()const;
 		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
 		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
@@ -186,12 +186,12 @@ class anchor_t{
 
 		// PARAMETER NUMBERS
 
-		int 									_nTot; 			// Total number of parameters
-		int 									_nPar; 			// Number of shape parameters
-		int 									_nCpl; 			// Number of couplings (total, all t' bins summed)
-		int 									_nBra; 			// Number of branchings
-		int 									_nIso;			// Number of isobar parameters
-		int 									_nBrCplAnc;		// Number of couplings with branchings in the anchor wave
+		size_t 									_nTot; 			// Total number of parameters
+		size_t 									_nPar; 			// Number of shape parameters
+		size_t 									_nCpl; 			// Number of couplings (total, all t' bins summed)
+		size_t 									_nBra; 			// Number of branchings
+		size_t 									_nIso;			// Number of isobar parameters
+		size_t 									_nBrCplAnc;		// Number of couplings with branchings in the anchor wave
 
 		// PARAMETERS AND DATA
 		std::vector<double>							_parameters; 		// Acutal paramters (2*_nCpl,_nPar,2*_nBra,_nIso) - these are 'all' parameters!!!
@@ -207,8 +207,8 @@ class anchor_t{
 		// OTHER MEMBERS
 		bool 									_is_ampl; 		// Enable Amplitunde fitting, needs to be tested.
 		bool 									_useBranch; 		// Switches the usage of branchings on/off (only in the operator() method
-		int 									_nOut; 			// Print output after _nOut iterations
-		int 									_count;			// Count of calls
+		size_t 									_nOut; 			// Print output after _nOut iterations
+		size_t 									_count;			// Count of calls
 };
 
 

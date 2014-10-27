@@ -147,8 +147,8 @@ class amplitude {
 		size_t 			nPar()									const		{return _nPar;};
 		size_t 			nCon()									const		{return _nCon;};
 
-		int			L()									const		{return _L;};
-		void			setL(int L)										{_L=L;};
+		size_t			L()									const		{return _L;};
+		void			setL(size_t L)										{_L=L;};
 
 		bool 			setPar(size_t n, double val);
 		bool 			setCon(size_t n, double val);
@@ -178,7 +178,7 @@ class amplitude {
 
 	protected:
 
-		int 			_L;		// Spin, treat special here, since its essential
+		size_t 			_L;		// Spin, treat special here, since its essential
 
 		std::vector<std::string>_var_types;	// Type of the variables // Convention: {m, t',...}
 		std::vector<std::string>_par_types;	// Names of the parameters

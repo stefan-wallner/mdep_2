@@ -621,7 +621,7 @@ std::complex<xdouble> t_dependent_background::template_eval(const double* var, c
 		xdouble E = (m*m +mPi*mPi - mIso*mIso)/(2*m);
 		PSQ = E*E - mPi*mPi;
 	};
-	return std::complex<xdouble>(pow(m-0.5,b)*exp(PSQ*(c0+c1*tPrime+c2*tPrime*tPrime)),0.);
+	return std::complex<xdouble>(pow(m-m0,b)*exp(PSQ*(c0+c1*tPrime+c2*tPrime*tPrime)),0.);
 };
 // End of special definitions
 

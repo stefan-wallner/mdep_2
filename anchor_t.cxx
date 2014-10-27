@@ -68,15 +68,16 @@ double anchor_t::operator()(
 double anchor_t::operator()(
 							const double							*xx){
 
+
 //	const std::complex<double>* cpl = (std::complex<double>*)xx; // This is forbidden by Charly, build complex variables by hand :(
 	std::complex<double> cpl[_nCpl];
-	for (int i=0;i<_nCpl;i++){
+	for (size_t i=0;i<_nCpl;i++){
 		cpl[i] = std::complex<double>(xx[2*i],xx[2*i+1]);
 	};
 	const double* par = xx+2*_nCpl;
 //	const std::complex<double>* bra = (std::complex<double>*)(xx+2*_nCpl+_nPar);// This is forbidden by Charly, build complex variables by hand :(
 	std::complex<double> bra[_nBra];
-	for (int i=0;i<_nBra;i++){
+	for (size_t i=0;i<_nBra;i++){
 		bra[i] = std::complex<double>(xx[2*_nCpl+_nPar+2*i],xx[2*_nCpl+_nPar+2*i+1]);
 	};
 	const double* iso_par = xx + 2*_nCpl + _nPar + 2*_nBra;
@@ -115,9 +116,9 @@ xdouble anchor_t::EvalCP(
 
 	xdouble chi2 = 0.;
 	std::vector<std::complex<xdouble> > actCpl = std::vector<std::complex<xdouble> >(_waveset.nFtw());
-	for (int tbin=0;tbin<_waveset.nTbin();tbin++){
+	for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){
 		if((*_waveset.eval_tbin())[tbin]){
-			for (int i=0;i<_waveset.nFtw();i++){
+			for (size_t i=0;i<_waveset.nFtw();i++){
 				actCpl[i] = cpl[i+tbin*_waveset.nFtw()];
 			};
 			chi2+=EvalTbin(tbin,&actCpl[0],&par[0],&iso_par[0]);//[0]//
@@ -141,9 +142,9 @@ xdouble anchor_t::EvalBranch(
 							const xdouble	 						*iso_par)		const{
 
 	std::vector<std::complex<xdouble> > cplin(_waveset.nFtw()*_waveset.nTbin());
-	for (int tbin=0;tbin<_waveset.nTbin();tbin++){
+	for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){
 		if((*_waveset.eval_tbin())[tbin]){
-			for (int i =0;i<_waveset.nFtw();i++){
+			for (size_t i =0;i<_waveset.nFtw();i++){
 				if ((*_waveset.n_branch())[i]==-1){
 					cplin[i+tbin*_waveset.nFtw()] = cpl[(*_waveset.n_cpls())[i]+tbin*(_waveset.nBrCpl())];
 				}else{
@@ -169,7 +170,7 @@ xdouble anchor_t::EvalAutoCpl(
 
 	xdouble chi2 = 0.;
 	int nNon = (*_waveset.borders_waves())[0];
-	for (int tbin=0;tbin<_waveset.nTbin();tbin++){
+	for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){
 		if((*_waveset.eval_tbin())[tbin]){
 			const std::complex<xdouble>* actCpl = cpl+tbin*nNon;
 			chi2+=EvalAutoCplTbin(tbin,actCpl,par,iso_par);
@@ -193,12 +194,12 @@ xdouble anchor_t::EvalAutoCplBranch(
 
 	xdouble chi2=0.;
 	int nNon = _nBrCplAnc;
-	for(int tbin=0;tbin<_waveset.nTbin();tbin++){
+	for(size_t tbin=0;tbin<_waveset.nTbin();tbin++){
 		if ((*_waveset.eval_tbin())[tbin]){
 			const std::complex<xdouble>* actCpl = cpl+tbin*nNon;
 			std::vector<std::complex<xdouble> > bestcpl = getMinimumCplBra(tbin,bra,actCpl,par,iso_par);
 			std::vector<std::complex<xdouble> > best_cpl_std = std::vector<std::complex<xdouble> >(_waveset.nFtw());
-			for (int i=0;i<_waveset.nFtw();i++){
+			for (size_t i=0;i<_waveset.nFtw();i++){
 				if(-1==(*_waveset.n_branch())[i]){
 					best_cpl_std[i] = bestcpl[(*_waveset.n_cpls())[i]];
 				}else{
@@ -225,7 +226,7 @@ xdouble anchor_t::EvalTbin(
 
 	xdouble chi2 = 0.;
 	std::vector<std::vector<std::complex<xdouble> > > iso_eval = _waveset.iso_funcs(iso_par);
-	for (int bin=_waveset.minBin(); bin<_waveset.maxBin(); bin++){
+	for (size_t bin=_waveset.minBin(); bin<_waveset.maxBin(); bin++){
 		chi2+=EvalBin(tbin,bin,cpl,par,iso_eval);
 //		std::cout<<"bin #"<<bin<<" chi2++"<<EvalBin(tbin,bin,cpl,par,iso_eval)<<std::endl;
 //		std::cout << bin<<"   "<< EvalBin(tbin,bin,cpl,par) <<std::endl;
@@ -260,7 +261,7 @@ xdouble anchor_t::EvalBin(
 	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl, par,iso_eval);
 	xdouble chi2 = 0.;
 //	print_vector(deltas);
-	for (int i=0;i<2*_waveset.nPoints()-1;i++){
+	for (size_t i=0;i<2*_waveset.nPoints()-1;i++){
 		int iWave = (*_waveset.point_to_wave())[(i+1)/2];
 //		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
 		if (_is_active[tbin][bin][iWave]){
@@ -276,7 +277,7 @@ xdouble anchor_t::EvalBin(
 			if(_waveset.write_out()){
 				*_waveset.outStream() <<chi2<<std::endl;
 			};
-			for (int j=0;j<i;j++){
+			for (size_t j=0;j<i;j++){
 				int jWave = (*_waveset.point_to_wave())[(j+1)/2];
 //				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
 				if(_is_active[tbin][bin][jWave]){
@@ -322,7 +323,7 @@ std::vector<xdouble> anchor_t::delta(
 		*_waveset.outStream() << " Re1 data    "<<_data[tbin][bin][0]<<"     - theory   "<<std::norm(ampls[0]/divider)<<"       =    "<<std::norm(ampls[0]/divider) - _data[tbin][bin][0]<<std::endl;
 	};
 	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0]; ////// HERE ADD if(_is_point_bin[bin][i]){...}; so that no deltas are aclculated for turend off bins
-	for (int i = 1; i<_waveset.nPoints();i++){
+	for (size_t i = 1; i<_waveset.nPoints();i++){
 #ifdef STORE_ACTIVE
 		if (not _is_active[tbin][bin][i]){
 			continue;
@@ -363,7 +364,7 @@ AandB<xdouble> anchor_t::get_AB(
 	int nNon = _waveset.nFtw() - nCplAnc;
 	AandB<xdouble> AB(2*nNon);
 	std::vector<xdouble> lines = std::vector<xdouble>(2*_waveset.nPoints()-2,0.); 							//// >>>>  _waveset.nPoints()
-	for(int bin=_waveset.minBin();bin<_waveset.maxBin();bin++){
+	for(size_t bin=_waveset.minBin();bin<_waveset.maxBin();bin++){
 		std::vector<double> var = _waveset.getVar(_waveset.get_m(bin),tbin);
 		std::vector<std::complex<xdouble> > func = _waveset.funcs(&var[0],par);
 
@@ -380,16 +381,16 @@ AandB<xdouble> anchor_t::get_AB(
 		};
 		xdouble RR = ampAnc.real();
 		xdouble II = ampAnc.imag();
-		for (int i =0;i<2*_waveset.nPoints()-2;i++){ 										//// >>>>  _waveset.nPoints()
+		for (size_t i =0;i<2*_waveset.nPoints()-2;i++){ 										//// >>>>  _waveset.nPoints()
 			xdouble val = (RR*RR+II*II - _data[tbin][bin][0])*_coma[tbin][bin][i+1][0];
-			for (int j=1;j<2*_waveset.nPoints()-1;j++){ 									//// >>>>  _waveset.nPoints()
+			for (size_t j=1;j<2*_waveset.nPoints()-1;j++){ 									//// >>>>  _waveset.nPoints()
 				val+=-_data[tbin][bin][j]*_coma[tbin][bin][i+1][j];
 			};
 			lines[i]=val;
 		};
-		int wave1 = 1;	// Start with 1, leave anchor wave out								//// |||| For de-isobarred, this stays, because anchor wave must be isobarred
-		int up1 = (*_waveset.borders_waves())[1];
-		for (unsigned int nf1 = nCplAnc;nf1<_waveset.nFtw();nf1++){
+		size_t wave1 = 1;	// Start with 1, leave anchor wave out								//// |||| For de-isobarred, this stays, because anchor wave must be isobarred
+		size_t up1 = (*_waveset.borders_waves())[1];
+		for (size_t nf1 = nCplAnc;nf1<_waveset.nFtw();nf1++){
 			if (nf1==up1){
 				wave1+=1;
 				up1 = (*_waveset.borders_waves())[wave1];
@@ -417,8 +418,8 @@ AandB<xdouble> anchor_t::get_AB(
 					continue;
 				};
 
-				int wave2=1;
-				int up2=(*_waveset.borders_waves())[1];
+				size_t wave2=1;
+				size_t up2=(*_waveset.borders_waves())[1];
 				//// (RR + j II)*(R - j I)*(r - j i) = (RR R r - RR I i - II I r + II R i)+j(II R r + II I i - RR r I - RR R i)
 
 				AB.B[2*ind1  ] += AB1.real() * lines[2*point1-2] * 2;							//// >>>> now is Point
@@ -427,7 +428,7 @@ AandB<xdouble> anchor_t::get_AB(
 				AB.B[2*ind1+1] +=-AB1.real() * lines[2*point1-1] * 2;							//// >>>> now is Point
 				AB.B[2*ind1+1] += AB1.imag() * lines[2*point1-2] * 2;							//// >>>> now is Point
 
-				for (unsigned int nf2= nCplAnc;nf2<_waveset.nFtw();nf2++){
+				for (size_t nf2= nCplAnc;nf2<_waveset.nFtw();nf2++){
 					if(nf2==up2){
 						wave2+=1;
 						up2 = (*_waveset.borders_waves())[wave2];
@@ -559,7 +560,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 		int nNon = _waveset.nFtw() - nCplAnc;
 		std::vector<std::complex<xdouble> > cplAncBr = std::vector<std::complex<xdouble> >(nCplAnc);
 		std::vector<std::complex<xdouble> > ccppll(_waveset.nBrCpl());
-		for (int i=0;i<_nBrCplAnc;i++){
+		for (size_t i=0;i<_nBrCplAnc;i++){
 			ccppll[i] = anchor_cpl[i];
 		};
 		for (int i=0;i<nCplAnc;i++){
@@ -657,7 +658,7 @@ std::vector<std::complex<xdouble> > anchor_t::getMinimumCplBra(
 	//	};
 	//	print_vector(les_as);
 		std::vector<xdouble> D = cholesky::cholesky_solve(ABprime.A,ABprime.B);
-		for (int i=_nBrCplAnc;i<_waveset.nBrCpl();i++){
+		for (size_t i=_nBrCplAnc;i<_waveset.nBrCpl();i++){
 			int irel = i-_nBrCplAnc;
 			ccppll[i] = std::complex<xdouble>(-D[2*irel]/2,-D[2*irel+1]/2);
 		};
@@ -694,39 +695,38 @@ std::vector<double> anchor_t::Diff(
 
 	int nTape = 0;
 	double x[_nTot];
-	for (int i=0;i<_nTot;i++){
+	for (size_t i=0;i<_nTot;i++){
 		x[i] = xx[i];
 	};
 
 	trace_on(nTape);
-	adouble ax[_nTot];
 	std::vector<adouble>aCpl_r(2*_nCpl);
 	std::vector<adouble>aPar(_nPar);
 	std::vector<adouble>aBra_r(2*_nBra);
 	std::vector<adouble>aIso(_nIso);
 	int count=0;
-	for (int i=0;i<2*_nCpl;i++){
+	for (size_t i=0;i<2*_nCpl;i++){
 		aCpl_r[i] <<= x[count];
 		count++;
 	};
-	for (int i=0; i<_nPar;i++){
+	for (size_t i=0; i<_nPar;i++){
 		aPar[i] <<= x[count];
 		count++;
 	};
-	for (int i=0;i<2*_nBra;i++){
+	for (size_t i=0;i<2*_nBra;i++){
 		aBra_r[i] <<= x[count];
 		count++;
 	};
-	for (int i=0;i<_nIso;i++){
+	for (size_t i=0;i<_nIso;i++){
 		aIso[i] <<= x[count];
 		count++;
 	};
 	std::vector<std::complex<adouble> > aCpl_c(_nCpl);
 	std::vector<std::complex<adouble> > aBra_c(_nBra);
-	for (int i=0;i<_nCpl;i++){
+	for (size_t i=0;i<_nCpl;i++){
 		aCpl_c[i] = std::complex<adouble>(aCpl_r[2*i],aCpl_r[2*i+1]);
 	};
-	for (int i=0;i<_nBra;i++){
+	for (size_t i=0;i<_nBra;i++){
 		aBra_c[i] = std::complex<adouble>(aBra_r[2*i],aBra_r[2*i+1]);
 	};
 	double Chi2;
@@ -736,9 +736,9 @@ std::vector<double> anchor_t::Diff(
 	trace_off();
 	double grad[_nTot];
 	gradient(nTape,_nTot,x,grad);
-	vector<double> gradient;
-	for (int i=0;i<_nTot;i++){
-		gradient.push_back(grad[i]);
+	vector<double> gradient(_nTot);
+	for (size_t i=0;i<_nTot;i++){
+		gradient[i]=grad[i];
 	};
 	return gradient;
 };
@@ -746,7 +746,7 @@ std::vector<double> anchor_t::Diff(
 //#######################################################################################################################################################
 ///Set a single parameter by number
 void anchor_t::setParameter(
-							int 						i, 	// # of parameter
+							size_t 						i, 	// # of parameter
 							double 						par){
 
 	if(_parameters.size() < 2*(_nCpl+_nBra)){
@@ -813,7 +813,7 @@ bool anchor_t::setParameter(
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
 		return false;
-	}else if (_nTot <= number){
+	}else if ((int)_nTot <= number){
 		std::cerr << "Error: Parameter number too high"<<std::endl;
 		return false;
 	}else{
@@ -826,7 +826,7 @@ bool anchor_t::setParameter(
 int anchor_t::getParNumber(
 							std::string 					name)						const{
 
-	for (int i=0;i<_parNames.size();i++){
+	for (size_t i=0;i<_parNames.size();i++){
 		if (_parNames[i] == name){
 			return i;
 		};
@@ -882,25 +882,25 @@ std::vector<std::complex<double> > anchor_t::get_branchings(
 	std::vector<std::complex<double> > all_cpls = std::vector<std::complex<double> >(_waveset.nFtw());
 	int active_t_bins=0;
 	int cpl_used=0;
-	for (int tbin=0;tbin<_waveset.nTbin();tbin++){ // Average couplings over all t' bins, after rotating to phase of cpl[0] to 0
+	for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){ // Average couplings over all t' bins, after rotating to phase of cpl[0] to 0
 		if ((*_waveset.eval_tbin())[tbin]){
 			std::vector<std::complex<double> > cpl_t = std::vector<std::complex<double> >(_nBrCplAnc);
-			for (int i=0;i<_nBrCplAnc;i++){
+			for (size_t i=0;i<_nBrCplAnc;i++){
 				cpl_t[i] = cpl[cpl_used];
 				cpl_used++;
 			};
 			active_t_bins++;
 			std::vector<std::complex<double> > all_cpls_t= getMinimumCpl(tbin,&cpl_t[0],&par[0], &iso_par[0]);//[0]//
 			std::complex<double> phase = all_cpls_t[0]/abs(all_cpls_t[0]);
-			for (int i=0;i<_waveset.nFtw();i++){
+			for (size_t i=0;i<_waveset.nFtw();i++){
 				all_cpls[i]+=all_cpls_t[i]/phase;
 			};
 		};
 	};
-	for (int i=0;i<_waveset.nFtw();i++){ // Divide by number of t' bins
+	for (size_t i=0;i<_waveset.nFtw();i++){ // Divide by number of t' bins
 		all_cpls[i]/=active_t_bins;
 	};
-	for (unsigned int j=0;j<(*_waveset.n_branch()).size();j++){ // Write coupling-average to corresponding branching
+	for (size_t j=0;j<(*_waveset.n_branch()).size();j++){ // Write coupling-average to corresponding branching
 		if ((*_waveset.n_branch())[j] >= 0){
 			brchs[(*_waveset.n_branch())[j]] = all_cpls[j];
 		};
@@ -914,7 +914,7 @@ std::vector<std::complex<double> > anchor_t::getUnbranchedCouplings(
 							const std::vector<std::complex<double> >	&bra)						const{
 	
 	std::vector<std::complex<double> > cpl_un(_waveset.nFtw());
-	for (int i=0;i<_waveset.nFtw();i++){
+	for (size_t i=0;i<_waveset.nFtw();i++){
 		if(-1==(*_waveset.n_branch())[i]){
 			cpl_un[i] = cpl[(*_waveset.n_cpls())[i]];
 		}else{
@@ -935,7 +935,7 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 	std::vector<std::complex<double> > cpl_all;
 	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
 		std::vector<std::complex<double> > cpl_t;
-		for (int i=0;i<_nBrCplAnc;i++){
+		for (size_t i=0;i<_nBrCplAnc;i++){
 			cpl_t.push_back(cpl[tbin*_nBrCplAnc+i]);
 		};
 		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl_t[0],&par[0],&iso[0]);//[0]//
@@ -947,7 +947,7 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _waveset.nBrCpl()*_waveset.nTbin()){ 		// Branched couplings for all t' bins
 		std::vector<std::complex<double> > cpl_t;
-		for (int i=0;i<_waveset.nBrCpl();i++){
+		for (size_t i=0;i<_waveset.nBrCpl();i++){
 			cpl_t.push_back(cpl[tbin*_waveset.nBrCpl()+i]);
 		};
 		cpl_all = getUnbranchedCouplings(cpl_t,bra);
@@ -956,7 +956,7 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 		cpl_all = getUnbranchedCouplings(cpl,bra);
 		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _waveset.nTbin()*_waveset.nFtw()){ 			// Simple couplings for all t' bins
-		for (int i=0;i<_waveset.nFtw();i++){
+		for (size_t i=0;i<_waveset.nFtw();i++){
 			cpl_all.push_back(cpl[tbin*_waveset.nFtw()+i]);
 		};
 		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for all t' bins"<<std::endl;
@@ -971,11 +971,11 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 //########################################################################################################################################################
 ///Set the anchor coupligs to one, that are coupled to another function
 void anchor_t::branchCouplingsToOne(){
-	for (unsigned int i=0;i<(*_waveset.coupled()).size();i++){
+	for (size_t i=0;i<(*_waveset.coupled()).size();i++){
 		if((*_waveset.coupled())[i] >=0){
-			int nCpl = (*_waveset.n_cpls())[i];
+			size_t nCpl = (*_waveset.n_cpls())[i];
 			if (nCpl <= _nBrCplAnc){
-				for (int tbin =0;tbin<_waveset.nTbin();tbin++){
+				for (size_t tbin =0;tbin<_waveset.nTbin();tbin++){
 					setParameter(2*_nBrCplAnc*tbin+2*nCpl  ,1.);
 					setParameter(2*_nBrCplAnc*tbin+2*nCpl+1,0.);
 				};
@@ -1022,8 +1022,7 @@ bool anchor_t::set_coma(
 	};
 	_coma[tbin][bin] = coma;
 	if (coma.size() == 2*_waveset.nPoints()-1){
-		int nerr = 0;
-		for (unsigned int i=0;i<coma.size();i++){
+		for (size_t i=0;i<coma.size();i++){
 			if (coma[i].size() != coma.size()){
 				std::cout<<"Warning: Set coma is not quadratic."<<std::endl;
 				return false;
@@ -1042,7 +1041,7 @@ void anchor_t::loadData(
 	_data[tbin] = std::vector<std::vector<double> >();
 	std::fstream data(dataFile,std::ios_base::in);
 	double val;
-	unsigned int nDat = 2*_waveset.nPoints()-1;
+	size_t nDat = 2*_waveset.nPoints()-1;
 	std::vector<double> data_bin;
 	while(data >> val){
 		data_bin.push_back(val);
@@ -1069,7 +1068,7 @@ void anchor_t::loadComa(
 	_coma[tbin]=std::vector<std::vector<std::vector<double> > >();
 	std::fstream data(comaFile,std::ios_base::in);
 	double val;
-	unsigned int nDat = 2*_waveset.nPoints()-1;
+	size_t nDat = 2*_waveset.nPoints()-1;
 	std::vector<std::vector<double> > coma_bin;
 	std::vector<double> coma_line;
 	while(data>>val){
@@ -1109,8 +1108,8 @@ int anchor_t::getNtotAnc(){
 ///Sets all data to 0.
 void anchor_t::nullify(){
 
-	for (int tbin = 0; tbin < _waveset.nTbin();tbin++){
-		for (int bin =0; bin<_waveset.nBins();bin++){
+	for (size_t tbin = 0; tbin < _waveset.nTbin();tbin++){
+		for (size_t bin =0; bin<_waveset.nBins();bin++){
 			int nDat = 2*_waveset.nPoints()-1;
 			for (int i=0;i<nDat;i++){
 				_data[tbin][bin][i]=0.;
@@ -1146,7 +1145,7 @@ void anchor_t::update_min_max_bin(){
 	if ((*_waveset.binning()).size() == 0){
 		std::cout<< "Warning: No binning set, cannot determine _waveset.minBin(), _waveset.maxBin()" <<std::endl;
 	};
-	for (unsigned int i=0;i<(*_waveset.binning()).size()-1;i++){
+	for (size_t i=0;i<(*_waveset.binning()).size()-1;i++){
 		double up = (*_waveset.binning())[i+1];
 		double low= (*_waveset.binning())[i];
 		if (ancMin >= low and ancMin <up){
@@ -1195,11 +1194,11 @@ void anchor_t::set_is_ampl(
 ///Complex conjugates _data, changes _coma accordingly
 void anchor_t::conjugate(){
 
-	for (int i=2;i<2*(_waveset.nPoints());i+=2){
-		for (int tbin=0;tbin<_waveset.nTbin();tbin++){
-			for(int bin=0;bin<_waveset.nBins();bin++){
+	for (size_t i=2;i<2*(_waveset.nPoints());i+=2){
+		for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){
+			for(size_t bin=0;bin<_waveset.nBins();bin++){
 				_data[tbin][bin][i]*=-1;
-				for (int j=0;j<2*_waveset.nPoints()-1;j++){
+				for (size_t j=0;j<2*_waveset.nPoints()-1;j++){
 					_coma[tbin][bin][i][j]*=-1;
 					_coma[tbin][bin][j][i]*=-1;
 				};
@@ -1223,7 +1222,7 @@ bool anchor_t::loadDataComa(
 	update_min_max_bin(); //Has to be called to set internal definitions right, since not all belong to the same class now
 	update_definitions(); // Has to be called once with all functions set, to get internal handling of parameter numbers right
 	if (waveset["data_files"].size() == _waveset.nTbin() and waveset["coma_files"].size() == _waveset.nTbin()){
-		for(int i=0;i<_waveset.nTbin();i++){
+		for(size_t i=0;i<_waveset.nTbin();i++){
 			loadData(i,waveset["data_files"][i].as<std::string>().c_str());
 			loadComa(i,waveset["coma_files"][i].as<std::string>().c_str());
 		};
@@ -1359,22 +1358,22 @@ void anchor_t::update_definitions(){
 	_nIso = _waveset.getNiso();
 	std::vector<std::string> names;
 	std::stringstream str_count;
-	for (int i=0;i<_nCpl;i++){
+	for (size_t i=0;i<_nCpl;i++){
 		str_count<<i;
 		names.push_back("reC"+str_count.str());
 		names.push_back("imC"+str_count.str());
 		str_count.str("");
 	};
-	for (int i=0;i<_nPar;i++){
+	for (size_t i=0;i<_nPar;i++){
 		names.push_back(_waveset.getParameterName(i));
 	};
-	for (int i=0;i<_nBra;i++){
+	for (size_t i=0;i<_nBra;i++){
 		str_count<<i;
 		names.push_back("reB"+str_count.str());
 		names.push_back("imB"+str_count.str());
 		str_count.str("");
 	};
-	for (int i=0;i<_nIso;i++){
+	for (size_t i=0;i<_nIso;i++){
 		names.push_back(_waveset.getIsoParName(i));
 	};
 	_parNames = names;
@@ -1385,11 +1384,11 @@ void anchor_t::update_definitions(){
 void anchor_t::update_is_active(){
 
 	_is_active = std::vector<std::vector<std::vector<bool> > >(_waveset.nTbin(),std::vector<std::vector<bool> >(_waveset.nBins(),std::vector<bool>(_waveset.nPoints(),true)));
-	for (int tbin =0;tbin<_waveset.nTbin();tbin++){
+	for (size_t tbin =0;tbin<_waveset.nTbin();tbin++){
 		if (_data.size() < tbin){
 			break;
 		};
-		for(int bin=0;bin<_waveset.nBins();bin++){
+		for(size_t bin=0;bin<_waveset.nBins();bin++){
 			if (_data[tbin].size() < bin-1){
 				break;
 			};
@@ -1399,7 +1398,7 @@ void anchor_t::update_is_active(){
 			if(_data[tbin][bin][0] == 0.){
 				_is_active[tbin][bin][0] = false;
 			};
-			for(int point=1;point<_waveset.nPoints();point++){
+			for(size_t point=1;point<_waveset.nPoints();point++){
 				if (_data[tbin][bin][2*point-1] == 0. and _data[tbin][bin][2*point] ==0.){
 					_is_active[tbin][bin][point] = false;
 				};
@@ -1428,19 +1427,19 @@ void anchor_t::write_plots(
 	std::vector<std::complex<double> > bra(_nBra);
 	std::vector<double> iso(_nIso);
 	int count =0;
-	for (int i=0;i<_nCpl;i++){
+	for (size_t i=0;i<_nCpl;i++){
 		cpl[i] = std::complex<double>(param[count],param[count+1]);
 		count+=2;
 	};
-	for (int i=0;i<_nPar;i++){
+	for (size_t i=0;i<_nPar;i++){
 		par[i] = param[count];
 		count++;
 	};
-	for (int i=0;i<_nBra;i++){
+	for (size_t i=0;i<_nBra;i++){
 		bra[i] = std::complex<double>(param[count],param[count+1]);
 		count+=2;
 	};
-	for (int i=0;i<_nIso;i++){
+	for (size_t i=0;i<_nIso;i++){
 		iso[i]=param[count];
 		count++;
 	};
@@ -1465,13 +1464,13 @@ void anchor_t::write_plots(
 	std::ofstream write_out;
 	write_out.open(filename.c_str());
 	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,&cpl_all[0],&par[0],&iso[0])<<std::endl;//[0]//
-	for (int bin=0;bin<_waveset.nBins();bin++){
+	for (size_t bin=0;bin<_waveset.nBins();bin++){
 		double mass = _waveset.get_m(bin);
 		double var[] = {mass, tprime};
 		std::vector<std::complex<double> > amplitudes = _waveset.amps(var,&cpl_all[0],&par[0],iso_eval);
 		std::complex<double> ancAmp = amplitudes[0];
 		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
-		for (int i=1; i<_waveset.nPoints(); i++){
+		for (size_t i=1; i<_waveset.nPoints(); i++){
 			std::complex<double> inter = ancAmp*conj(amplitudes[i]);
 			write_out<<" "<<inter.real()<<" "<<_data[tbin][bin][2*i-1]<<" "<<1/sqrt(_coma[tbin][bin][2*i-1][2*i-1]);
 			write_out<<" "<<inter.imag()<<" "<<_data[tbin][bin][2*i  ]<<" "<<1/sqrt(_coma[tbin][bin][2*i  ][2*i  ]);

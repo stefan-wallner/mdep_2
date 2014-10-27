@@ -21,9 +21,9 @@ double phaseSpace(double m3Pi, int mode=0, int L=0, double m_isobar=1.){
 			std::cerr << "phaseSpace.h: Error: Phase space not defined at m3Pi = " << m3Pi << std::endl;
 			return 0.;
 		};
-		int pos;
-		double mmax;
-		double mmin;
+		int pos =0;
+		double mmax = 0.;
+		double mmin = 0.;
 		for (int i =1; i< length; i++){
 			if (ms[i] > m3Pi){
 				pos = i;

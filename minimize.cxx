@@ -56,7 +56,7 @@ double minimize::fit(){
 		_min->Minimize();
 		const double *xs = _min->X();
 		std::vector<double> best_par(_method.nTot());
-		for (int i=0;i<_method.nTot();i++){
+		for (size_t i=0;i<_method.nTot();i++){
 			_method.setParameter(i,xs[i]);
 		};
 		return _method(xs);
@@ -70,38 +70,38 @@ double minimize::fit(){
 void minimize::initCouplings(){ 
 
 	std::cout<<"Initialize couplings"<<std::endl;
-	int cpls = _method.nBrCplAnc();
+	size_t cpls = _method.nBrCplAnc();
 	setRandomCpl(); // Set random couplings
-	for(int tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Switch off all t' bins
+	for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Switch off all t' bins
 		_method.Waveset()->setEvalTbin(tbin,false);
 	};
 	_method.setUseBranch(false); // Do not use branchings at first
-	for(int tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Find cpl for each t' bin
+	for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Find cpl for each t' bin
 		_method.Waveset()->setEvalTbin(tbin,true);
 		std::cout<<"tBin #"<<tbin<<std::endl;
-		for (int i =0;i<2*_method.nCpl();i++){
+		for (size_t i =0;i<2*_method.nCpl();i++){
 			fixPar(i);
 		};
-		for (int i=0;i<2*cpls;i++){
+		for (size_t i=0;i<2*cpls;i++){
 			relPar(2*cpls*tbin+i);
 		};
 		double onetbinchi2 = fit();
 		std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
 		_method.Waveset()->setEvalTbin(tbin,false);
 	};
-	for(int tbin=0;tbin<_method.Waveset()->nTbin();tbin++){ // Switch on all t' bins
+	for(size_t tbin=0;tbin<_method.Waveset()->nTbin();tbin++){ // Switch on all t' bins
 		_method.Waveset()->setEvalTbin(tbin,true);
 	};
 	std::vector<std::complex<double> > couplings(_method.nCpl());
 	std::vector<double> par(_method.nPar());
-	for (int i=0;i<_method.nCpl();i++){
+	for (size_t i=0;i<_method.nCpl();i++){
 		couplings[i] = std::complex<double>(_method.parameters()[2*i],_method.parameters()[2*i+1]);
 	};
-	for (int i=0;i<_method.nPar();i++){
+	for (size_t i=0;i<_method.nPar();i++){
 		par[i] = _method.parameters()[2*_method.nCpl()+i];
 	};
 	std::vector<double> iso_par(_method.nIso());
-	for (int i=0;i<_method.nIso();i++){
+	for (size_t i=0;i<_method.nIso();i++){
 		iso_par[i] = _method.parameters()[2*_method.nCpl()+_method.nPar()+2*_method.nBra()+i];
 	};
 	std::cout << "Total with _method.EvalAutoCpl() (For consistency check): "<< _method.EvalAutoCpl(&couplings[0],&par[0],&iso_par[0])<<std::endl;
@@ -114,20 +114,20 @@ void minimize::initCouplings(){
 			setParameter(2*_method.nCpl()+_method.nPar()+2*i+1,bra[i].imag());
 		};
 		std::cout << "With the found branchings, Chi2(...)="<< _method.EvalAutoCplBranch(&bra[0],&couplings[0],&par[0],&iso_par[0])<<" ('_method.EvalAutoCplBranch(...)')"<<std::endl; //[0]//
-		for (int i =0;i<2*_method.nCpl();i++){ // Fix couplings
+		for (size_t i =0;i<2*_method.nCpl();i++){ // Fix couplings
 			fixPar(i);
 		};
-		for (int i=0;i<2*_method.nBra();i++){ // Rel Branchings
+		for (size_t i=0;i<2*_method.nBra();i++){ // Rel Branchings
 			relPar(2*_method.nCpl()+_method.nPar()+i);
 		};
 		fit();
 		std::cout<<"Couplings and branchings"<<std::endl;
-		for (int i =0;i<2*_method.nCpl();i++){ // Rel couplings
+		for (size_t i =0;i<2*_method.nCpl();i++){ // Rel couplings
 			relPar(i);
 		};
 		fit();
 	}else{
-		for(int i=0;i<_method.nCpl();i++){
+		for(size_t i=0;i<_method.nCpl();i++){
 			relPar(2*i);
 			relPar(2*i+1);
 		};
@@ -135,14 +135,14 @@ void minimize::initCouplings(){
 	std::cout<<"Total: "<<_method(_min->X())<<std::endl;
 	std::cout<<"Couplings and branchings found"<<std::endl;
 	std::cout<<"Setting automatic limits for couplings and branchings"<<std::endl;
-	for (int i=0;i<_method.nCpl();i++){
+	for (size_t i=0;i<_method.nCpl();i++){
 		double val = std::max(_method.parameters()[2*i]*_method.parameters()[2*i],_method.parameters()[2*i+1]*_method.parameters()[2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(2*i  ,3*val,-3*val);
 		_method.setParLimits(2*i+1,3*val,-3*val);
 	};
 	int par_bef = 2*_method.nCpl() +_method.nPar();
-	for (int i=0;i<_method.nBra();i++){
+	for (size_t i=0;i<_method.nBra();i++){
 		double val = std::max(_method.parameters()[par_bef+2*i]*_method.parameters()[par_bef+2*i],_method.parameters()[par_bef+2*i+1]*_method.parameters()[par_bef+2*i+1]);
 		val = pow(val,.5);
 		_method.setParLimits(par_bef+2*i  ,3*val,-3*val);
@@ -167,7 +167,7 @@ void minimize::setParameter(
 	int number = _method.getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
-	}else if (_method.nTot() <= number){
+	}else if ((int)_method.nTot() <= number){
 		std::cerr << "Error: Parameter number too high"<<std::endl;
 	}else{
 		setParameter(number,par);
@@ -204,7 +204,7 @@ void minimize::setStepSize(
 	int number = _method.getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
-	}else if (_method.nTot() <= number){
+	}else if ((int)_method.nTot() <= number){
 		std::cerr << "Error: Parameter number too high"<<std::endl;
 	}else{
 		setStepSize(number,par);
@@ -263,7 +263,7 @@ void minimize::relPar(
 	int number = _method.getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
-	}else if (_method.nTot() <= number){
+	}else if ((int)_method.nTot() <= number){
 		std::cerr << "Error: Parameter number too high"<<std::endl;
 	}else{
 		relPar(number);
@@ -277,7 +277,7 @@ void minimize::fixPar(
 	int number = _method.getParNumber(name);
 	if (-1==number){
 		std::cerr << "Error: Parameter '"<<name<<"' not found"<<std::endl;
-	}else if (_method.nTot() <= number){
+	}else if ((int)_method.nTot() <= number){
 		std::cerr << "Error: Parameter number too high"<<std::endl;
 	}else{
 		fixPar(number);
@@ -306,18 +306,18 @@ void minimize::printStatus(){
 void minimize::update_definitions(){ 
 	_method.update_definitions();
 	std::vector<bool> rels;
-	for (int i=0;i<_method.nCpl();i++){
+	for (size_t i=0;i<_method.nCpl();i++){
 		rels.push_back(true);
 		rels.push_back(true);
 	};
-	for (int i=0;i<_method.nPar();i++){
+	for (size_t i=0;i<_method.nPar();i++){
 		rels.push_back(false);
 	};
-	for (int i=0;i<_method.nBra();i++){
+	for (size_t i=0;i<_method.nBra();i++){
 		rels.push_back(false);
 		rels.push_back(false);
 	};
-	for (int i=0;i<_method.nIso();i++){
+	for (size_t i=0;i<_method.nIso();i++){
 		rels.push_back(false);
 	};
 	_released = rels;
@@ -393,7 +393,7 @@ bool minimize::initialize(std::string s1, std::string s2){
 ///Randomize couplings within _randRange
 void minimize::setRandomCpl(){
 
-	for(int i=0; i<2*_method.nCpl();i++){
+	for(size_t i=0; i<2*_method.nCpl();i++){
 		if (_released[i]){
 			_method.setParameter(i,2*((double)rand()/RAND_MAX-0.5)*_randRange);
 		};
@@ -404,7 +404,7 @@ void minimize::setRandomCpl(){
 ///Randomize branchings within _randRange
 void minimize::setRandomBra(){ 
 
-	for (int i=0;i<2*_method.nBra();i++){
+	for (size_t i=0;i<2*_method.nBra();i++){
 		if (_released[2*_method.nCpl()+_method.nPar()+i]){
 			_method.setParameter(2*_method.nCpl()+_method.nPar()+i, 2*((double)rand()/RAND_MAX-0.5)*_randRange);
 		};
@@ -419,12 +419,12 @@ void minimize::finish_setUp(){
 	if (_released.size() != _method.parameters().size()){
 	//		std::cout<<"Warning: No paramter status set, releasing couplings, fixing all others."<<std::endl;
 		std::vector<bool> std_rel(_method.parameters().size(),false);
-		for (int i=0;i<2*_method.nCpl();i++){
+		for (size_t i=0;i<2*_method.nCpl();i++){
 			std_rel[i]=true;
 		};
 		_released = std_rel;
 	};
-	for (int i=0; i<first_branch.size();i++){
+	for (size_t i=0; i<first_branch.size();i++){
 		setParameter(2*_method.nCpl()+_method.nPar()+2*first_branch[i]  ,1.); // Re(Br)
 		setParameter(2*_method.nCpl()+_method.nPar()+2*first_branch[i]+1,0.); // Im(Br)
 		fixPar(2*_method.nCpl()+_method.nPar()+2*first_branch[i]  );
@@ -460,7 +460,7 @@ void minimize::loadFitterDefinitions(
 ///Cube required by the MultiNest package
 void minimize::cube(					double						*in)						const{
 	
-	for (int i=0;i<_method.nTot();i++){
+	for (size_t i=0;i<_method.nTot();i++){
 		in[i] = (1-in[i])*(*_method.lower_parameter_limits())[i]+ in[i]*(*_method.upper_parameter_limits())[i];
 	};
 };

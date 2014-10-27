@@ -74,8 +74,8 @@ class minimize{
 		ROOT::Math::Minimizer* 	_min;							// ROOT Minimizer
 		ROOT::Math::Functor 	_f;							// ROOT Functor object
 		bool 			_init; 							// Flag for the initialization of the minimizer
-		int 			_maxFunctionCalls;					// Miminizer definition
-		int 			_maxIterations;						// Miminizer definition
+		size_t 			_maxFunctionCalls;					// Miminizer definition
+		size_t 			_maxIterations;						// Miminizer definition
 		double 			_tolerance;						// Miminizer definition
 		std::vector<double> 	_step_sizes;						// Step Size for each paramter	
 		std::vector<bool> 	_released; 						// Status of each paramters

@@ -96,29 +96,29 @@ class waveset {
 		// // ONE LINE GETTERS
 		bool 				write_out		()const		{return _write_out;};			
 		bool				has_isobars		()const		{return _has_isobars;};				
-		int				minBin			()const		{return _minBin;};			
-		int				maxBin			()const		{return _maxBin;};			
-		int				nBrCpl			()const		{return _nBrCpl;};			
+		size_t				minBin			()const		{return _minBin;};			
+		size_t				maxBin			()const		{return _maxBin;};			
+		size_t				nBrCpl			()const		{return _nBrCpl;};			
 		// // SIMPLE OVER ALL NUMBERS
-		int 				nPoints			()const		{return _nPoints;};
-		int 				nFtw			()const		{return _nFtw;};
-		int 				nTbin			()const		{return _nTbin;};
-		int 				nBins			()const		{return _nBins;};
-		int 				getNtot			()const		{return 2*getNcpl() + getNpar() + 2*nBranch() + getNiso();};
-		int 				getNcpl			()const		{return _nBrCpl * _nTbin;};
-		int 				nBranch			()const		{return _nBranch;};
+		size_t 				nPoints			()const		{return _nPoints;};
+		size_t 				nFtw			()const		{return _nFtw;};
+		size_t 				nTbin			()const		{return _nTbin;};
+		size_t 				nBins			()const		{return _nBins;};
+		size_t 				getNtot			()const		{return 2*getNcpl() + getNpar() + 2*nBranch() + getNiso();};
+		size_t 				getNcpl			()const		{return _nBrCpl * _nTbin;};
+		size_t 				nBranch			()const		{return _nBranch;};
 		double				get_m			(int bin)const	{return (_binning[bin]+_binning[bin+1])/2.;};
 		std::ofstream*			outStream		()const		{return _outStream;};
 		const std::vector<bool>*	eval_tbin		()const		{return &_eval_tbin;};
 
 		const std::vector<int>* 	n_branch		()const		{return &_n_branch;};
-		const std::vector<int>*		n_cpls			()const		{return &_n_cpls;};
-		const std::vector<int>*		borders_waves		()const		{return &_borders_waves;};
+		const std::vector<size_t>*	n_cpls			()const		{return &_n_cpls;};
+		const std::vector<size_t>*	borders_waves		()const		{return &_borders_waves;};
 		const std::vector<int>*		point_to_wave		()const		{return &_point_to_wave;};
 		const std::vector<int>*		funcs_to_waves		()const		{return &_funcs_to_waves;};
 		const std::vector<int>*		iso_to_waves		()const		{return &_iso_to_waves;};
 		const std::vector<int>*		wave_binning_pts	()const		{return &_wave_binning_pts;};
-		const std::vector<int>*		point_borders_wave	()const		{return &_point_borders_wave;};
+		const std::vector<size_t>*	point_borders_wave	()const		{return &_point_borders_wave;};
 		const std::vector<int>*		coupled			()const		{return &_coupled;};
 
 		const std::vector<double>*	upperLims		()const		{return &_upperLims;};
@@ -127,8 +127,8 @@ class waveset {
 		const std::vector<double>*	t_binning		()const		{return &_t_binning;};
 
 		// // PROPERTIES OF THE WAVES
-		int 				getNpar()				const;
-		int 				getNiso()				const;
+		size_t 				getNpar()				const;
+		size_t 				getNiso()				const;
 		std::string 			getWaveName(int i)			const;
 		std::vector<int>	 	get_wave_functions(int wave)		const;
 		std::vector<int>	 	get_wave_pars(int wave)			const;
@@ -191,10 +191,10 @@ class waveset {
 
 	protected:
 	// WAVES
-		int 					_nWaves; 		// Number of waves
+		size_t 					_nWaves; 		// Number of waves
 		std::vector<std::string> 		_waveNames;
-		int					_nPoints; 		// Number of amplitudes in the end (+1 for each wave, +1 for each isobar step)
-		int 					_nFtw; 			// Number of function-wave couplings (should be _funcs_to_waves.size())
+		size_t					_nPoints; 		// Number of amplitudes in the end (+1 for each wave, +1 for each isobar step)
+		size_t 					_nFtw; 			// Number of function-wave couplings (should be _funcs_to_waves.size())
 		std::vector<double>			_upperLims; 		// Gives     limits	each
 		std::vector<double> 			_lowerLims; 		// 	 the	    for	     wave
 		std::vector<int> 			_L; 			// Gives the Spin of each wave
@@ -205,49 +205,49 @@ class waveset {
 
 	// FUNCTIONS
 		std::vector<int> 			_funcs_to_waves; 	// Tells, which function is to be coupled to the wave (the blocks for each wave are encoded in '_borders_waves')
-		int 					_nPar; 			// Number of parameters
-		int 					_nFuncs; 		// Number of functions
+		size_t 					_nPar; 			// Number of parameters
+		size_t 					_nFuncs; 		// Number of functions
 		std::vector<amplitude*>			_amp_funcs;		// Defined amplitude functions
-		std::vector<int> 			_borders_waves; 	// Tells, which entries in funcs to waves belong to which wave
+		std::vector<size_t> 			_borders_waves; 	// Tells, which entries in funcs to waves belong to which wave
 		std::vector<double> 			_funcUpperLims; 	// Mass limits for each function
 		std::vector<double> 			_funcLowerLims; 	// ''	''	''	''
 
 	// ISOBARS
 		std::vector<int> 			_iso_to_waves; 		// Couples isobars to waves (-1 -> no isobar paramtrization -> Standard mdep fit)
-		int 					_nIso; 			// Number of isobars
+		size_t 					_nIso; 			// Number of isobars
 		std::vector<amplitude*>			_amp_isos;		// Isobar parametrizations
-		int 					_maxBinIso; 		// Maximum number of bins for one isobar
+		size_t 					_maxBinIso; 		// Maximum number of bins for one isobar
 		std::vector<int> 			_iso_n_binning; 	// Tells, which isobar binning to use for the waves
 		std::vector<std::vector<double> >	_iso_binnings;		// Gives different isobar binnings
-		std::vector<int> 			_point_borders_wave;	// Tells, where the isobar points for a single wave start
+		std::vector<size_t> 			_point_borders_wave;	// Tells, where the isobar points for a single wave start
 		std::vector<int> 			_L_iso_func; 		// Gives the spin of the the single isobars
 		std::vector<int> 			_iso_binning_pts; 	// Number of isobar bins for each wave (no isobar -> -1)
 
 	// PARAMETERS & CONSTANTS
-		std::vector<int> 			_borders_par; 		// Tells, which paramters belong to which function
-		std::vector<int> 			_iso_borders_par; 	// Tells, which isobar parameters belong to which isobar
+		std::vector<size_t> 			_borders_par; 		// Tells, which paramters belong to which function
+		std::vector<size_t> 			_iso_borders_par; 	// Tells, which isobar parameters belong to which isobar
 
 	// PHASE SPACE
 		int					_globalPs; 		// Assume only ONE global PS and   //Also assume ps that does not depend on the isobar mass
 		std::vector<int> 			_wavePs; 		// One PS for each wave // Or the spin
 
 	// BINNING
-		int 					_nBins; 		// Number of bins
+		size_t 					_nBins; 		// Number of bins
 		std::vector<double> 			_binning;   		// Binning in m3pi
-		int 					_minBin; 		// Minimum bin used by any wave
-		int 					_maxBin; 		// Maximum bin used by any wave
+		size_t 					_minBin; 		// Minimum bin used by any wave
+		size_t 					_maxBin; 		// Maximum bin used by any wave
 		double 					_mMin; 			// minimum mass (m3pi)
 		double 					_mMax; 			// maximum mass (m3pi)
-		int 					_nTbin;  		// number of t' bins
+		size_t 					_nTbin;  		// number of t' bins
 		std::vector<double> 			_t_binning; 		// Binning in t'
 		std::vector<bool> 			_eval_tbin; 		// switch on/off single t' bins
 
 	// BRANCHING
-		int 					_nBranch;  		// Number of branchings
-		int 					_nBrCpl;   		// Number of couplings with branchings
+		size_t 					_nBranch;  		// Number of branchings
+		size_t 					_nBrCpl;   		// Number of couplings with branchings
 		std::vector<int> 			_coupled;  		// Encodes coupled functions
 		std::vector<int>			_n_branch; 		// Number of branching for wave/function
-		std::vector<int> 			_n_cpls;   		// Number of coupling for wave/function
+		std::vector<size_t> 			_n_cpls;   		// Number of coupling for wave/function
 
 	// INTERNAL
 		bool 					_write_out;		// Flag to switch on the text_output
