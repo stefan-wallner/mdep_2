@@ -1,4 +1,5 @@
 import numpy as np
+from sys import argv
 
 def ampl_to_SDM(ampl):
 	"""
@@ -92,9 +93,41 @@ def square(xx):
 
 
 if __name__ == "__main__":
-	means = [100.,100.]
-	coma = [[1.,0.],[0.,1.]]
-	print get_coma_MC(means,coma,square,1000000)
+	datFile = argv[1]
+	comaFile = argv[2]
+	data = []
+	with open(datFile,'r') as ininin:
+		for line in ininin.readlines():
+			linevals = [float(val) for val in line.split()]
+			data.append(linevals)
+	nPoints = len(data[0])	
+	coma = []
+	with open(comaFile,'r') as ininin:
+		for line in ininin.readlines():
+			comaLine = [float(val) for val in line.split()]
+			oneComa = []
+			for i in range(nPoints):
+				lin = []
+				for j in range(nPoints):
+					lin.append(comaLine[i*nPoints+j])
+				oneComa.append(lin)
+			coma.append(oneComa)
+	with open(datFile+'_SDM','w') as outData:
+		with open(comaFile+'_SDM','w') as outComa:
+			for i in range(len(data)):
+				points = ampl_to_SDM(data[i])
+				for point in points:
+					outData.write(str(point)+'  ')
+				outData.write('\n')
+				newComa = get_coma(data[i],coma[i])
+				for lin in newComa:
+					for val in lin:
+						outComa.write(str(val)+'  ')
+				outComa.write('\n')
+
+
+
+
 
 
 
