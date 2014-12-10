@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as la
 from sys import argv
 
 def ampl_to_SDM(ampl):
@@ -17,31 +18,6 @@ def ampl_to_SDM(ampl):
 		SDM.append(inter.real)
 		SDM.append(inter.imag)
 	return SDM
-
-def get_coma_MC(mean,coma,trafo,n_SAMPLE = 10000):	
-	"""
-	Transforms the covariance matrix according to trafo
-	"""
-	new_mean = trafo(mean)
-	new_coma = []
-	new_dim = len(new_mean)
-	outfile = open('outfile.txt','w')
-	for i in range(new_dim):
-		new_coma.append([0. for i in range(new_dim)])
-	for i in range(n_SAMPLE):
-		sample = np.random.multivariate_normal(mean,coma)
-		new_sample = trafo(sample)
-		for i in range(new_dim):
-			new_sample[i]-=new_mean[i]
-		outfile.write(str(sample[0])+'\n')
-		for i in range(new_dim):
-			for j in range(new_dim):
-				new_coma[i][j]+=new_sample[i]*new_sample[j]
-	for i in range(new_dim):
-		for j in range(new_dim):
-			new_coma[i][j]/=n_SAMPLE
-	outfile.close()
-	return new_coma
 
 def get_coma(mean,coma):
 	"""
@@ -81,15 +57,20 @@ def get_coma(mean,coma):
 					new_coma[i][j]+=jac[i][k]*jac[j][l]*coma[k][l]
 	return new_coma
 
-def dtv(var, n=1000):
-	ppp = 0.
-	for i in range(n):
-		ppp+=(np.random.normal(0.,var))**2.
-	ppp/=n
-	print var,ppp	
-
-def square(xx):
-	return [x**2 for x in xx]
+def invert(matrix):
+	dim = len(matrix)
+	aa = np.zeros((dim,dim))
+	for i in range(dim):
+		for j in range(dim):
+			aa[i,j] = matrix[i][j]
+	inv = la.inv(aa)
+	retmat = []
+	for i in range(dim):
+		retmat.append([0.]*dim)
+	for i in range(dim):
+		for j in range(dim):
+			retmat[i][j] = inv[i,j]
+	return retmat
 
 
 if __name__ == "__main__":
@@ -119,7 +100,7 @@ if __name__ == "__main__":
 				for point in points:
 					outData.write(str(point)+'  ')
 				outData.write('\n')
-				newComa = get_coma(data[i],coma[i])
+				newComa = invert(get_coma(data[i],coma[i]))
 				for lin in newComa:
 					for val in lin:
 						outComa.write(str(val)+'  ')

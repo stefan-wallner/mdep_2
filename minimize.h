@@ -53,6 +53,7 @@ class minimize{
 		bool 			initialize(std::string s1="Minuit2", std::string s2="Migrad");
 		void 			setRandomCpl();
 		void 			setRandomBra();
+		void			findRandRange();
 		void 			finish_setUp();
 
 	// MULTINEST

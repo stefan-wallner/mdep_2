@@ -412,6 +412,29 @@ void minimize::setRandomBra(){
 	reload_par_definitions();
 };
 //########################################################################################################################################################
+/// Find random range for the couplings
+void minimize::findRandRange(){
+
+	double basis = 2.;
+	double minChi2 = std::numeric_limits<double>::max();
+	size_t minDim = 0;
+	for (size_t i=0;i<20;++i){
+		setRandRange(pow(basis,i));
+		for (size_t j=0;j<10;++j){
+			setRandomCpl();
+			double actChi2 = _method();
+//			std::cout<<"findRandRange: "<<basis<<"^"<<i<<": "<<actChi2<<std::endl;
+			if (actChi2<minChi2){
+				minChi2 = actChi2;
+				minDim = i;
+			};
+		};
+	};
+	std::cout<<"Found best _randRange to be: "<<basis<<"^"<<minDim<<" with Chi2 approx.: "<<minChi2<<std::endl; 
+	setRandRange(pow(basis,minDim));
+	setRandomCpl();
+};
+//########################################################################################################################################################
 ///Sets some internal vaiables accordingly
 void minimize::finish_setUp(){
 
