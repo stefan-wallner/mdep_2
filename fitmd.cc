@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 	
-	Chi2.findRandRange();
+//	Chi2.findRandRange();
 
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;

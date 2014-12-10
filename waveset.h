@@ -74,7 +74,7 @@ class waveset {
 
 		// // BINNING
 		void 				setBinning(std::vector<double> binning);
-		void 				setTbinning(std::vector<double> binning);
+		void 				setTbinning(std::vector<std::vector<double> > binning);
 		void 				setEvalTbin(int i, bool flag);
 		void 				setMinBin(int in);
 		void 				setMaxBin(int in);
@@ -124,7 +124,7 @@ class waveset {
 		const std::vector<double>*	upperLims		()const		{return &_upperLims;};
 		const std::vector<double>*	lowerLims		()const		{return &_lowerLims;};
 		const std::vector<double>*	binning			()const		{return &_binning;};
-		const std::vector<double>*	t_binning		()const		{return &_t_binning;};
+		const std::vector<std::vector<double> >*t_binning	()const		{return &_t_binning;};
 
 		// // PROPERTIES OF THE WAVES
 		size_t 				getNpar()				const;
@@ -239,7 +239,8 @@ class waveset {
 		double 					_mMin; 			// minimum mass (m3pi)
 		double 					_mMax; 			// maximum mass (m3pi)
 		size_t 					_nTbin;  		// number of t' bins
-		std::vector<double> 			_t_binning; 		// Binning in t'
+		size_t					_nTvar;			// Number of t' like variables
+		std::vector<std::vector<double> >	_t_binning; 		// Binning in t'
 		std::vector<bool> 			_eval_tbin; 		// switch on/off single t' bins
 
 	// BRANCHING

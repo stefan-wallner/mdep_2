@@ -168,7 +168,7 @@ class anchor_t{
 		std::string 				className		()const		{return "anchor_t";};
 		void 					printStatus()		const;
 		void 					set_is_ampl(bool is_ampl);
-		void 					setTbinning(std::vector<double> binning);
+		void 					setTbinning(std::vector<std::vector<double> > binning);
 		void 					update_n_cpls();
 		void 					update_min_max_bin();
 		void 					update_definitions();

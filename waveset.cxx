@@ -24,7 +24,7 @@ waveset::waveset():
 	_write_out(false),
 	_has_isobars(false),
 	_binning(std::vector<double>(2)){
-	setTbinning(std::vector<double>(2,0.));
+	setTbinning(std::vector<std::vector<double> >(2,std::vector<double>(1,0.)));
 };
 //########################################################################################################################################################
 #ifdef USE_YAML
@@ -47,7 +47,7 @@ waveset::waveset(
 	_has_isobars(false),
 	_binning(std::vector<double>(2)){
 
-	setTbinning(std::vector<double>(2,0.));
+	setTbinning(std::vector<std::vector<double> >(2,std::vector<double>(1,0.)));
 	YAML::Node Ycard   = YAML::LoadFile(card);
 	std::string parametrizations = Ycard["parametrization_file"].as<std::string>();
 	std::string waves = Ycard["wave_file"].as<std::string>();
@@ -662,10 +662,15 @@ void waveset::setBinning(
 //########################################################################################################################################################
 ///Sets the binning in t'
 void waveset::setTbinning(
-							std::vector<double> 					binning){
+							std::vector<std::vector<double> >			binning){
 
 	_t_binning = binning;
-	_nTbin = binning.size() - 1;
+	_nTbin = binning.size();
+	if (binning.size() >0){
+		_nTvar = binning[0].size();
+	}else{
+		_nTvar = 0;
+	};
 	if (_eval_tbin.size() != _nTbin){
 		_eval_tbin = std::vector<bool>(_nTbin,true);
 	};
@@ -961,11 +966,16 @@ void waveset::loadBinnings(
 		binning.push_back(M);
 	};
 	setBinning(binning);
-	std::vector<double> tbinning;
+	std::vector<std::vector<double> > tbinning;
 	if (waveset["t_binning"]){
 		int nTbin = waveset["t_binning"].size();
 		for (int i=0; i<nTbin;i++){
-			tbinning.push_back(waveset["t_binning"][i].as<double>());
+			int nvaract = waveset["t_binning"][i].size();
+			std::vector<double> act_var;
+			for (int jj=0;jj<nvaract;++jj){
+				act_var.push_back(waveset["t_binning"][i][jj].as<double>());
+			};
+			tbinning.push_back(act_var);
 		};
 		setTbinning(tbinning);
 	};
@@ -1603,9 +1613,12 @@ std::vector<double> waveset::getVar(
 							double							m,
 							int 							tbin)		const{
 
-	std::vector<double> vec(2);
+	std::vector<double> vec(_nTvar+1);
 	vec[0] = m;
-	vec[1] = (_t_binning[tbin] * 0.7 + _t_binning[tbin+1] * 0.3);
+//	vec[1] = (_t_binning[tbin][0] * 0.7 + _t_binning[tbin+1][0] * 0.3);
+	for (size_t i=0;i<_nTvar;i++){
+		vec[i+1] = _t_binning[tbin][i];
+	};
 	return vec;
 };
 //########################################################################################################################################################
@@ -1782,7 +1795,10 @@ void waveset::printStatus()												const{
 	std::cout<<std::endl<<"_minBin: "<<_minBin<<"; _maxBin: "<<_maxBin<<std::endl;
 	std::cout<<std::endl<<"_mMin: "<<_mMin<<"; _mMax: "<<_mMax<<std::endl;
 	std::cout<<"_nTbin: "<<_nTbin<<std::endl<<std::endl<<"_t_binning"<<std::endl;
-	print_vector(_t_binning);
+	for (size_t i=0;i<_t_binning.size();++i){
+		print_vector(_t_binning[i]);
+	};
+	std::cout<<"_nTvar: "<<_nTvar<<std::endl<<std::endl;
 	std::cout<<std::endl;
 	print_vector(_eval_tbin);
 	std::cout<<std::endl<<std::endl<<"BRANCHING: "<<std::endl;

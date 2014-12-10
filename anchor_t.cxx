@@ -1332,7 +1332,7 @@ bool anchor_t::loadParameterValues(
 #endif//USE_YAML
 //########################################################################################################################################################
 ///Initializes _data and _coma, when setting the t' binning
-void anchor_t::setTbinning(std::vector<double> binning){
+void anchor_t::setTbinning(std::vector<std::vector<double> > binning){
 	_waveset.setTbinning(binning);
 	if (_data.size() != _waveset.nTbin()){
 		if (_data.size() != 0){
