@@ -93,6 +93,7 @@ void minimize::initCouplings(
 			for (size_t i=0;i<2*cpls;i++){
 				relPar(2*cpls*tbin+i);
 			};
+			setRandomCpl(); // Set here again, otherwise different seed make no sense...
 			double onetbinchi2 = fit();
 			if (seed==0 or onetbinchi2 < bestChi2Tbin[tbin]){
 				std::vector<double> actpar = _method.parameters();
