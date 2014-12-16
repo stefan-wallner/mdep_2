@@ -67,28 +67,52 @@ double minimize::fit(){
 };
 //########################################################################################################################################################
 ///Finds start values for couplings and branchings
-void minimize::initCouplings(){ 
+void minimize::initCouplings(
+							size_t 						nSeeds){ 
 
 	std::cout<<"Initialize couplings"<<std::endl;
 	size_t cpls = _method.nBrCplAnc();
-	setRandomCpl(); // Set random couplings
-	for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Switch off all t' bins
-		_method.Waveset()->setEvalTbin(tbin,false);
-	};
+	size_t nTbin = _method.Waveset()->nTbin();
+
+	std::vector<double> bestChi2Tbin(nTbin);
+	std::vector<std::vector<double> >bestCplTbin(nTbin,std::vector<double>(2*cpls));
 	_method.setUseBranch(false); // Do not use branchings at first
-	for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Find cpl for each t' bin
-		_method.Waveset()->setEvalTbin(tbin,true);
-		std::cout<<"tBin #"<<tbin<<std::endl;
-		for (size_t i =0;i<2*_method.nCpl();i++){
-			fixPar(i);
+	for (size_t seed=0;seed<nSeeds;++seed){
+		std::cout<<"Seed #"<<seed<<std::endl;
+		setRandomCpl(); // Set random couplings
+		for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Switch off all t' bins
+			_method.Waveset()->setEvalTbin(tbin,false);
 		};
-		for (size_t i=0;i<2*cpls;i++){
-			relPar(2*cpls*tbin+i);
+
+		for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Find cpl for each t' bin
+			_method.Waveset()->setEvalTbin(tbin,true);
+			std::cout<<"tBin #"<<tbin<<std::endl;
+			for (size_t i =0;i<2*_method.nCpl();i++){
+				fixPar(i);
+			};
+			for (size_t i=0;i<2*cpls;i++){
+				relPar(2*cpls*tbin+i);
+			};
+			double onetbinchi2 = fit();
+			if (seed==0 or onetbinchi2 < bestChi2Tbin[tbin]){
+				std::vector<double> actpar = _method.parameters();
+				bestChi2Tbin[tbin] = onetbinchi2;
+				for (size_t bestpar=0;bestpar<2*cpls;++bestpar){
+					bestCplTbin[tbin][bestpar] = actpar[2*tbin*cpls+bestpar];
+				};
+			};
+			std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
+			_method.Waveset()->setEvalTbin(tbin,false);
 		};
-		double onetbinchi2 = fit();
-		std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
-		_method.Waveset()->setEvalTbin(tbin,false);
 	};
+	for (size_t tbin=0;tbin<nTbin;++tbin){
+		std::cout<<"best Chi2 for tbin #"<<tbin<<": "<<bestChi2Tbin[tbin]<<std::endl;
+
+		for (size_t cpl=0;cpl<2*cpls;++cpl){
+			setParameter(2*cpls*tbin+cpl,bestCplTbin[tbin][cpl]);
+		};
+	};
+
 	for(size_t tbin=0;tbin<_method.Waveset()->nTbin();tbin++){ // Switch on all t' bins
 		_method.Waveset()->setEvalTbin(tbin,true);
 	};

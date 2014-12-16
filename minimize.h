@@ -23,7 +23,7 @@ class minimize{
 
 	// Fitting routines
 		double 			fit();
-		void 			initCouplings();
+		void 			initCouplings(size_t nSeeds = 1);
 
 	// Setters and getters
 		anchor_t*		method(){return &_method;};

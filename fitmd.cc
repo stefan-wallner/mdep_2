@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
-	Chi2.initCouplings();
+	Chi2.initCouplings(2);
 
 
 	std::cout<<"-------inited------"<<std::endl;
