@@ -147,7 +147,7 @@ class anchor_t{
 		size_t					nCpl			()const		{return _nCpl;};
 		size_t					nBra			()const		{return _nBra;};
 		size_t 					nIso			()const		{return _nIso;};
-		size_t					nBrCplAnc		()const		{return _nBrCplAnc;};
+		size_t					nBrCpl			()const		{return _nBrCplAnc;};
 		const std::vector<double>		parameters		()const;
 		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
 		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
@@ -180,6 +180,7 @@ class anchor_t{
 		void					write_plots(std::string filename, int tbin) const;
 		void					write_plots(std::string filename, int tbin,const std::vector<double> &paramters) const;
 		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
+
 	protected:
 		// WAVESET
 		waveset									_waveset;		// The waveset used
@@ -200,6 +201,7 @@ class anchor_t{
 		std::vector<std::string> 						_parNames; 		// Name of each parameter
 		std::vector<std::vector<std::vector<double> > > 			_data; 			// Data
 		std::vector<std::vector<std::vector<std::vector<double> > > > 		_coma; 			// Covariance matrix
+
 #ifdef STORE_ACTIVE
 		std::vector<std::vector<std::vector<bool> > >				_is_active;		// Flag, which point is actually active
 #endif//STORE_ACTIVE
@@ -209,6 +211,7 @@ class anchor_t{
 		bool 									_useBranch; 		// Switches the usage of branchings on/off (only in the operator() method
 		size_t 									_nOut; 			// Print output after _nOut iterations
 		size_t 									_count;			// Count of calls
+
 };
 
 

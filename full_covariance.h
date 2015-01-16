@@ -99,13 +99,12 @@ class full_covariance{
 #endif//USE_YAML
 	// OTHER SETTERS & GETTERS
 		waveset* 				Waveset			()		{return &_waveset;};
-		bool					useBranch		()const		{return _useBranch;};
 		size_t					nTot			()const		{return _nTot;};
 		size_t					nPar			()const		{return _nPar;};
 		size_t					nCpl			()const		{return _nCpl;};
 		size_t					nBra			()const		{return _nBra;};
 		size_t 					nIso			()const		{return _nIso;};
-		size_t					nBrCplAnc		()const		{return _nBrCplAnc;};
+		size_t					nBrCpl			()const		{return _nBrCpl;};
 		const std::vector<double>		parameters		()const;
 		const std::vector<double>*		upper_parameter_limits	()const		{return &_upper_parameter_limits;};
 		const std::vector<double>*		lower_parameter_limits	()const		{return &_lower_parameter_limits;};
@@ -117,9 +116,8 @@ class full_covariance{
 		std::vector<double>			getParameters		()const;
 		double					getParameter(size_t i)	const;
 
-		int getNtotAnc();
-		int getNanc();
-		void setUseBranch(bool in);
+		int getNtot();
+		int getNcpl();
 
 
 	// OTHER METHODS
@@ -137,6 +135,7 @@ class full_covariance{
 		void					write_plots(std::string filename, int tbin) const;
 		void					write_plots(std::string filename, int tbin,const std::vector<double> &paramters) const;
 		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
+
 	protected:
 		// WAVESET
 		waveset									_waveset;		// The waveset used
@@ -148,7 +147,7 @@ class full_covariance{
 		size_t 									_nCpl; 			// Number of couplings (total, all t' bins summed)
 		size_t 									_nBra; 			// Number of branchings
 		size_t 									_nIso;			// Number of isobar parameters
-		size_t 									_nBrCplAnc;		// Number of couplings with branchings in the anchor wave
+		size_t 									_nBrCpl;		// Number of couplings with branchings in the anchor wave
 
 		// PARAMETERS AND DATA
 		std::vector<double>							_parameters; 		// Acutal paramters (2*_nCpl,_nPar,2*_nBra,_nIso) - these are 'all' parameters!!!
@@ -162,7 +161,6 @@ class full_covariance{
 #endif//STORE_ACTIVE
 
 		// OTHER MEMBERS
-		bool 									_useBranch; 		// Switches the usage of branchings on/off (only in the operator() method
 		size_t 									_nOut; 			// Print output after _nOut iterations
 		size_t 									_count;			// Count of calls
 };

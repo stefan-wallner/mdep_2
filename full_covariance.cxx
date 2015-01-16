@@ -19,8 +19,8 @@ full_covariance::full_covariance():
 	_waveset(),
 	_nOut(1000),
 	_count(0),
-	_useBranch(true){
-
+	_nBra(0){
+	
 	setTbinning((*_waveset.t_binning()));
 };
 //########################################################################################################################################################
@@ -32,7 +32,7 @@ full_covariance::full_covariance(
 	_waveset(card),
 	_nOut(1000),
 	_count(0),
-	_useBranch(true){
+	_nBra(0){
 	YAML::Node Ycard   = YAML::LoadFile(card);
 	std::string parametrizations = Ycard["parametrization_file"].as<std::string>();
 	YAML::Node Yparam  = YAML::LoadFile(parametrizations);
@@ -49,7 +49,7 @@ full_covariance::full_covariance(
 };
 #endif//USE_YAML
 //########################################################################################################################################################
-///Evaluate Chi2 with the internal _parameters (Call the oter operator)
+///Evaluate Chi2 with the internal _parameters (Call the other operator)
 double full_covariance::operator()(){
 
 	return (*this)(&parameters()[0]);
@@ -82,11 +82,7 @@ double full_covariance::operator()(
 
 	// std::cout<<par[0]<<std::endl;
 	double chi2;
-	if (_useBranch){ // Evaluate
-		chi2 = EvalBranch(bra,cpl,par,iso_par);
-	}else{
-		chi2 = EvalCP(cpl,par,iso_par); // This only works, because of the Automatic coupling finding algorithm, switching off the branchings does not give additional couplings
-	};
+	chi2 = EvalBranch(bra,cpl,par,iso_par);
 	_count++;
 	/* if (chi2 != chi2){ // Check for NaN
 	std::cout<<"NaN paramters are:"<<std::endl;
@@ -188,13 +184,24 @@ xdouble full_covariance::EvalBin(
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
 	double mass = _waveset.get_m(bin); // Eval at bin center.
+
+//	std::vector<std::complex<xdouble> > ccpl(_waveset.nFtw(),std::complex<xdouble>(1.,0.));
+//	std::cout<<ccpl.size()<<std::endl;
+//	std::cout<<_nCpl<<std::endl;
+//	for (size_t i=0; i<_nPar;++i){
+//		std::cout<<i<<" "<<par[i]<<std::endl;
+//	};
+
+
 	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl, par,iso_eval);
+
+
 	xdouble chi2 = 0.;
 //	print_vector(deltas);
-	for (size_t i=0;i<2*_waveset.nPoints()-1;i++){
-		int iWave = (*_waveset.point_to_wave())[(i+1)/2];
+	for (size_t i=0;i<_waveset.nPoints()*_waveset.nPoints();++i){
+//		int iWave1 = (*_waveset.point_to_wave())[(i+1)/2];
 //		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
-		if (_is_active[tbin][bin][iWave]){
+//		if (_is_active[tbin][bin][iWave]){
 //			std::cout<<"le_addite:D"<<pow(deltas[i],2.)*_coma[tbin][bin][i][i]<<std::endl;
 			if (_waveset.write_out()){
 				*_waveset.outStream() <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -202,15 +209,20 @@ xdouble full_covariance::EvalBin(
 				*_waveset.outStream() <<"   cov_key(imb, ipi, ipj,  isectd) =     "<<_coma[tbin][bin][i][i]<<std::endl;
 				*_waveset.outStream() <<"  Ci^2 before      "<<chi2<<"      +     "<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<"       =    ";
 			};
+
+//			if (tbin == 3 and bin == 50){
+//				std::cout<< i<<" "<<deltas[i]<<" "<<_coma[tbin][bin][i][i]<<std::endl;
+//			};
+
 			chi2+= deltas[i]*deltas[i]*_coma[tbin][bin][i][i];
 //			std::cout<<deltas[i]<<"*"<<deltas[i]<<"*"<<_coma[tbin][bin][i][i]<<"="<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<std::endl;
 			if(_waveset.write_out()){
 				*_waveset.outStream() <<chi2<<std::endl;
 			};
 			for (size_t j=0;j<i;j++){
-				int jWave = (*_waveset.point_to_wave())[(j+1)/2];
+//				int jWave = (*_waveset.point_to_wave())[(j+1)/2];
 //				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
-				if(_is_active[tbin][bin][jWave]){
+//				if(_is_active[tbin][bin][jWave]){
 //					std::cout<<"le_addite: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
 					if (_waveset.write_out()){
 						*_waveset.outStream() <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<j+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -223,10 +235,11 @@ xdouble full_covariance::EvalBin(
 					if(_waveset.write_out()){
 						*_waveset.outStream() <<chi2<<std::endl;
 					};
-				};
-			};
+//				};
+//			};
 		};
 	};
+//	std::cout<<tbin<<":"<<bin<<"::"<<chi2<<std::endl;
 	return chi2;
 };
 template double full_covariance::EvalBin(int tbin,int bin,const std::complex<double> *cpl,const double *par,std::vector<std::vector<std::complex<double> > > &iso_eval) const;
@@ -241,31 +254,48 @@ std::vector<xdouble> full_covariance::delta(
 							const xdouble	 						*par,
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
+	size_t nPoints = _waveset.nPoints();
 	std::vector<double> var = _waveset.getVar(mass,tbin);
 	std::vector<std::complex<xdouble> > ampls = _waveset.amps(&var[0], cpl, par, iso_eval);
-	std::vector<xdouble> del = std::vector<xdouble> (2*_waveset.nPoints()-1);
-	std::complex<xdouble> divider = std::complex<xdouble>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
-	if(_waveset.write_out()){
-		*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           1  isectd=           "<<tbin+1<<std::endl;
-		*_waveset.outStream() << " Re1 data    "<<_data[tbin][bin][0]<<"     - theory   "<<std::norm(ampls[0]/divider)<<"       =    "<<std::norm(ampls[0]/divider) - _data[tbin][bin][0]<<std::endl;
-	};
-	del[0]=std::norm(ampls[0]/divider) - _data[tbin][bin][0]; ////// HERE ADD if(_is_point_bin[bin][i]){...}; so that no deltas are aclculated for turend off bins
-	for (size_t i = 1; i<_waveset.nPoints();i++){
+
+///	std::cout<<"''''''''''''''''''''''''''''''''''''''''"<<std::endl;
+///	for (size_t i=0;i<ampls.size();++i){
+///		std::cout<<i<<": "<<ampls[i]<<std::endl;
+///	};
+
+	std::vector<xdouble> del = std::vector<xdouble> (nPoints*nPoints);
+//	del[0]=std::norm(ampls[0]) - _data[tbin][bin][0]; ////// HERE ADD if(_is_point_bin[bin][i]){...}; so that no deltas are aclculated for turend off bins
+	for (size_t i = 0; i<_waveset.nPoints();i++){
 #ifdef STORE_ACTIVE
 		if (not _is_active[tbin][bin][i]){
 			continue;
 		};
 #endif//STORE_ACTIVE
-		std::complex<xdouble> inter = ampls[0]*std::conj(ampls[i])/divider;
-		del[2*i-1]=real(inter) - _data[tbin][bin][2*i-1]; // real part
-		del[2*i]=imag(inter) - _data[tbin][bin][2*i];    // imag part
+		del[i*(nPoints+1)] = std::norm(ampls[i]) - _data[tbin][bin][i*(nPoints+1)];
 		if(_waveset.write_out()){
-			*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<2*i<<"  isectd=           "<<tbin+1<<std::endl;
-			*_waveset.outStream() << " Re data    "<<_data[tbin][bin][2*i-1]<<"     - theory   "<<real(inter)<<"       =    "<<real(inter) - _data[tbin][bin][2*i-1]<<std::endl;
-			*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<2*i+1<<"  isectd=           "<<tbin+1<<std::endl;
-			*_waveset.outStream() << " Im data    "<<_data[tbin][bin][2*i]<<"     - theory   "<<imag(inter)<<"       =    "<<imag(inter) - _data[tbin][bin][2*i]<<std::endl;
+			*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
+			*_waveset.outStream() << " Re1 data    "<<_data[tbin][bin][i*(nPoints+1)]<<"     - theory   "<<std::norm(ampls[i])<<"       =    "<<del[i*(nPoints+1)]<<std::endl;
+		};
+		for (size_t j=0; j<i;++j){
+#ifdef STORE_ACTIVE
+			if (not _is_active[tbin][bin][j]){
+				continue;
+			};
+#endif//STORE_ACTIVE
+			std::complex<xdouble> inter = ampls[i]*std::conj(ampls[j]);
+			del[nPoints*i+j]= - imag(inter) - _data[tbin][bin][nPoints*i+j];    // imag part
+			del[nPoints*j+i]=   real(inter) - _data[tbin][bin][nPoints*j+i];    // real part
+
+			if(_waveset.write_out()){
+				*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<nPoints*i+j<<"  isectd=           "<<tbin+1<<std::endl;
+				*_waveset.outStream() << " Re data    "<<_data[tbin][bin][nPoints*i+j]<<"     - theory   "<<real(inter)<<"       =    "<<del[nPoints*i+j]<<std::endl;
+				*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<nPoints*j+i<<"  isectd=           "<<tbin+1<<std::endl;
+				*_waveset.outStream() << " Im data    "<<_data[tbin][bin][nPoints*j+i]<<"     - theory   "<<imag(inter)<<"       =    "<<del[nPoints*j+i]<<std::endl;
+			};
 		};
 	};
+//	print_vector(del);	
+
 	return del;
 };
 template std::vector<double> full_covariance::delta(int tbin, int bin,double mass, const std::complex<double> *cpl, const double *par, std::vector<std::vector<std::complex<double> > > &iso_eval) const;
@@ -467,41 +497,15 @@ void full_covariance::init_upper_limits(int n){
 ///Calculates some initial values for the branchigs
 std::vector<std::complex<double> > full_covariance::get_branchings(
 							const std::vector<std::complex<double> > 	&cpl,
-							const std::vector<double> 			&par,
-							const std::vector<double> 			&iso_par)					const{
+							const std::vector<double> 			&par = std::vector<double>(),
+							const std::vector<double> 			&iso_par = std::vector<double>())		const{
 
-	// Gets branchings as follows:
-	//	- Take Anchor cpls to get couplings for each t-bin
-	//	- Average over the tbins for all couplings
-	//	- Determine the branchings from these averages
-	std::vector<std::complex<double> > brchs = std::vector<std::complex<double> >(_waveset.nBranch());
-	std::vector<std::complex<double> > all_cpls = std::vector<std::complex<double> >(_waveset.nFtw());
-	int active_t_bins=0;
-	int cpl_used=0;
-	for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){ // Average couplings over all t' bins, after rotating to phase of cpl[0] to 0
-		if ((*_waveset.eval_tbin())[tbin]){
-			std::vector<std::complex<double> > cpl_t = std::vector<std::complex<double> >(_nBrCplAnc);
-			for (size_t i=0;i<_nBrCplAnc;i++){
-				cpl_t[i] = cpl[cpl_used];
-				cpl_used++;
-			};
-			active_t_bins++;
-			std::vector<std::complex<double> > all_cpls_t= getMinimumCpl(tbin,&cpl_t[0],&par[0], &iso_par[0]);//[0]//
-			std::complex<double> phase = all_cpls_t[0]/abs(all_cpls_t[0]);
-			for (size_t i=0;i<_waveset.nFtw();i++){
-				all_cpls[i]+=all_cpls_t[i]/phase;
-			};
-		};
-	};
-	for (size_t i=0;i<_waveset.nFtw();i++){ // Divide by number of t' bins
-		all_cpls[i]/=active_t_bins;
-	};
-	for (size_t j=0;j<(*_waveset.n_branch()).size();j++){ // Write coupling-average to corresponding branching
-		if ((*_waveset.n_branch())[j] >= 0){
-			brchs[(*_waveset.n_branch())[j]] = all_cpls[j];
-		};
-	};
-	return brchs;
+	
+
+
+
+
+	return std::vector<std::complex<double> >(_nBra,std::complex<double>(1.,0.));;
 };
 //########################################################################################################################################################
 ///Gets the couplings-without-branchings from couplings-with-branchings and branchings
@@ -531,22 +535,20 @@ std::vector<std::complex<double> > full_covariance::getAllCouplings(
 	std::vector<std::complex<double> > cpl_all;
 	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
 		std::vector<std::complex<double> > cpl_t;
-		for (size_t i=0;i<_nBrCplAnc;i++){
-			cpl_t.push_back(cpl[tbin*_nBrCplAnc+i]);
+		for (size_t i=0;i<_nBrCpl;i++){
+			cpl_t.push_back(cpl[tbin*_nBrCpl+i]);
 		};
-		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl_t[0],&par[0],&iso[0]);//[0]//
-		cpl_all = getUnbranchedCouplings(cpl_all,bra);
+		cpl_all = cpl_t;
 		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
-	}else if (cpl.size() == _nBrCplAnc){ 			// Anchor couplings for one t' bin
-		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl[0],&par[0],&iso[0]);//[0]//
-		cpl_all = getUnbranchedCouplings(cpl_all,bra);
+	}else if (cpl.size() == _nBrCpl){ 			// Anchor couplings for one t' bin
+		cpl_all = cpl;
 		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _waveset.nBrCpl()*_waveset.nTbin()){ 		// Branched couplings for all t' bins
 		std::vector<std::complex<double> > cpl_t;
 		for (size_t i=0;i<_waveset.nBrCpl();i++){
 			cpl_t.push_back(cpl[tbin*_waveset.nBrCpl()+i]);
 		};
-		cpl_all = getUnbranchedCouplings(cpl_t,bra);
+		cpl_all = cpl_t;
 		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for all t' bins"<<std::endl;
 	}else if (cpl.size() == _waveset.nBrCpl()){ 			// Branched couplings for one t' bin
 		cpl_all = getUnbranchedCouplings(cpl,bra);
@@ -570,10 +572,10 @@ void full_covariance::branchCouplingsToOne(){
 	for (size_t i=0;i<(*_waveset.coupled()).size();i++){
 		if((*_waveset.coupled())[i] >=0){
 			size_t nCpl = (*_waveset.n_cpls())[i];
-			if (nCpl <= _nBrCplAnc){
+			if (nCpl <= _nBrCpl){
 				for (size_t tbin =0;tbin<_waveset.nTbin();tbin++){
-					setParameter(2*_nBrCplAnc*tbin+2*nCpl  ,1.);
-					setParameter(2*_nBrCplAnc*tbin+2*nCpl+1,0.);
+					setParameter(2*_nBrCpl*tbin+2*nCpl  ,1.);
+					setParameter(2*_nBrCpl*tbin+2*nCpl+1,0.);
 				};
 			};
 		};
@@ -639,7 +641,7 @@ void full_covariance::loadData(
 	_data[tbin] = std::vector<std::vector<double> >();
 	std::fstream data(dataFile,std::ios_base::in);
 	double val;
-	size_t nDat = _waveswet.nPoints()*_waveset.nPoints();
+	size_t nDat = _waveset.nPoints()*_waveset.nPoints();
 	std::vector<double> data_bin;
 	while(data >> val){
 		data_bin.push_back(val);
@@ -666,7 +668,7 @@ void full_covariance::loadComa(
 	_coma[tbin]=std::vector<std::vector<std::vector<double> > >();
 	std::fstream data(comaFile,std::ios_base::in);
 	double val;
-	size_t nDat = _waveswet.nPoints()*_waveset.nPoints();
+	size_t nDat = _waveset.nPoints()*_waveset.nPoints();
 	std::vector<std::vector<double> > coma_bin;
 	std::vector<double> coma_line;
 	while(data>>val){
@@ -688,19 +690,15 @@ void full_covariance::loadComa(
 };
 //########################################################################################################################################################
 ///Returns the number of anchor couplings
-int full_covariance::getNanc(){
-	return _nBrCplAnc * _waveset.nTbin();
-};
-//########################################################################################################################################################
-///Switches on/off usage of branchings in the operator()
-void full_covariance::setUseBranch(bool in){
-	_useBranch = in;
+int full_covariance::getNcpl(){
+	int to_set = (_waveset.nFtw()-nBra())*_waveset.nTbin();
+	return to_set;
 };
 //########################################################################################################################################################
 ///Gets the total number of paramters with only anchor couplings
-int full_covariance::getNtotAnc(){
+int full_covariance::getNtot(){
 
-	return 2*getNanc() + _waveset.getNpar() + 2*_waveset.nBranch() + _waveset.getNiso();
+	return 2*getNcpl() + _waveset.getNpar() + 2*_waveset.nBranch() + _waveset.getNiso();
 };
 //########################################################################################################################################################
 ///Sets all data to 0.
@@ -708,7 +706,7 @@ void full_covariance::nullify(){
 
 	for (size_t tbin = 0; tbin < _waveset.nTbin();tbin++){
 		for (size_t bin =0; bin<_waveset.nBins();bin++){
-			int nDat = _waveswet.nPoints()*_waveset.nPoints();
+			int nDat = _waveset.nPoints()*_waveset.nPoints();
 			for (int i=0;i<nDat;i++){
 				_data[tbin][bin][i]=0.;
 			};
@@ -720,7 +718,7 @@ void full_covariance::nullify(){
 void full_covariance::update_n_cpls(){
 
 	_waveset.update_n_cpls();
-	_nBrCplAnc = (*_waveset.n_cpls())[(*_waveset.borders_waves())[0]-1]+1;
+	_nBrCpl = (*_waveset.n_cpls())[(*_waveset.borders_waves())[(*_waveset.borders_waves()).size()]-1]+1;
 };
 //########################################################################################################################################################
 ///Updates the internal ranges for evaluation
@@ -764,7 +762,7 @@ void full_covariance::printStatus()																const{
 	std::cout<<std::endl<<"ANCHOR:"<<std::endl;
 	std::cout<<std::endl<<"PARAMETER NUMBERS:"<<std::endl;
 	std::cout<<"_nTot: "<<_nTot<<"; _nPar: "<<_nPar<<"; _nCpl: "<<_nCpl<<std::endl;
-	std::cout<<"_nBra: "<<_nBra<<"; _nIso: "<<_nIso<< "; _nBrCplAnc: "<<_nBrCplAnc<<std::endl;
+	std::cout<<"_nBra: "<<_nBra<<"; _nIso: "<<_nIso<< "; _nBrCpl: "<<_nBrCpl<<std::endl;
 	std::cout<<std::endl<<std::endl<<"PARAMETERS:"<<std::endl<<"_parameters"<<std::endl;
 	print_vector(_parameters);
 	std::cout<<std::endl<<"_upper_parameter_limits"<<std::endl;
@@ -775,7 +773,6 @@ void full_covariance::printStatus()																const{
 	print_vector(_parNames);
 	std::cout<<std::endl<<"Omit printing of _data and _coma"<<std::endl;
 	std::cout<<std::endl<<"OTHER MEMBERS:"<<std::endl;
-	std::cout<<std::endl<<"_useBranch: "<<_useBranch<<std::endl;
 	std::cout<<std::endl<<"_nOut: "<<_nOut<<std::endl;
 	std::cout<<std::endl<<"_count: "<<_count<<std::endl;
 
@@ -784,13 +781,18 @@ void full_covariance::printStatus()																const{
 ///Complex conjugates _data, changes _coma accordingly
 void full_covariance::conjugate(){ //<<need>>
 
-	for (size_t i=2;i<2*(_waveset.nPoints());i+=2){
-		for (size_t tbin=0;tbin<_waveset.nTbin();tbin++){
-			for(size_t bin=0;bin<_waveset.nBins();bin++){
-				_data[tbin][bin][i]*=-1;
-				for (size_t j=0;j<2*_waveset.nPoints()-1;j++){
-					_coma[tbin][bin][i][j]*=-1;
-					_coma[tbin][bin][j][i]*=-1;
+	size_t nPoints = _waveset.nPoints();
+	for (size_t ii = 0;ii<nPoints*nPoints;++ii){
+		size_t i = ii/nPoints;
+		size_t j = ii-nPoints*i;
+		if (j<i){
+			for(size_t tbin=0;tbin<_waveset.nTbin();++tbin){
+				for(size_t bin=0;bin<_waveset.nBins();++bin){
+					_data[tbin][bin][ii]*=-1;
+					for (size_t jj=0;jj<nPoints*nPoints;++jj){
+						_coma[tbin][bin][ii][jj]*=-1;
+						_coma[tbin][bin][jj][ii]*=-1;
+					};
 				};
 			};
 		};
@@ -941,9 +943,9 @@ void full_covariance::setTbinning(std::vector<std::vector<double> > binning){
 ///Updates internal definitions
 void full_covariance::update_definitions(){
 
-	_nTot = getNtotAnc();
+	_nTot = getNtot();
 	_nPar = _waveset.getNpar();
-	_nCpl = getNanc();
+	_nCpl = getNcpl();
 	_nBra = _waveset.nBranch();
 	_nIso = _waveset.getNiso();
 	std::vector<std::string> names;
@@ -974,6 +976,7 @@ void full_covariance::update_definitions(){
 void full_covariance::update_is_active(){ //<<need>>
 
 	_is_active = std::vector<std::vector<std::vector<bool> > >(_waveset.nTbin(),std::vector<std::vector<bool> >(_waveset.nBins(),std::vector<bool>(_waveset.nPoints(),true)));
+	size_t  nPoint = _waveset.nPoints();
 	for (size_t tbin =0;tbin<_waveset.nTbin();tbin++){
 		if (_data.size() < tbin){
 			break;
@@ -985,12 +988,15 @@ void full_covariance::update_is_active(){ //<<need>>
 			if (_data[tbin][bin].size() < _waveset.nPoints()*_waveset.nPoints()){
 				break;
 			};
-			if(_data[tbin][bin][0] == 0.){
-				_is_active[tbin][bin][0] = false;
-			};
 			for(size_t point=1;point<_waveset.nPoints();point++){
-				if (_data[tbin][bin][2*point-1] == 0. and _data[tbin][bin][2*point] ==0.){
-					_is_active[tbin][bin][point] = false;
+				_is_active[tbin][bin][point] = true; // Relie here on the fact, that zero intensity results in a zero in all interferences
+				double sum_squares = 0.;
+				for (size_t i=0;i<nPoint;++i){
+					sum_squares+=pow(_data[tbin][bin][point*nPoint+i],2.);
+					sum_squares+=pow(_data[tbin][bin][point+nPoint*i],2.);
+				};
+				if (0.==sum_squares){
+					_is_active[tbin][bin][point] = false;				
 				};
 			};
 		};

@@ -16,7 +16,8 @@ waves = [
 		'1-(2-+)0+ rho pi F',
 		'1-(2-+)1+ f2 pi S',
 		'1-(4++)1+ f2 pi F',
-		'1-(4++)1+ rho pi G'
+		'1-(4++)1+ rho pi G',
+		'1-(1-+)1+ rho pi P'
 					]
 
 numbers={
@@ -32,7 +33,8 @@ numbers={
 	"1-(2++)2+ rho pi D":9,
 	"1-(2-+)1+ f2 pi S":10,
 	"1-(2-+)0+ rho pi F":11,
-	"1-(2-+)0+ f2 pi D":12
+	"1-(2-+)0+ f2 pi D":12,
+	"1-(1-+)1+ rho pi P":13
 }
 nwaves=str(len(waves))
 numbers_inverse={}
@@ -59,7 +61,7 @@ integrals.close()
 
 npoints=str(len(ints[waves[0]]))
 
-out_int = open("/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared/tabulated_integrals.h",'w')
+out_int = open("/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/tabulated_integrals.h",'w')
 #out_int = open("tabulated_integrals.h",'w')
 dot_template = open("tabulated_integrals.template",'r')
 

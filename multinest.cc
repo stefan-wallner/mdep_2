@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
 	
 	double tol = 0.5;				// tol, defines the stopping criteria
 	
-	int ndims = Chi2.method()->getNtotAnc();	// dimensionality (no. of free parameters)
+	int ndims = Chi2.method()->nTot();		// dimensionality (no. of free parameters)
 	
-	int nPar = Chi2.method()->getNtotAnc();		// total no. of parameters including free & derived parameters
+	int nPar = Chi2.method()->nTot();		// total no. of parameters including free & derived parameters
 	
-	int nClsPar = Chi2.method()->getNtotAnc();	// no. of parameters to do mode separation on
+	int nClsPar = Chi2.method()->nTot();		// no. of parameters to do mode separation on
 	
 	int updInt = 1000;				// after how many iterations feedback is required & the output files should be updated
 							// note: posterior files are updated & dumper routine is called after every updInt*10 iterations

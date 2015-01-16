@@ -3,7 +3,14 @@
 #include<vector>
 #include<complex>
 #include<string>
+
+//#define USE_ANCHOR_T
+#ifdef USE_ANCHOR_T
 #include"anchor_t.h"
+#else//USE_ANCHOR_T
+#include"full_covariance.h"
+#endif//USE_ANCHOR_T
+
 #include"Math/Minimizer.h"
 #include"Math/Factory.h"
 #include"Math/Functor.h"
@@ -26,7 +33,11 @@ class minimize{
 		void 			initCouplings(size_t nSeeds = 1);
 
 	// Setters and getters
+#ifdef USE_ANCHOR_T
 		anchor_t*		method(){return &_method;};
+#else
+		full_covariance*	method(){return &_method;};
+#endif
 		void 			setParameter(int i, double par);
 		void 			setParameter(std::string name, double par);
 		void 			setParameters(std::vector<double> pars);
@@ -64,7 +75,11 @@ class minimize{
 #endif//USE_YAML
 	protected:
 	//METHOD
+#ifdef USE_ANCHOR_T
 		anchor_t		_method;						// The method used (at the moment anchor_t)
+#else
+		full_covariance		_method;						// The method used (at the moment anchor_t)
+#endif
 
 	// OWN STUFF
 		std::vector<double> 	_best_par; 						// Best paramters

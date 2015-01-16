@@ -244,7 +244,11 @@ xdouble anchor_t::EvalAutoCplTbin(
 							const xdouble	 						*iso_par)		const{
 
 	std::vector<std::complex<xdouble> > mincpl = getMinimumCpl(tbin,cpl,par,iso_par);
-	return EvalTbin(tbin,&mincpl[0],par,iso_par); // &...[0] stays, since mincpl is built inside the function
+//	std::cout<<tbin<<": ";
+//	print_vector(mincpl);
+	xdouble chi2 = EvalTbin(tbin,&mincpl[0],par,iso_par); // &...[0] stays, since mincpl is built inside the function
+//	std::cout<<chi2<<std::endl;
+	return chi2;
 };
 template double anchor_t::EvalAutoCplTbin(int tbin, const std::complex<double> *cpl, const double *par, const double *iso_par)const;
 //########################################################################################################################################################
@@ -258,6 +262,14 @@ xdouble anchor_t::EvalBin(
 							std::vector<std::vector<std::complex<xdouble> > > 		&iso_eval)		const{
 
 	double mass = _waveset.get_m(bin); // Eval at bin center.
+
+//	std::vector<std::complex<xdouble> > ccpl(_waveset.nFtw(),std::complex<xdouble>(1.,0.));
+//	std::cout<<ccpl.size()<<std::endl;
+//	std::cout<<_nCpl<<std::endl;
+//	for (size_t i=0; i<_nPar;++i){
+//		std::cout<<i<<" "<<par[i]<<std::endl;
+//	};
+
 	std::vector<xdouble> deltas = delta(tbin,bin,mass, cpl, par,iso_eval);
 	xdouble chi2 = 0.;
 //	print_vector(deltas);
@@ -273,6 +285,8 @@ xdouble anchor_t::EvalBin(
 				*_waveset.outStream() <<"  Ci^2 before      "<<chi2<<"      +     "<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<"       =    ";
 			};
 			chi2+= deltas[i]*deltas[i]*_coma[tbin][bin][i][i];
+
+
 //			std::cout<<deltas[i]<<"*"<<deltas[i]<<"*"<<_coma[tbin][bin][i][i]<<"="<<deltas[i]*deltas[i]*_coma[tbin][bin][i][i]<<std::endl;
 			if(_waveset.write_out()){
 				*_waveset.outStream() <<chi2<<std::endl;
@@ -297,6 +311,7 @@ xdouble anchor_t::EvalBin(
 			};
 		};
 	};
+//	std::cout<<tbin<<":"<<bin<<"::"<<chi2<<std::endl;
 	return chi2;
 };
 template double anchor_t::EvalBin(int tbin,int bin,const std::complex<double> *cpl,const double *par,std::vector<std::vector<std::complex<double> > > &iso_eval) const;
@@ -313,6 +328,12 @@ std::vector<xdouble> anchor_t::delta(
 
 	std::vector<double> var = _waveset.getVar(mass,tbin);
 	std::vector<std::complex<xdouble> > ampls = _waveset.amps(&var[0], cpl, par, iso_eval);
+
+///	std::cout<<"''''''''''''''''''''''''''''''''''''''''"<<std::endl;
+///	for (size_t i=0;i<ampls.size();++i){
+///		std::cout<<i<<": "<<ampls[i]<<std::endl;
+///	};
+
 	std::vector<xdouble> del = std::vector<xdouble> (2*_waveset.nPoints()-1);
 	std::complex<xdouble> divider = std::complex<xdouble>(1.,0.); // When amplitudes are fitted, this is set to |ampls[0]|
 	if(_is_ampl){
@@ -331,7 +352,8 @@ std::vector<xdouble> anchor_t::delta(
 #endif//STORE_ACTIVE
 		std::complex<xdouble> inter = ampls[0]*std::conj(ampls[i])/divider;
 		del[2*i-1]=real(inter) - _data[tbin][bin][2*i-1]; // real part
-		del[2*i]=imag(inter) - _data[tbin][bin][2*i];    // imag part
+		del[2*i  ]=imag(inter) - _data[tbin][bin][2*i];    // imag part
+
 		if(_waveset.write_out()){
 			*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<2*i<<"  isectd=           "<<tbin+1<<std::endl;
 			*_waveset.outStream() << " Re data    "<<_data[tbin][bin][2*i-1]<<"     - theory   "<<real(inter)<<"       =    "<<real(inter) - _data[tbin][bin][2*i-1]<<std::endl;

@@ -1,10 +1,11 @@
 cmake_minimum_required (VERSION 2.8.8)
 
 project (Mdep)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder -fopenmp")
 set(use_auto_diff ON) 
 set(use_YAML ON)
-set(use_multiNest ON)
+#set(use_multiNest ON)
+#set(use_anchor_t ON)
 
 set(CMAKE_MODULE_PATH  ${PROJECT_SOURCE_DIR} )
 
@@ -20,6 +21,10 @@ set( INCLUDE_DIRS
 #### Switch on single modules
 
 add_definitions( -DSTORE_ACTIVE )
+
+#if ( use_anchor_t )
+#  add_definitions( -DUSE_ANCHOR_T )
+#endif()
 
 if( use_YAML )
   add_definitions( -DUSE_YAML )
@@ -51,9 +56,10 @@ include_directories(
 )
 
 #set libraries
-add_library(waveset SHARED waveset.cxx)
-add_library(anchor_t SHARED anchor_t.cxx)
-add_library(minimize SHARED minimize.cxx)
+add_library(waveset               SHARED waveset.cxx            )
+add_library(anchor_t              SHARED anchor_t.cxx           )
+add_library(full_covariance       SHARED full_covariance.cxx    )
+add_library(minimize              SHARED minimize.cxx           )
 
 
 #set execuatbles
@@ -69,7 +75,9 @@ endif()
 
 #link own libraries
 target_link_libraries(anchor_t waveset)
+#target_link_libraries(full_covariance waveset)
 target_link_libraries(minimize anchor_t)
+target_link_libraries(minimize full_covariance)
 target_link_libraries(fitmd.exe minimize)
 
 target_link_libraries(de_isobarring anchor_t)

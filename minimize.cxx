@@ -66,17 +66,24 @@ double minimize::fit(){
 	};
 };
 //########################################################################################################################################################
-///Finds start values for couplings and branchings
+///Finds start values for couplings and branchings // works only for anchot_t, for full_covariance not
 void minimize::initCouplings(
 							size_t 						nSeeds){ 
 
-	std::cout<<"Initialize couplings"<<std::endl;
-	size_t cpls = _method.nBrCplAnc();
-	size_t nTbin = _method.Waveset()->nTbin();
 
+	std::cout<<"Initialize couplings"<<std::endl;
+
+	size_t nTbin = _method.Waveset()->nTbin();
+	size_t cpls = _method.nCpl()/nTbin;
 	std::vector<double> bestChi2Tbin(nTbin);
 	std::vector<std::vector<double> >bestCplTbin(nTbin,std::vector<double>(2*cpls));
+#ifdef USE_ANCHOR_T
 	_method.setUseBranch(false); // Do not use branchings at first
+#else
+	for (size_t i=2*_method.nCpl() + _method.nPar();i<2*_method.nCpl() + _method.nPar()+2*_method.nBra();++i){
+		relPar(i);
+	};
+#endif//USE_ANCHOR_T
 	for (size_t seed=0;seed<nSeeds;++seed){
 		std::cout<<"Seed #"<<seed<<std::endl;
 		setRandomCpl(); // Set random couplings
@@ -88,9 +95,11 @@ void minimize::initCouplings(
 			_method.Waveset()->setEvalTbin(tbin,true);
 			std::cout<<"tBin #"<<tbin<<std::endl;
 			for (size_t i =0;i<2*_method.nCpl();i++){
+//				std::cout<<"fix "<<i<<std::endl;
 				fixPar(i);
 			};
 			for (size_t i=0;i<2*cpls;i++){
+//				std::cout<<"rel "<<i<<std::endl;
 				relPar(2*cpls*tbin+i);
 			};
 			setRandomCpl(); // Set here again, otherwise different seed make no sense...
@@ -129,8 +138,10 @@ void minimize::initCouplings(
 	for (size_t i=0;i<_method.nIso();i++){
 		iso_par[i] = _method.parameters()[2*_method.nCpl()+_method.nPar()+2*_method.nBra()+i];
 	};
-	std::cout << "Total with _method.EvalAutoCpl() (For consistency check): "<< _method.EvalAutoCpl(&couplings[0],&par[0],&iso_par[0])<<std::endl;
+//	std::cout << "Total with _method.EvalAutoCpl() (For consistency check): "<< _method.EvalAutoCpl(&couplings[0],&par[0],&iso_par[0])<<std::endl; Removed do to convertability
+#ifdef USE_ANCHOR_T
 	_method.setUseBranch(true);
+#endif//USE_ANCHOR_T
 	if (_method.nBra()>0){
 		std::vector<std::complex<double> > bra = _method.get_branchings(couplings,par,iso_par);
 		// branchCouplingsToOne(); // Set all coupled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
@@ -138,7 +149,7 @@ void minimize::initCouplings(
 			setParameter(2*_method.nCpl()+_method.nPar()+2*i ,bra[i].real());
 			setParameter(2*_method.nCpl()+_method.nPar()+2*i+1,bra[i].imag());
 		};
-		std::cout << "With the found branchings, Chi2(...)="<< _method.EvalAutoCplBranch(&bra[0],&couplings[0],&par[0],&iso_par[0])<<" ('_method.EvalAutoCplBranch(...)')"<<std::endl; //[0]//
+//std::cout << "With the found branchings, Chi2(...)="<< _method.EvalAutoCplBranch(&bra[0],&couplings[0],&par[0],&iso_par[0])<<" ('_method.EvalAutoCplBranch(...)')"<<std::endl; //[0]//
 		for (size_t i =0;i<2*_method.nCpl();i++){ // Fix couplings
 			fixPar(i);
 		};
@@ -492,7 +503,7 @@ void minimize::loadFitterDefinitions(
 		_minStepSize = waveset["min_step_size"].as<double>();
 	};
 	int nPar = _method.Waveset()->getNpar();
-	int nCpl = _method.getNanc();
+	int nCpl = _method.nCpl();
 	for (int par = 0;par<nPar;par++){
 		setStepSize(2*nCpl+par,std::max(_minStepSize, 0.0001*fabs(_method.parameters()[2*nCpl+par])));
 	};

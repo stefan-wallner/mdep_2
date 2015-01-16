@@ -108,10 +108,13 @@ std::vector<std::complex<xdouble> > waveset::amps(
 		if (m[0] >= _lowerLims[wave] and m[0]<_upperLims[wave]){
 			if(-1==n_iso_bin){
 				std::complex<xdouble> amp(0.,0.);
+//				std::cout<<wave<<": ";
 				for (int nFunc = loBor; nFunc<upBor; nFunc++){
 					int func = _funcs_to_waves[nFunc]; // Number of function contributing to the actual wave
 					amp+=std::complex<xdouble>(ps[wave],0.)*cpl[nFunc]*funcEval[func];
+//					std::cout<<" + ("<<std::complex<xdouble>(ps[wave],0.)<<" * "<<cpl[nFunc]<<" * "<<funcEval[func]<<")";
 				};
+//				std::cout<<std::endl;
 				ampl[amplcount]=amp;
 				amplcount++;
 			}else{
@@ -130,6 +133,7 @@ std::vector<std::complex<xdouble> > waveset::amps(
 				amplcount+=abs(n_iso_bin);
 		};
 	};
+
 	return ampl;
 };
 template std::vector<std::complex<double> > waveset::amps(const double *m, const std::complex<double> *cpl,const double *par, std::vector<std::vector<std::complex<double> > > &funcEvals2pi) const;

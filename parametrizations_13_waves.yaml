@@ -65,7 +65,35 @@ cohBKG(1++)0+_rho_pi_D:
    value: 0.139
  - name: mR
    value: 0.770
+########################################
+# 1-+ Sector:
+########################################
+pi1(1600):
+ parametrization: 0
+ parameters:
+ - name: M_pi1(1600)
+   value: 1.60940051682
+ - name: G_pi1(1600)
+   value: 0.373093939347
 
+tdepBKG:
+ parametrization: 101
+ parameters:
+ - name: tdepBKG(1-+)1+_rho_pi_P__b
+   value: 3.98445053613
+ - name: tdepBKG(1-+)1+_rho_pi_P__c0
+   value: -14.8312350262
+ - name: tdepBKG(1-+)1+_rho_pi_P__c1
+   value: 12.0990430259
+ - name: tdepBKG(1-+)1+_rho_pi_P__c2
+   value: -11.0640113244
+ constants:
+ - name: m0
+   value: 0.5 
+ - name: mP
+   value: 0.139
+ - name: mR
+   value: 0.77
 ########################################
 # 0-+ Sector:
 ########################################
