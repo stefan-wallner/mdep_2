@@ -1487,7 +1487,7 @@ void anchor_t::write_plots(
 	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,&cpl_all[0],&par[0],&iso[0])<<std::endl;//[0]//
 	for (size_t bin=0;bin<_waveset.nBins();bin++){
 		double mass = _waveset.get_m(bin);
-		double var [] = _waveset.getVar(mass,tbin);
+		double* var = &_waveset.getVar(mass,tbin)[0];
 		std::vector<std::complex<double> > amplitudes = _waveset.amps(var,&cpl_all[0],&par[0],iso_eval);
 		std::complex<double> ancAmp = amplitudes[0];
 		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
