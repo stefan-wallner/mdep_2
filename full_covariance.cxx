@@ -531,12 +531,12 @@ std::vector<std::complex<double> > full_covariance::get_branchings(
 	
 
 
-
+	throw; // Does not work at the moment
 
 	return std::vector<std::complex<double> >(_nBra,std::complex<double>(1.,0.));;
 };
 //########################################################################################################################################################
-///Gets the couplings-without-branchings from couplings-with-branchings and branchings
+///Gets the couplings-without-branchings from couplings-with-branchings and branchings for one t' bin
 std::vector<std::complex<double> > full_covariance::getUnbranchedCouplings(
 							const std::vector<std::complex<double> >	&cpl,
 							const std::vector<std::complex<double> >	&bra)						const{
@@ -560,38 +560,26 @@ std::vector<std::complex<double> > full_covariance::getAllCouplings(
 							const std::vector<std::complex<double> >	&bra,
 							const std::vector<double>			&iso)						const{
 
-	std::vector<std::complex<double> > cpl_all;
-	if (cpl.size() == _nCpl){ 				// Anchor couplings for all t' bins
-		std::vector<std::complex<double> > cpl_t;
-		for (size_t i=0;i<_nBrCpl;i++){
-			cpl_t.push_back(cpl[tbin*_nBrCpl+i]);
-		};
-		cpl_all = cpl_t;
-		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
-	}else if (cpl.size() == _nBrCpl){ 			// Anchor couplings for one t' bin
-		cpl_all = cpl;
-		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
-	}else if (cpl.size() == _waveset.nBrCpl()*_waveset.nTbin()){ 		// Branched couplings for all t' bins
-		std::vector<std::complex<double> > cpl_t;
-		for (size_t i=0;i<_waveset.nBrCpl();i++){
-			cpl_t.push_back(cpl[tbin*_waveset.nBrCpl()+i]);
-		};
-		cpl_all = cpl_t;
-		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for all t' bins"<<std::endl;
-	}else if (cpl.size() == _waveset.nBrCpl()){ 			// Branched couplings for one t' bin
-		cpl_all = getUnbranchedCouplings(cpl,bra);
-		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for one t' bin"<<std::endl;
-	}else if (cpl.size() == _waveset.nTbin()*_waveset.nFtw()){ 			// Simple couplings for all t' bins
-		for (size_t i=0;i<_waveset.nFtw();i++){
-			cpl_all.push_back(cpl[tbin*_waveset.nFtw()+i]);
-		};
-		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for all t' bins"<<std::endl;
-	}else if (cpl.size() == _waveset.nFtw()){ 			// Simple couplings for one t' bin
-		cpl_all = cpl;
-		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for one t' bin"<<std::endl;
-	}else{
-		std::cerr<<"Error: Can't determine the format of the couplings"<<std::endl;
+
+	size_t nTbin = _waveset.nTbin();
+	size_t nFtw = _waveset.nFtw();
+	size_t cpls = _nCpl/nTbin;
+	std::vector<std::complex<double> > cpl_all(nFtw);
+	if (cpl.size() == nFtw*nTbin){
+		for (size_t i=0;i<nFtw;++i){
+			cpl_all[i] = std::complex<double>(cpl[nFtw*tbin+i]);
+		};	
 	};
+	if (cpl.size() == _nCpl){
+		std::cout<< "Got branched couplings"<<std::endl;
+		std::vector<std::complex<double> > tCpls(cpls);
+		for (size_t i=0;i<cpls;++i){
+			tCpls[i]=cpl[tbin*cpls+i];
+		};
+		cpl_all = getUnbranchedCouplings(tCpls,bra);
+	};
+
+
 	return cpl_all;
 };
 //########################################################################################################################################################
@@ -1123,7 +1111,11 @@ void full_covariance::write_plots(
 							const std::vector<std::complex<double> >		&bra,
 							const std::vector<double> 				&iso)					const{
 
+	print_vector(cpl);
+	std::cout<<std::endl;
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
+	print_vector(cpl_all);
+	std::cout<<std::endl;
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_waveset.has_isobars()){
 		iso_eval = _waveset.iso_funcs(&iso[0]);
