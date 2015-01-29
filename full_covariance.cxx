@@ -1111,10 +1111,8 @@ void full_covariance::write_plots(
 							const std::vector<std::complex<double> >		&bra,
 							const std::vector<double> 				&iso)					const{
 
-	print_vector(cpl);
 	std::cout<<std::endl;
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
-	print_vector(cpl_all);
 	std::cout<<std::endl;
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_waveset.has_isobars()){
