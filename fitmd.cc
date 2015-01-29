@@ -1,5 +1,6 @@
 #include<string>
 #include<iostream>
+#include<fstream>
 
 
 #include"minimize.h"
@@ -8,82 +9,157 @@
 #include"currentDateTime.h"
 #include"matrix_utilities.h"
 
+std::vector<double> load_file(std::string fileName){
+	std::vector<double> ret	;
+	std::fstream data(fileName.c_str(),std::ios_base::in);
+	double val;
+	while (data>>val){
+		ret.push_back(val);
+	};
+	return ret;
+};
 
-//std::string C="../13w_11t_testload.yaml";
-//std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/6waves_2014-09-05_10:08:53.191171.yaml";
-//std::string C="/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/massDependentFit/scripts/chi_squared_retry/card_test_deiso_2014-09-11_10.38.02.497167.yaml";
+
 int main(int argc, char* argv[]){
-	std::string C = std::string(argv[1]);
+
+	std::string card = std::string(argv[1]);
+	if (argc > 2){
+		int seed = atoi(argv[2]);
+		std::srand(seed); 
+	};
+
+	std::cout<<"Load definitions from:"<<std::endl;
+	std::cout<<card<<std::endl;
 	std::cout<<"--------start------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
-	minimize Chi2(C);
-
+	minimize Chi2(card);
 	//int n = Chi2.getParNumber("G_a1(1260)");
 	//Chi2.setParLimits(n,.13,13.);
 	//Chi2.printStatus();
 	//return 0;
+
 	size_t nPar = Chi2.method()->Waveset()->getNpar();
 	size_t nCpl = Chi2.method()->nCpl();
 	size_t nBra = Chi2.method()->Waveset()->nBranch();
 	size_t nTot = Chi2.method()->nTot();
 	size_t nIso = Chi2.method()->Waveset()->getNiso();
+	size_t nTbin= Chi2.method()->Waveset()->nTbin();
+	size_t nFtw = Chi2.method()->Waveset()->nFtw();
+
+	size_t dummy = nTbin*nFtw;
+	dummy+=dummy;
 
 	Chi2.printStatus();
 	Chi2.method()->Waveset()->printParameters();
 
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 
-//	for(size_t i =0;i<2*nCpl;++i){
-//		Chi2.setParameter(i,0.);
-//	};
-//	print_vector(Chi2.method()->parameters());
 
-//	double mincpl0[] = {-0.0939535, -1.77798, 0.0103546, 0.0239377, -0.551942, -4.35815, -3.18178, -2.0867, 0.992887, 2.85563, 6.02061, 26.0761, 5.73455, -0.62779, -0.981888, -0.455697, 0.595485, -0.176115, 0.143274, 0.510437, -526.927, -922.296, 130.548, 107.55, -73.6623, -122.349, -49.0378, -113.996, 3.49182, 2.94789, -4.71697, -23.504, -9.99731, -13.23, -1.15653, -1.05145, -2.6136, -2.93982, -3212.45, 372.683, 4643.27, -780.66, -202.638, -73.6321, -144.038, -16.5198, 38.3427, 27.3795, 8.35382, -59.6984, -128.853, -322.555, -138.394, -95.5949, -31.9701, 13.0923, -20.6158, -9.41411, 0.70602, -13.6373, -8.73475, -7.51873, -10611.3, -2273.08, -2200.64, 582.229, -912.666, -261.219, -119.908, -1928.88};
-//	std::vector<std::complex<double> > ccppll(nCpl,std::complex<double>(0.,0.));
-//	for (size_t i=0;i<35;++i){
-//		ccppll[i] = std::complex<double>(mincpl0[2*i],mincpl0[2*i+1]);	
-//	};
-//	print_vector(Chi2.method()->get_branchings(ccppll,std::vector<double>(),std::vector<double>()));
-
-//	for (size_t i=1;i<11;++i){
-//		Chi2.method()->Waveset()->setEvalTbin(i,false);
-//	};
+	std::vector<double> parrrr = load_file("./erte");
+	std::cout<<"Found file with "<<parrrr.size()<<" paramters"<<std::endl;
 
 
-//	std::cout <<"------->>>>>> "<<(*Chi2.method())()<<std::endl;
-//	return 0;	
-
-//	Chi2.findRandRange();
-//	return 0;
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
-	Chi2.initCouplings(2);
 
+//	Chi2.initCouplings(4);	
 
 	std::cout<<"-------inited------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
+	std::cout<<"best couplings found:"<<std::endl;
 
-
-/*	Chi2.relPar(nTot-1);
-	Chi2.relPar(nTot-2);
-	Chi2.relPar(nTot-3);
-	Chi2.relPar(nTot-4);
-	Chi2.method()->write_plots("plots.txt",0);
+	for (size_t i=0;i<parrrr.size();++i){
+		Chi2.setParameter(i,parrrr[i]);
+	};
 	Chi2.fit();
-	Chi2.method()->write_plots("plots.txt",0);
-*/
-//	Chi2.open_output("./out_out.out");
-//	std::cout<<Chi2()<<std::endl;
-//	Chi2.close_output();
+//	std::vector<double> bestpars = Chi2.method()->parameters();
+//	ofstream olo;
+//	olo.open("erte");
+//	for(size_t i=0;i<bestpars.size();++i){
+//		olo<<bestpars[i]<<" ";
+//	};
+//	olo.close();
 
-//	Chi2.relPar(4);
-//	Chi2.relPar(5);
-//	Chi2.relPar(6);
-//	Chi2.relPar(7);
-
+	std::cout<<Chi2()<<std::endl;
+	Chi2.method()->write_plots("plots0.txt",0);
 	return 0;
+
+
+/*
+// From init couplings without branchs
+	std::vector<std::complex<double> > actCpl(nFtw);
+	for (size_t tbin=0;tbin<nTbin;++tbin){
+		Chi2.method()->Waveset()->setEvalTbin(tbin,false);
+	};
+	std::vector<std::complex<double> > bestBra(nBra,std::complex<double>(0.,0.));
+	for (size_t tbin=0;tbin<nTbin;++tbin){
+		Chi2.method()->Waveset()->setEvalTbin(tbin,true);
+		for (size_t cpl=0;cpl<nFtw;++cpl){
+			size_t iii = 2*tbin*nFtw+2*cpl;
+			actCpl[cpl] = std::complex<double>(cplll[iii],cplll[iii+1]);
+		};
+		std::vector<std::vector<std::complex<double> > > cplBra = Chi2.method()->full_to_br_cpl(actCpl);
+		for (size_t cpl=0;cpl<nCpl/nTbin;++cpl){
+			Chi2.setParameter(2*nCpl/nTbin*tbin+2*cpl  ,cplBra[0][cpl].real());
+			Chi2.setParameter(2*nCpl/nTbin*tbin+2*cpl+1,cplBra[0][cpl].imag());
+			Chi2.relPar(2*nCpl/nTbin*tbin+2*cpl  );
+			Chi2.relPar(2*nCpl/nTbin*tbin+2*cpl+1);
+		};
+		for (size_t bra=0;bra<nBra;++bra){
+			bestBra[bra]+=cplBra[1][bra]/std::complex<double>(nTbin,0.);
+			Chi2.setParameter(2*nCpl+nPar+2*bra  ,cplBra[1][bra].real());
+			Chi2.setParameter(2*nCpl+nPar+2*bra+1,cplBra[1][bra].imag());
+		};
+
+		std::cout<<tbin<<":::;:::"<<Chi2()<<std::endl;
+		Chi2.method()->Waveset()->setEvalTbin(tbin,false);
+	};
+	for (size_t bra=0;bra<nBra;++bra){
+		Chi2.setParameter(2*nCpl+nPar+2*bra  ,bestBra[bra].real());
+		Chi2.setParameter(2*nCpl+nPar+2*bra+1,bestBra[bra].imag());
+		Chi2.relPar(2*nCpl+nPar+2*bra  );
+		Chi2.relPar(2*nCpl+nPar+2*bra+1);
+
+	};
+
+
+	for (size_t tbin=0;tbin<nTbin;++tbin){
+		Chi2.method()->Waveset()->setEvalTbin(tbin,true);
+		
+	};
+	std::cout<<"!!!!!!!!"<<Chi2()<<std::endl;
+	
+	Chi2.fit();
+//Fritresult from brenched
+	for (size_t i=0;i<650;++i){
+		Chi2.setParameter(i,ppar[i]);
+	};
+	std::cout<<"--------------------------------------------------------------------------------------"<<std::endl;
+//Unbranched fit result with straing values above
+
+
+
+	for (size_t i=0;i<770;++i){
+		Chi2.setParameter(i,cplolo[i]);
+	};
+	for (size_t tbin =0;tbin<nTbin;++tbin){
+		stringstream nam;
+		nam<<"whatever"<<tbin;
+		Chi2.method()->write_plots(nam.str(),tbin);
+	};
+	for(size_t i=1;i<11;++i){
+		Chi2.method()->Waveset()->setEvalTbin(i,false);
+	};
+
+
+	Chi2.method()->Waveset()->open_output("le_out_off_se");
+	std::cout<<Chi2()<<std::endl;
+	Chi2.method()->Waveset()->close_output();
+//	std::cout<<Chi2.fit()<<std::endl;
+//	print_vector(Chi2.method()->parameters());
+*/
 };
 

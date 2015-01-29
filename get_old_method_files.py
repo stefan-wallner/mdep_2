@@ -6,7 +6,7 @@ from rootpy.plotting import Canvas, Hist, Legend
 from ROOT import TH1D
 
 def get_old_method_files(data_file, waveset, target,sfit):
-	"""Writes the data from .root files to be used by the full coma approacht of fitmd_2"""
+	"""Writes the data from .root files to be used by the full coma approach of fitmd_2"""
 	numberNdigit = 3
 	waveNumbers = get_wave_numbers(waveset, sfit)
 	nWaves = len(waveset)
@@ -17,10 +17,11 @@ def get_old_method_files(data_file, waveset, target,sfit):
 			w2 = getNdigitInt(waveNumbers[j],numberNdigit)
 			ii = i*nWaves+j
 			if i==j:
-				histName = ['h1'+w1]
-			if i<j:
-				histName = ['h2'+w1+w2,'h2'+w2+w1]
+#				histName = ['h1'+w1]
+				histName = ['h'+str(waveNumbers[i])]
 			if i>j:
+				histName = ['h2'+w1+w2,'h2'+w2+w1]
+			if i<j:
 				histName = ['h1'+w1+w2,'h1'+w2+w1]
 			histNames[ii] = histName
 	isChanged = [1]*nWaves**2
@@ -34,17 +35,21 @@ def get_old_method_files(data_file, waveset, target,sfit):
 				hists[ii] = inROOT.get(histNames[ii][1])	
 		nBins = hists[0].GetNbinsX()
 		with open(target+"_data",'w') as outoutout:
-			for i in range(nBins):
-				for hist in hists:
-					outoutout.write(str(hist.GetBinContent(i+1))+' ')
+			for bin in range(nBins):
+				for i in range(len(hists)):
+					hist=hists[i]
+					fakk=1
+					if histNames[i][0][1] == '2':
+						fakk = isChanged[i]
+					outoutout.write(str(fakk*hist.GetBinContent(bin+1))+' ')
 				outoutout.write("\n")
 		with open(target+"_coma",'w') as outoutout:
-			for i in range(nBins):
+			for bin in range(nBins):
 				for i in range(nWaves**2):
 					for j in range(nWaves**2):
 						if i == j:
 							try:
-								err = 1/hists[i].GetBinError(i+1)
+								err = 1/hists[i].GetBinError(bin+1)
 							except ZeroDivisionError:
 								err = 0.
 							err **= 2

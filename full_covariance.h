@@ -41,12 +41,19 @@ class full_covariance{
 								const xdouble	 					*par,
 								const xdouble	 					*iso_par)			const;
 
-		template<typename xdouble>
-		xdouble EvalTbin(
+		double EvalTbin(
 								int 							tbin,
-								const std::complex<xdouble> 				*cpl,
-								const xdouble	 					*par,
-								const xdouble						*iso_par)			const;
+								const std::complex<double> 				*cpl,
+								const double	 					*par,
+								const double						*iso_par)			const;
+#ifdef ADOL_ON
+		adouble EvalTbin(
+								int 							tbin,
+								const std::complex<adouble> 				*cpl,
+								const adouble	 					*par,
+								const adouble						*iso_par)			const;
+#endif//ADOL_ON
+
 
 		template<typename xdouble>
 		xdouble EvalBin(
@@ -119,6 +126,7 @@ class full_covariance{
 		int getNtot();
 		int getNcpl();
 
+		std::vector<std::vector<std::complex<double> > > full_to_br_cpl(std::vector<std::complex<double> > &cpl);
 
 	// OTHER METHODS
 		std::string 				className		()const		{return "full_covariance";};
@@ -127,9 +135,7 @@ class full_covariance{
 		void 					update_n_cpls();
 		void 					update_min_max_bin();
 		void 					update_definitions();
-#ifdef STORE_ACTIVE
 		void					update_is_active();
-#endif//STORE_ACTIVE
 
 	// PLOTTING
 		void					write_plots(std::string filename, int tbin) const;
@@ -156,9 +162,7 @@ class full_covariance{
 		std::vector<std::string> 						_parNames; 		// Name of each parameter
 		std::vector<std::vector<std::vector<double> > > 			_data; 			// Data
 		std::vector<std::vector<std::vector<std::vector<double> > > > 		_coma; 			// Covariance matrix
-#ifdef STORE_ACTIVE
-		std::vector<std::vector<std::vector<bool> > >				_is_active;		// Flag, which point is actually active
-#endif//STORE_ACTIVE
+		std::vector<std::vector<bool> >						_is_active;		// Flag, which point is actually active
 
 		// OTHER MEMBERS
 		size_t 									_nOut; 			// Print output after _nOut iterations

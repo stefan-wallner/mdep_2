@@ -28,6 +28,10 @@ class minimize{
 		minimize(std::string card);
 #endif//USE_YAML
 
+		double 			operator()			()				{return _method();};
+		double 			operator()			(std::vector<double>&xx)	{return _method(xx);};
+		double 			operator()			(const double*xx)		{return _method(xx);};
+
 	// Fitting routines
 		double 			fit();
 		void 			initCouplings(size_t nSeeds = 1);
@@ -38,37 +42,39 @@ class minimize{
 #else
 		full_covariance*	method(){return &_method;};
 #endif
-		void 			setParameter(int i, double par);
-		void 			setParameter(std::string name, double par);
-		void 			setParameters(std::vector<double> pars);
-		void 			setStepSize(int i, double step);
-		void 			setStepSize(std::string name, double par);
-		void 			setStepSizes(std::vector<double> steps);
-		void 			setRandRange(double range);
+		void 			setParameter			(int i, double par		);
+		void 			setParameter			(std::string name, double par	);
+		void 			setParameters			(std::vector<double> pars	);
+		void 			setStepSize			(int i, double step		);
+		void 			setStepSize			(std::string name, double par	);
+		void 			setStepSizes			(std::vector<double> steps	);
+		void 			setRandRange			(double range			);
+		
+		double			getParameter			(size_t i)	const;			
 
 	// Fixing and releasing
 		void 			relPar(int i);
 		void 			fixPar(int i);
 		void 			relPar(std::string name);
 		void 			fixPar(std::string name);
-		const std::vector<bool>*getReleased			()const		{return &_released;};
+		const std::vector<bool>*getReleased			()		const		{return &_released;};
 
 
 	// Print routines
-		std::string 		className			()const		{return "minimize";};
+		std::string 		className			()		const		{return "minimize";};
 		void 			printStatus();
 
 	// Internal handlers
-		void 			update_definitions();
-		void 			reload_par_definitions(int mara_peter = -1);
-		bool 			initialize(std::string s1="Minuit2", std::string s2="Migrad");
-		void 			setRandomCpl();
-		void 			setRandomBra();
-		void			findRandRange();
-		void 			finish_setUp();
+		void 			update_definitions		();
+		void 			reload_par_definitions		(int mara_peter = -1);
+		bool 			initialize			(std::string s1="Minuit2", std::string s2="Migrad");
+		void 			setRandomCpl			();
+		void 			setRandomBra			();
+		void			findRandRange			();
+		void 			finish_setUp			();
 
 	// MULTINEST
-		void			cube(double* in)				const;
+		void			cube				(double* in)	const;
 
 #ifdef USE_YAML	
 		void 			loadFitterDefinitions(YAML::Node &waveset);

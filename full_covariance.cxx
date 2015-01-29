@@ -5,7 +5,6 @@
 #include<iostream>
 #include<string>
 #include<limits>
-
 #include"matrix_utilities.h"
 
 #ifdef ADOL_ON
@@ -115,6 +114,9 @@ xdouble full_covariance::EvalCP(
 			for (size_t i=0;i<_waveset.nFtw();i++){
 				actCpl[i] = cpl[i+tbin*_waveset.nFtw()];
 			};
+//			std::cout<<"VVVVVVVVVVVVVVVVVVVVVVVVV"<<std::endl;
+//			print_vector(actCpl);
+//			std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
 			chi2+=EvalTbin(tbin,&actCpl[0],&par[0],&iso_par[0]);//[0]//
 	//		std::cout<<tbin<<":E:"<<EvalTbin(tbin,actCpl,par)<<std::endl;
 //			std::cout<<chi2<<std::endl;
@@ -156,15 +158,16 @@ xdouble full_covariance::EvalBranch(
 template double full_covariance::EvalBranch(const std::complex<double> *branch, const std::complex<double> *cpl, const double *par, const double *iso_par)const;
 //########################################################################################################################################################
 ///Gets the chi2 for a single t' bin
-template<typename xdouble>
-xdouble full_covariance::EvalTbin(
+double full_covariance::EvalTbin(
 							int 								tbin,
-							const std::complex<xdouble>	 				*cpl,
-							const xdouble	 						*par,
-							const xdouble 							*iso_par)		const{
+							const std::complex<double>	 				*cpl,
+							const double	 						*par,
+							const double 							*iso_par)		const{
 
-	xdouble chi2 = 0.;
-	std::vector<std::vector<std::complex<xdouble> > > iso_eval = _waveset.iso_funcs(iso_par);
+	double chi2 = 0.;
+	std::vector<std::vector<std::complex<double> > > iso_eval = _waveset.iso_funcs(iso_par);
+//Careful, multiprocessing messes up the output file!!! Bed for debugging
+#pragma omp parallel for reduction(+:chi2)
 	for (size_t bin=_waveset.minBin(); bin<_waveset.maxBin(); bin++){
 		chi2+=EvalBin(tbin,bin,cpl,par,iso_eval);
 //		std::cout<<"bin #"<<bin<<" chi2++"<<EvalBin(tbin,bin,cpl,par,iso_eval)<<std::endl;
@@ -172,7 +175,23 @@ xdouble full_covariance::EvalTbin(
 	};
 	return chi2;
 };
-template double full_covariance::EvalTbin(int tbin, const std::complex<double> *cpl,const double *par, const double *iso_par)const;
+#ifdef ADOL_ON // Has to be twice, otherwise the openmp pragma would not work. Did not fins another workaround
+adouble full_covariance::EvalTbin(
+							int 								tbin,
+							const std::complex<adouble>	 				*cpl,
+							const adouble	 						*par,
+							const adouble 							*iso_par)		const{
+
+	adouble chi2 = 0.;
+	std::vector<std::vector<std::complex<adouble> > > iso_eval = _waveset.iso_funcs(iso_par);
+	for (size_t bin=_waveset.minBin(); bin<_waveset.maxBin(); bin++){
+		chi2+=EvalBin(tbin,bin,cpl,par,iso_eval);
+//		std::cout<<"bin #"<<bin<<" chi2++"<<EvalBin(tbin,bin,cpl,par,iso_eval)<<std::endl;
+//		std::cout << bin<<"   "<< EvalBin(tbin,bin,cpl,par) <<std::endl;
+	};
+	return chi2;
+};
+#endif//ADOL_ON
 //########################################################################################################################################################
 ///Gets the Chi2 for a single t' and m3pi bin
 template<typename xdouble>
@@ -201,7 +220,9 @@ xdouble full_covariance::EvalBin(
 	for (size_t i=0;i<_waveset.nPoints()*_waveset.nPoints();++i){
 //		int iWave1 = (*_waveset.point_to_wave())[(i+1)/2];
 //		if (mass >= _lowerLims[iWave] and mass < _upperLims[iWave]){
-//		if (_is_active[tbin][bin][iWave]){
+//		if (_is_active[bin][i]){
+		if (deltas[i] != 0.){
+
 //			std::cout<<"le_addite:D"<<pow(deltas[i],2.)*_coma[tbin][bin][i][i]<<std::endl;
 			if (_waveset.write_out()){
 				*_waveset.outStream() <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -219,10 +240,12 @@ xdouble full_covariance::EvalBin(
 			if(_waveset.write_out()){
 				*_waveset.outStream() <<chi2<<std::endl;
 			};
+
 			for (size_t j=0;j<i;j++){
 //				int jWave = (*_waveset.point_to_wave())[(j+1)/2];
 //				if(mass >= _lowerLims[jWave] and mass < _upperLims[jWave]){
-//				if(_is_active[tbin][bin][jWave]){
+//				if(_is_active[bin][j]){
+				if (deltas[j] != 0.){
 //					std::cout<<"le_addite: "<<2.*deltas[i]*deltas[j]*_coma[tbin][bin][i][j]<<std::endl;
 					if (_waveset.write_out()){
 						*_waveset.outStream() <<" mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<j+1<<"  ipj=            "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
@@ -235,8 +258,8 @@ xdouble full_covariance::EvalBin(
 					if(_waveset.write_out()){
 						*_waveset.outStream() <<chi2<<std::endl;
 					};
-//				};
-//			};
+				};
+			};
 		};
 	};
 //	std::cout<<tbin<<":"<<bin<<"::"<<chi2<<std::endl;
@@ -258,32 +281,38 @@ std::vector<xdouble> full_covariance::delta(
 	std::vector<double> var = _waveset.getVar(mass,tbin);
 	std::vector<std::complex<xdouble> > ampls = _waveset.amps(&var[0], cpl, par, iso_eval);
 
+
 ///	std::cout<<"''''''''''''''''''''''''''''''''''''''''"<<std::endl;
 ///	for (size_t i=0;i<ampls.size();++i){
 ///		std::cout<<i<<": "<<ampls[i]<<std::endl;
 ///	};
-
-	std::vector<xdouble> del = std::vector<xdouble> (nPoints*nPoints);
+	std::vector<xdouble> del(nPoints*nPoints,0.);
 //	del[0]=std::norm(ampls[0]) - _data[tbin][bin][0]; ////// HERE ADD if(_is_point_bin[bin][i]){...}; so that no deltas are aclculated for turend off bins
 	for (size_t i = 0; i<_waveset.nPoints();i++){
-#ifdef STORE_ACTIVE
-		if (not _is_active[tbin][bin][i]){
+//		if (not _is_active[bin][i]){
+
+//			continue;
+//		};
+		if (ampls[i] == std::complex<xdouble>(0.,0.)){
 			continue;
 		};
-#endif//STORE_ACTIVE
+
 		del[i*(nPoints+1)] = std::norm(ampls[i]) - _data[tbin][bin][i*(nPoints+1)];
 		if(_waveset.write_out()){
 			*_waveset.outStream() << " mass   "<<mass<<"      imb=           "<<bin<<"  ipi=           "<<i+1<<"  isectd=           "<<tbin+1<<std::endl;
 			*_waveset.outStream() << " Re1 data    "<<_data[tbin][bin][i*(nPoints+1)]<<"     - theory   "<<std::norm(ampls[i])<<"       =    "<<del[i*(nPoints+1)]<<std::endl;
 		};
 		for (size_t j=0; j<i;++j){
-#ifdef STORE_ACTIVE
-			if (not _is_active[tbin][bin][j]){
+//			if (not _is_active[bin][j]){
+//				continue;
+//			};
+			
+			if (ampls[j] == std::complex<xdouble>(0.,0.)){
 				continue;
 			};
-#endif//STORE_ACTIVE
+
 			std::complex<xdouble> inter = ampls[i]*std::conj(ampls[j]);
-			del[nPoints*i+j]= - imag(inter) - _data[tbin][bin][nPoints*i+j];    // imag part
+			del[nPoints*i+j]=   imag(inter) - _data[tbin][bin][nPoints*i+j];    // imag part
 			del[nPoints*j+i]=   real(inter) - _data[tbin][bin][nPoints*j+i];    // real part
 
 			if(_waveset.write_out()){
@@ -304,7 +333,6 @@ template std::vector<double> full_covariance::delta(int tbin, int bin,double mas
 #ifdef ADOL_ON
 template adouble full_covariance::EvalCP(const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par) const;
 template adouble full_covariance::EvalBranch(const std::complex<adouble> *branch, const std::complex<adouble> *cpl, const adouble *par, const adouble *iso_par) const;
-template adouble full_covariance::EvalTbin(int tbin, const std::complex<adouble> *cpl,const adouble *par, const adouble *iso_par) const;
 template adouble full_covariance::EvalBin(int tbin,int bin,const std::complex<adouble> *cpl,const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_par) const;
 template std::vector<adouble> full_covariance::delta(int tbin, int bin,double mass, const std::complex<adouble> *cpl, const adouble *par, std::vector<std::vector<std::complex<adouble> > > &iso_eval) const;
 //#######################################################################################################################################################
@@ -391,7 +419,7 @@ void full_covariance::setParameter(
 	};
 };
 //#######################################################################################################################################################
-double full_covariance::getParameter(size_t i)															const{
+double full_covariance::getParameter(			size_t 						i)						const{
 
 	if(i<2*_nCpl){
 		return _parameters[i];
@@ -596,9 +624,7 @@ bool full_covariance::set_data(
 		_data[tbin] = std::vector<std::vector<double> >(_waveset.nBins());
 	};
 	_data[tbin][bin] = data;
-#ifdef STORE_ACTIVE
 	update_is_active();
-#endif//STORE_ACTIVE
 
 	if (data.size() == _waveset.nPoints()*_waveset.nPoints()){
 		return true;
@@ -650,9 +676,7 @@ void full_covariance::loadData(
 			data_bin = std::vector<double>();
 		};
 	};
-#ifdef STORE_ACTIVE
 	update_is_active();
-#endif//STORE_ACTIVE
 	if (_waveset.nBins() != _data[tbin].size()){
 		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _data.size()="<<_data[tbin].size()<<std::endl;
 	}else{
@@ -689,10 +713,54 @@ void full_covariance::loadComa(
 	};
 };
 //########################################################################################################################################################
-///Returns the number of anchor couplings
+///Returns the number of couplings
 int full_covariance::getNcpl(){
-	int to_set = (_waveset.nFtw()-nBra())*_waveset.nTbin();
-	return to_set;
+	std::vector<size_t> nnn = *_waveset.n_cpls();
+	size_t n = nnn.size();
+	size_t maxx = 0;
+	for (size_t i=0;i<n;++i){
+		if (nnn[i] > maxx){
+			maxx = nnn[i];
+		};
+	};
+	maxx+=1;
+	maxx *= _waveset.nTbin();
+	return maxx;
+};
+//########################################################################################################################################################
+/// Sets br and cpl in one t' bin so, that it corresponds tothe full cpls
+std::vector<std::vector<std::complex<double> > > full_covariance::full_to_br_cpl(std::vector<std::complex<double> > &cpl){
+
+	size_t nFtw  = _waveset.nFtw();
+	size_t nTbin = _waveset.nTbin();
+	size_t nCpl  = _nCpl;
+	size_t cpls  = nCpl/nTbin;
+	size_t nBra  = _waveset.nBranch();
+
+	std::vector<std::vector<std::complex<double> > > ret;
+	ret.push_back(std::vector<std::complex<double> >(cpls,std::complex<double>(0.,0.)));
+	ret.push_back(std::vector<std::complex<double> >(nBra,std::complex<double>(0.,0.)));
+
+	std::vector<int> n_branch= *_waveset.n_branch();
+	std::vector<size_t> n_cpls = *_waveset.n_cpls();
+
+	std::complex<double> phase = conj(cpl[0])/abs(cpl[0]);
+
+	for (size_t func=0;func<nFtw;++func){
+		int nBr = n_branch[func];
+		size_t nCp = n_cpls[func];
+		if (nBr ==-1){
+			ret[0][nCp] = cpl[func]*phase;
+		}else{
+			if(ret[0][nCp] == std::complex<double>(0.,0.)){
+				ret[0][nCp] = cpl[func]*phase;
+				ret[1][nBr] = std::complex<double>(1.,0.);
+			}else{
+				ret[1][nBr] = cpl[func]*phase/ret[0][nCp];
+			};
+		};
+	};
+	return ret;
 };
 //########################################################################################################################################################
 ///Gets the total number of paramters with only anchor couplings
@@ -717,8 +785,16 @@ void full_covariance::nullify(){
 ///Updates the number of couplings
 void full_covariance::update_n_cpls(){
 
-	_waveset.update_n_cpls();
-	_nBrCpl = (*_waveset.n_cpls())[(*_waveset.borders_waves())[(*_waveset.borders_waves()).size()]-1]+1;
+	std::vector<size_t> nnn = *_waveset.n_cpls();
+	size_t n = nnn.size();
+	size_t maxx = 0;
+	for (size_t i=0;i<n;++i){
+		if (nnn[i] > maxx){
+			maxx = nnn[i];
+		};
+	};
+	maxx+=1;
+	_nBrCpl =  maxx;
 };
 //########################################################################################################################################################
 ///Updates the internal ranges for evaluation
@@ -759,7 +835,7 @@ void full_covariance::update_min_max_bin(){
 /// Prints the internal status
 void full_covariance::printStatus()																const{
 	_waveset.printStatus();
-	std::cout<<std::endl<<"ANCHOR:"<<std::endl;
+	std::cout<<std::endl<<"FULL COVARIANCE:"<<std::endl;
 	std::cout<<std::endl<<"PARAMETER NUMBERS:"<<std::endl;
 	std::cout<<"_nTot: "<<_nTot<<"; _nPar: "<<_nPar<<"; _nCpl: "<<_nCpl<<std::endl;
 	std::cout<<"_nBra: "<<_nBra<<"; _nIso: "<<_nIso<< "; _nBrCpl: "<<_nBrCpl<<std::endl;
@@ -788,7 +864,7 @@ void full_covariance::conjugate(){ //<<need>>
 		if (j<i){
 			for(size_t tbin=0;tbin<_waveset.nTbin();++tbin){
 				for(size_t bin=0;bin<_waveset.nBins();++bin){
-					_data[tbin][bin][ii]*=-1;
+//					_data[tbin][bin][ii]*=-1;
 					for (size_t jj=0;jj<nPoints*nPoints;++jj){
 						_coma[tbin][bin][ii][jj]*=-1;
 						_coma[tbin][bin][jj][ii]*=-1;
@@ -797,6 +873,16 @@ void full_covariance::conjugate(){ //<<need>>
 			};
 		};
 	};
+	for (size_t i=0;i<nPoints;++i){
+		for (size_t j=0;j<i;++j){
+			for(size_t tbin=0;tbin<_waveset.nTbin();++tbin){
+				for(size_t bin=0;bin<_waveset.nBins();++bin){
+					_data[tbin][bin][i*nPoints+j]*=-1;
+				};
+			};
+		};
+	};
+
 };
 //########################################################################################################################################################
 #ifdef USE_YAML
@@ -970,39 +1056,25 @@ void full_covariance::update_definitions(){
 	};
 	_parNames = names;
 };
-#ifdef STORE_ACTIVE
 //########################################################################################################################################################
 ///Updates, which data-point is actually active
 void full_covariance::update_is_active(){ //<<need>>
 
-	_is_active = std::vector<std::vector<std::vector<bool> > >(_waveset.nTbin(),std::vector<std::vector<bool> >(_waveset.nBins(),std::vector<bool>(_waveset.nPoints(),true)));
+	_is_active = std::vector<std::vector<bool> >(_waveset.nBins(),std::vector<bool>(_waveset.nPoints(),true));
 	size_t  nPoint = _waveset.nPoints();
-	for (size_t tbin =0;tbin<_waveset.nTbin();tbin++){
-		if (_data.size() < tbin){
-			break;
-		};
-		for(size_t bin=0;bin<_waveset.nBins();bin++){
-			if (_data[tbin].size() < bin-1){
-				break;
-			};
-			if (_data[tbin][bin].size() < _waveset.nPoints()*_waveset.nPoints()){
-				break;
-			};
-			for(size_t point=1;point<_waveset.nPoints();point++){
-				_is_active[tbin][bin][point] = true; // Relie here on the fact, that zero intensity results in a zero in all interferences
-				double sum_squares = 0.;
-				for (size_t i=0;i<nPoint;++i){
-					sum_squares+=pow(_data[tbin][bin][point*nPoint+i],2.);
-					sum_squares+=pow(_data[tbin][bin][point+nPoint*i],2.);
-				};
-				if (0.==sum_squares){
-					_is_active[tbin][bin][point] = false;				
-				};
+	std::vector<int> point_to_wave = *(_waveset.point_to_wave());
+	for(size_t bin=0;bin<_waveset.nBins();++bin){
+		double mass = _waveset.get_m(bin);
+		for (size_t point = 0;point<nPoint;++point){
+			size_t wave = point_to_wave[point];
+			double upperLim = (*_waveset.upperLims())[wave];
+			double lowerLim = (*_waveset.lowerLims())[wave];
+			if (mass > upperLim or mass < lowerLim){
+				_is_active[bin][point] = false;
 			};
 		};
 	};
 };
-#endif//STORE_ACTIVE
 //########################################################################################################################################################
 ///Writes plots with the internal _parameters
 void full_covariance::write_plots(
@@ -1042,7 +1114,7 @@ void full_covariance::write_plots(
 	write_plots(filename,tbin,cpl,par,bra,iso);
 };
 //########################################################################################################################################################
-///Writes plots for one t' bin
+///Writes plots for one t' bin, only diagonal elements at the moment
 void full_covariance::write_plots(
 							std::string						filename,
 							int 							tbin,
@@ -1051,7 +1123,6 @@ void full_covariance::write_plots(
 							const std::vector<std::complex<double> >		&bra,
 							const std::vector<double> 				&iso)					const{
 
-	double tprime = _waveset.getVar(0.,tbin)[1];
 	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
 	std::vector<std::vector<std::complex<double> > > iso_eval;
 	if(_waveset.has_isobars()){
@@ -1062,14 +1133,22 @@ void full_covariance::write_plots(
 	std::cout<<"write_plots(...): Chi2 for the used paramters is: "<<EvalTbin(tbin,&cpl_all[0],&par[0],&iso[0])<<std::endl;//[0]//
 	for (size_t bin=0;bin<_waveset.nBins();bin++){
 		double mass = _waveset.get_m(bin);
-		double var[] = {mass, tprime};
-		std::vector<std::complex<double> > amplitudes = _waveset.amps(var,&cpl_all[0],&par[0],iso_eval);
-		std::complex<double> ancAmp = amplitudes[0];
-		write_out<<mass<<" "<<norm(ancAmp)<<" "<<_data[tbin][bin][0]<<" "<<1/sqrt(_coma[tbin][bin][0][0]);
-		for (size_t i=1; i<_waveset.nPoints(); i++){
-			std::complex<double> inter = ancAmp*conj(amplitudes[i]);
-			write_out<<" "<<inter.real()<<" "<<_data[tbin][bin][2*i-1]<<" "<<1/sqrt(_coma[tbin][bin][2*i-1][2*i-1]);
-			write_out<<" "<<inter.imag()<<" "<<_data[tbin][bin][2*i  ]<<" "<<1/sqrt(_coma[tbin][bin][2*i  ][2*i  ]);
+		std::vector<double> var = _waveset.getVar(mass,tbin);
+		std::vector<std::complex<double> > amplitudes = _waveset.amps(&var[0],&cpl_all[0],&par[0],iso_eval);
+		write_out<<mass<<" ";
+		for (size_t i=0; i<_waveset.nPoints(); i++){
+			for (size_t j=0; j<_waveset.nPoints(); j++){
+				std::complex<double> inter = amplitudes[i]*conj(amplitudes[j]);
+				if (i==j){
+					write_out<<inter.real()<<" "<<_data[tbin][bin][(_waveset.nPoints()+1)*i]<<" "<<pow(_coma[tbin][bin][(_waveset.nPoints()+1)*i][(_waveset.nPoints()+1)*i],-.5)<<" ";
+				};
+				if (i<j){
+					write_out<<inter.real()<<" "<<_data[tbin][bin][_waveset.nPoints()*i+j]<<" "<<pow(_coma[tbin][bin][_waveset.nPoints()*i+j][_waveset.nPoints()*i+j],-.5)<<" ";
+				};
+				if(i>j){
+					write_out<<inter.imag()<<" "<<_data[tbin][bin][_waveset.nPoints()*i+j]<<" "<<pow(_coma[tbin][bin][_waveset.nPoints()*i+j][_waveset.nPoints()*i+j],-.5)<<" ";
+				};
+			};
 		};
 		write_out<<std::endl;
 	};

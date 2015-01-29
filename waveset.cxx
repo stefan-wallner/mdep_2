@@ -845,8 +845,8 @@ bool waveset::loadWaves(
 
 	bool ookk = true;
 	int nWaves = waveset["waves"].size();
-	double mmin = waveset["waves"][0]["mmin"].as<double>();
-	double mmax = waveset["waves"][0]["mmax"].as<double>();
+//	double mmin = waveset["waves"][0]["mmin"].as<double>();
+//	double mmax = waveset["waves"][0]["mmax"].as<double>();
 	for (int i=0;i<nWaves;i++){
 		add_wave();
 		std::string wName = waveset["waves"][i]["name"].as<std::string>();
@@ -861,7 +861,7 @@ bool waveset::loadWaves(
 		};
 		double mmin_act = waveset["waves"][i]["mmin"].as<double>();
 		double mmax_act = waveset["waves"][i]["mmax"].as<double>();
-		if (mmin_act<mmin){
+/*		if (mmin_act<mmin){
 			ookk=false;
 			std::cerr << "Error: Lower limit of '"<<waveset["waves"][i]["name"]<<"' below anchor mass limit"<<std::endl;
 		};
@@ -869,6 +869,7 @@ bool waveset::loadWaves(
 			ookk=false;
 			std::cerr << "Error: Upper limit of '"<<waveset["waves"][i]["name"]<<"' above anchor mass limit"<<std::endl;
 		};
+*/// Comment this check, since this is not required anymore for some methods
 		setWaveLimits(i,mmin_act,mmax_act);
 		bool set_phase_space = true; 
 		if (waveset["divide_integrals"]){

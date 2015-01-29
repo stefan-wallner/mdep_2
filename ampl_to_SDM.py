@@ -58,6 +58,9 @@ def get_coma(mean,coma):
 	return new_coma
 
 def invert(matrix):
+	"""
+	Inverts 'matrix'
+	"""
 	dim = len(matrix)
 	aa = np.zeros((dim,dim))
 	for i in range(dim):

@@ -6,6 +6,7 @@
 #include<iostream>
 #include<fstream>
 #include<cstdlib>
+#include <stdexcept>
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -77,6 +78,9 @@ void minimize::initCouplings(
 	size_t cpls = _method.nCpl()/nTbin;
 	std::vector<double> bestChi2Tbin(nTbin);
 	std::vector<std::vector<double> >bestCplTbin(nTbin,std::vector<double>(2*cpls));
+	size_t nBra = _method.nBra();
+	std::vector<std::vector<double> > bestBras = std::vector<std::vector<double> >(nTbin,std::vector<double >(2*nBra));
+
 #ifdef USE_ANCHOR_T
 	_method.setUseBranch(false); // Do not use branchings at first
 #else
@@ -87,6 +91,9 @@ void minimize::initCouplings(
 	for (size_t seed=0;seed<nSeeds;++seed){
 		std::cout<<"Seed #"<<seed<<std::endl;
 		setRandomCpl(); // Set random couplings
+#ifndef USE_ANCHOR_T
+		setRandomBra();
+#endif//USE_ANCHOR_T
 		for(size_t tbin=0; tbin<_method.Waveset()->nTbin();tbin++){ // Switch off all t' bins
 			_method.Waveset()->setEvalTbin(tbin,false);
 		};
@@ -110,6 +117,9 @@ void minimize::initCouplings(
 				for (size_t bestpar=0;bestpar<2*cpls;++bestpar){
 					bestCplTbin[tbin][bestpar] = actpar[2*tbin*cpls+bestpar];
 				};
+				for(size_t bestbra=0;bestbra<2*nBra;++bestbra){
+					bestBras[tbin][bestbra] = actpar[2*_method.nCpl()+_method.nPar()+bestbra];
+				};
 			};
 			std::cout <<"... Chi2 = "<<onetbinchi2<<std::endl;
 			_method.Waveset()->setEvalTbin(tbin,false);
@@ -131,6 +141,26 @@ void minimize::initCouplings(
 	for (size_t i=0;i<_method.nCpl();i++){
 		couplings[i] = std::complex<double>(_method.parameters()[2*i],_method.parameters()[2*i+1]);
 	};
+	for (size_t tbin=0;tbin<nTbin;++tbin){
+		std::complex<double> firstcpl = couplings[cpls*tbin];
+		std::complex<double> phase = conj(firstcpl)/abs(firstcpl);
+		for (size_t cpl =0; cpl<cpls; ++cpl){
+			size_t nn = tbin*cpls+cpl;
+			couplings[nn]*=phase;
+			setParameter(2*nn  ,couplings[nn].real());
+			setParameter(2*nn+1,couplings[nn].imag());
+		};
+		for (size_t bra=0;bra<nBra;++bra){
+			std::complex<double> cc(bestBras[tbin][2*bra],bestBras[tbin][2*bra+1]);
+			cc*=phase;
+			bestBras[tbin][2*bra  ] = cc.real();
+			bestBras[tbin][2*bra+1] = cc.imag();
+		};
+
+
+	};
+
+
 	for (size_t i=0;i<_method.nPar();i++){
 		par[i] = _method.parameters()[2*_method.nCpl()+i];
 	};
@@ -143,12 +173,16 @@ void minimize::initCouplings(
 	_method.setUseBranch(true);
 #endif//USE_ANCHOR_T
 	if (_method.nBra()>0){
-		std::vector<std::complex<double> > bra = _method.get_branchings(couplings,par,iso_par);
-		// branchCouplingsToOne(); // Set all coupled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
-		for (unsigned int i=0;i<bra.size();i++){ // Set found branchings
-			setParameter(2*_method.nCpl()+_method.nPar()+2*i ,bra[i].real());
-			setParameter(2*_method.nCpl()+_method.nPar()+2*i+1,bra[i].imag());
+		std::vector<double> branchings(2*nBra,0.);
+		for (size_t bra = 0;bra<2*nBra;++bra){
+			for (size_t tbin=0;tbin<nTbin;++tbin){
+				branchings[bra]+=bestBras[tbin][bra];
+			};
+			branchings[bra]/=nTbin;
+			setParameter(2*_method.nCpl()+_method.nPar()+bra,branchings[bra]);
 		};
+
+		// branchCouplingsToOne(); // Set all coupled couplings to one, since all should be in the branchings right now // Somehow Chi2 is better, when this is not done
 //std::cout << "With the found branchings, Chi2(...)="<< _method.EvalAutoCplBranch(&bra[0],&couplings[0],&par[0],&iso_par[0])<<" ('_method.EvalAutoCplBranch(...)')"<<std::endl; //[0]//
 		for (size_t i =0;i<2*_method.nCpl();i++){ // Fix couplings
 			fixPar(i);
@@ -264,6 +298,16 @@ void minimize::setRandRange(
 							double 						range){
 
 	_randRange=range;
+};
+//########################################################################################################################################################
+///Getter for parameters (for simplicty to avoid minimize::method()->parameters()[]
+double minimize::getParameter(				size_t						i)						const{
+
+	size_t max = _method.nTot();
+	if (i>max){
+		throw std::invalid_argument("Parameter i does not exist");
+	};
+	return _method.parameters()[i];
 };
 //########################################################################################################################################################
 ///Release parameter by number

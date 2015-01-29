@@ -1,8 +1,10 @@
 import sys
 import os
-
-
-
+"""
+Writes a file tabulated_integrals.h
+This file can be included to give the integrals wanted for the mass dependent fitter
+This is at the moment not very elegant, but not avoidable at the moment
+"""
 waves = [
 		'1-(0-+)0+ f0(980) pi S', 
 		'1-(1++)0+ f0(980) pi P',

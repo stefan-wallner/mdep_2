@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.8.8)
 
 project (Mdep)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder -fopenmp")
+
 set(use_auto_diff ON) 
 set(use_YAML ON)
 #set(use_multiNest ON)
@@ -65,6 +66,7 @@ add_library(minimize              SHARED minimize.cxx           )
 #set execuatbles
 add_executable(fitmd.exe fitmd.cc)
 add_executable(de_isobarring test_de-isobar.cc)
+add_executable(standard_test.exe standard_test.cc)
 
 add_executable(amplitude test_amplitude.cc)
 
@@ -79,6 +81,7 @@ target_link_libraries(anchor_t waveset)
 target_link_libraries(minimize anchor_t)
 target_link_libraries(minimize full_covariance)
 target_link_libraries(fitmd.exe minimize)
+target_link_libraries(standard_test.exe minimize)
 
 target_link_libraries(de_isobarring anchor_t)
 
@@ -88,6 +91,7 @@ target_link_libraries(minimize ${ROOT_LIBS} )
 #link YAML
 if ( use_YAML )
   target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
+  target_link_libraries(standard_test.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
   target_link_libraries(waveset /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
 endif()
 
