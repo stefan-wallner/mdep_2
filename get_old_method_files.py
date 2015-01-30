@@ -5,7 +5,7 @@ from rootpy.io import root_open
 from rootpy.plotting import Canvas, Hist, Legend
 from ROOT import TH1D
 
-def get_old_method_files(data_file, waveset, target,sfit):
+def get_old_method_files(data_file, waveset, target,sfit, FULL_COMA = True):
 	"""Writes the data from .root files to be used by the full coma approach of fitmd_2"""
 	numberNdigit = 3
 	waveNumbers = get_wave_numbers(waveset, sfit)
@@ -46,16 +46,24 @@ def get_old_method_files(data_file, waveset, target,sfit):
 		with open(target+"_coma",'w') as outoutout:
 			for bin in range(nBins):
 				for i in range(nWaves**2):
-					for j in range(nWaves**2):
-						if i == j:
-							try:
-								err = 1/hists[i].GetBinError(bin+1)
-							except ZeroDivisionError:
-								err = 0.
-							err **= 2
-							outoutout.write(str(err)+' ')
-						else:
-							outoutout.write("0.0 ")
+					if FULL_COMA:
+						for j in range(nWaves**2):
+							if i == j:
+								try:
+									err = 1/hists[i].GetBinError(bin+1)
+								except ZeroDivisionError:
+									err = 0.
+								err **= 2
+								outoutout.write(str(err)+' ')
+							else:
+								outoutout.write("0.0 ")
+					else:
+						try:
+							err = 1/hists[i].GetBinError(bin+1)
+						except ZeroDivisionError:
+							err = 0.
+						err**=2
+						outoutout.write(str(err)+' ')
 				outoutout.write('\n')
 
 
@@ -118,10 +126,10 @@ if __name__ == "__main__":
 			"/nfs/hicran/project/compass/analysis/swallner/data_massindependentfits/amplitudes/florian/hfit_0.326380-0.448588.root",
 			"/nfs/hicran/project/compass/analysis/swallner/data_massindependentfits/amplitudes/florian/hfit_0.448588-0.724294.root",
 			"/nfs/hicran/project/compass/analysis/swallner/data_massindependentfits/amplitudes/florian/hfit_0.724294-1.000000.root"]
-	target = 	"/nfs/mds/user/fkrinner/data_mdep_fit/13w_exotic_old_method/"
+	target = 	"/nfs/mds/user/fkrinner/data_mdep_fit/13w_exotic_old_method_noComa/"
 	sfit   = 	"/nfs/hicran/project/compass/analysis/swallner/data_massindependentfits/amplitudes/florian/sfit.dat"
 	for i in range(len(data_files)):
-		get_old_method_files(data_files[i],waveset, target+str(i),sfit)
+		get_old_method_files(data_files[i],waveset, target+str(i),sfit, FULL_COMA = False)
 		print data_files[i]
 
 

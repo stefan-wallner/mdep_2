@@ -64,17 +64,17 @@ int main(int argc, char* argv[]){
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 
-//	Chi2.initCouplings(4);	
+	Chi2.initCouplings(4);	
 
 	std::cout<<"-------inited------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 	std::cout<<"best couplings found:"<<std::endl;
 
-	for (size_t i=0;i<parrrr.size();++i){
-		Chi2.setParameter(i,parrrr[i]);
-	};
-	Chi2.fit();
+//	for (size_t i=0;i<parrrr.size();++i){
+//		Chi2.setParameter(i,parrrr[i]);
+//	};
+//	Chi2.fit();
 //	std::vector<double> bestpars = Chi2.method()->parameters();
 //	ofstream olo;
 //	olo.open("erte");
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
 //	};
 //	olo.close();
 
-	std::cout<<Chi2()<<std::endl;
+	std::cout<<"isolreit? "<<Chi2()<<std::endl;
 	Chi2.method()->write_plots("plots0.txt",0);
 	return 0;
 

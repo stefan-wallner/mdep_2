@@ -60,6 +60,7 @@ include_directories(
 add_library(waveset               SHARED waveset.cxx            )
 add_library(anchor_t              SHARED anchor_t.cxx           )
 add_library(full_covariance       SHARED full_covariance.cxx    )
+add_library(old_method            SHARED old_method.cxx    )
 add_library(minimize              SHARED minimize.cxx           )
 
 
@@ -80,6 +81,7 @@ target_link_libraries(anchor_t waveset)
 #target_link_libraries(full_covariance waveset)
 target_link_libraries(minimize anchor_t)
 target_link_libraries(minimize full_covariance)
+target_link_libraries(minimize old_method)
 target_link_libraries(fitmd.exe minimize)
 target_link_libraries(standard_test.exe minimize)
 

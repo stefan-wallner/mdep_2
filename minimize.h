@@ -4,12 +4,22 @@
 #include<complex>
 #include<string>
 
+//#define USE_FULL_COMA
 //#define USE_ANCHOR_T
 #ifdef USE_ANCHOR_T
 #include"anchor_t.h"
+typedef anchor_t METHOD;
 #else//USE_ANCHOR_T
+#ifdef USE_FULL_COMA
 #include"full_covariance.h"
+typedef full_covariance METHOD;
+#else//USE_FULL_COMA
+#include"old_method.h"
+typedef old_method METHOD;
+#endif//USE_FULL_COMA
 #endif//USE_ANCHOR_T
+
+
 
 #include"Math/Minimizer.h"
 #include"Math/Factory.h"
@@ -37,11 +47,7 @@ class minimize{
 		void 			initCouplings(size_t nSeeds = 1);
 
 	// Setters and getters
-#ifdef USE_ANCHOR_T
-		anchor_t*		method(){return &_method;};
-#else
-		full_covariance*	method(){return &_method;};
-#endif
+		METHOD*		method(){return &_method;};
 		void 			setParameter			(int i, double par		);
 		void 			setParameter			(std::string name, double par	);
 		void 			setParameters			(std::vector<double> pars	);
@@ -81,11 +87,7 @@ class minimize{
 #endif//USE_YAML
 	protected:
 	//METHOD
-#ifdef USE_ANCHOR_T
-		anchor_t		_method;						// The method used (at the moment anchor_t)
-#else
-		full_covariance		_method;						// The method used (at the moment anchor_t)
-#endif
+		METHOD			_method;						// The method used (at the moment anchor_t)
 
 	// OWN STUFF
 		std::vector<double> 	_best_par; 						// Best paramters
