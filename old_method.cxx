@@ -671,7 +671,7 @@ void old_method::loadComa(
 		coma_line.push_back(val);
 //		std::cout<< "coma_line.szie() = "<<coma_line.size()<<std::endl;
 		if (coma_line.size() == nDat*nDat){
-//			std::cout<<"_coma["<<tbin<<"].push_back(std::vector<double>("<<coma_line.size()<<")"<<std::endl;
+//				std::cout<<"_coma["<<tbin<<"].push_back(std::vector<double>("<<coma_line.size()<<")"<<std::endl;
 			_coma[tbin].push_back(coma_line);
 			coma_line = std::vector<double>();
 		};
