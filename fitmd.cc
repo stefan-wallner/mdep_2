@@ -4,6 +4,9 @@
 
 
 #include"minimize.h"
+#include"method.h"
+#include"old_method.h"
+
 #include"../chi_squared/breitWigners.h"
 #include"yaml-cpp/yaml.h"
 #include"currentDateTime.h"
@@ -59,31 +62,45 @@ int main(int argc, char* argv[]){
 	std::vector<double> parrrr = load_file("./erte");
 	std::cout<<"Found file with "<<parrrr.size()<<" paramters"<<std::endl;
 
+//	for (size_t i=0;i<2*nCpl/nTbin;++i){
+//		Chi2.setParameter(i,parrrr[i]);
+//	};
+
 
 	std::cout<<"--------init-------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 
-	Chi2.initCouplings(4);	
+//	Chi2.initCouplings(5);	
+//	Chi2.relPar("M_pi1(1600)");
+//	Chi2.relPar("G_pi1(1600)");
+//	Chi2.fit();
+//	Chi2.fit();
 
 	std::cout<<"-------inited------"<<std::endl;
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 	std::cout<<"best couplings found:"<<std::endl;
 
-//	for (size_t i=0;i<parrrr.size();++i){
-//		Chi2.setParameter(i,parrrr[i]);
-//	};
-//	Chi2.fit();
-//	std::vector<double> bestpars = Chi2.method()->parameters();
-//	ofstream olo;
-//	olo.open("erte");
-//	for(size_t i=0;i<bestpars.size();++i){
-//		olo<<bestpars[i]<<" ";
-//	};
-//	olo.close();
+	int mmm = Chi2.method()->getParNumber("M_pi1(1600)");
+	int ggg = Chi2.method()->getParNumber("G_pi1(1600)");
 
-	std::cout<<"isolreit? "<<Chi2()<<std::endl;
+	for (size_t i=0;i<parrrr.size();++i){
+		Chi2.setParameter(i,parrrr[i]);
+	};
+	std::cout<<"M: "<< Chi2.method()->getParameter(mmm)<<std::endl;
+	std::cout<<"G: "<< Chi2.method()->getParameter(ggg)<<std::endl;
+
+//	Chi2.fit();
+	std::vector<double> bestpars = Chi2.method()->parameters();
+	ofstream olo;
+	olo.open("erte");
+	for(size_t i=0;i<bestpars.size();++i){
+		olo<<bestpars[i]<<" ";
+	};
+	olo.close();
+//
+//	std::cout<<"isolreit? "<<Chi2()<<std::endl;
 	Chi2.method()->write_plots("plots0.txt",0);
 	return 0;
 

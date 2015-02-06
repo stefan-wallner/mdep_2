@@ -6,7 +6,7 @@
 #include<iostream>
 #include<fstream>
 #include<cstdlib>
-#include <stdexcept>
+#include<stdexcept>
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"

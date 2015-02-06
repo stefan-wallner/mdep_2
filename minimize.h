@@ -4,6 +4,8 @@
 #include<complex>
 #include<string>
 
+#include"method.h"
+
 //#define USE_FULL_COMA
 //#define USE_ANCHOR_T
 #ifdef USE_ANCHOR_T
@@ -18,7 +20,6 @@ typedef full_covariance METHOD;
 typedef old_method METHOD;
 #endif//USE_FULL_COMA
 #endif//USE_ANCHOR_T
-
 
 
 #include"Math/Minimizer.h"

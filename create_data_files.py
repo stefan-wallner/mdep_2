@@ -4,6 +4,7 @@ sys.path.append('/nfs/hicran/project/compass/analysis/fkrinner/fkrinner/trunk/ma
 from sys import argv
 from convertTextOutput import getRelevantData
 from convertTextOutput import getIntegralAverage
+from create_mdep_data_files import own_pinv
 import yaml
 import os
 import datetime
@@ -78,7 +79,9 @@ def get_data_anchor(waves,up,low,direct,DIVIDE_PHASE_SPACE,int_dir,ACC_CORRECTED
 			jacobian.append(jacLine)
 		jacobian_M = np.matrix(jacobian)
 		final_coma = jacobian_M*raw_coma*jacobian_M.T
-		final_coma_inv = la.pinv(final_coma)
+		
+#		final_coma_inv = la.pinv(final_coma)
+		final_coma_inv = own_pinv(final_coma)
 		final_comas_inv.append(final_coma_inv.tolist())
 		data_points.append(data_point)
 	return data_points,final_comas_inv
@@ -250,8 +253,8 @@ def process_config(config_file, date_time_flag=False):
 			pass
 	except KeyError:
 		pass
-	for tbin in range(len(tbinning)-1):
-		t_name = name+"_"+str(tbinning[tbin])+'_'+str(tbinning[tbin+1])
+	for tbin in range(len(tbinning)):
+		t_name = name+"_"+str(tbinning[tbin])
 		int_dir=''
 		if norm_to_int:
 			try:
