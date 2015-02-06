@@ -7,7 +7,7 @@
 #include"method.h"
 
 //#define USE_FULL_COMA
-//#define USE_ANCHOR_T
+#define USE_ANCHOR_T
 #ifdef USE_ANCHOR_T
 #include"anchor_t.h"
 typedef anchor_t METHOD;

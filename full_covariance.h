@@ -1,7 +1,7 @@
 #ifndef ___FULLL___COMA___
 #define ___FULLL___COMA___
 #include"waveset.h"
-#include"method.h"
+#include"full_SDM.h"
 #include<complex>
 #include<vector>
 #include<string>
@@ -12,7 +12,7 @@
 #include "yaml-cpp/yaml.h"
 #endif//USE_YAML
 
-class full_covariance : public method{
+class full_covariance : public full_SDM{
 	public:
 	// CONSTRUCTOR
 		full_covariance();
@@ -78,39 +78,19 @@ class full_covariance : public method{
 		std::vector<double> 			Diff(std::vector<double> &xx)								const;
 		std::vector<double> 			Diff(const double* xx)									const;
 #endif//ADOL_ON
-	// PARAMETER HANDLING
-		std::vector<std::complex<double> > 	get_branchings(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par) const;
-		std::vector<std::complex<double> >	getAllCouplings(int tbin,const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
-		void 					branchCouplingsToOne();
-
-
-
 	// DATA HANDLING
 		bool 					set_data(int tbin, int bin, std::vector<double> data);
 		bool 					set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
-		void 					loadData(int tbin, const char* dataFile);
 		void 					loadComa(int tbin, const char* comaFile);
-		void 					nullify();
 		void 					conjugate();
 	// OTHER SETTERS & GETTERS
 
 		const std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
 
 		std::vector<double>			getParameters		()const;
-
-		int getNtot();
-		int getNcpl();
-
-		std::vector<std::vector<std::complex<double> > > full_to_br_cpl(std::vector<std::complex<double> > &cpl);
-
 	// OTHER METHODS
 		std::string 				className		()const		{return "full_covariance";};
-		void 					printStatus()		const;
 		void 					setTbinning(std::vector<std::vector<double> > binning);
-		void 					update_n_cpls();
-		void 					update_definitions();
-		void					update_is_active();
-
 	// PLOTTING
 		using					method::write_plots;
 		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
@@ -118,8 +98,6 @@ class full_covariance : public method{
 	protected:
 		// PARAMETERS AND DATA
 		std::vector<std::vector<std::vector<std::vector<double> > > > 		_coma; 			// Covariance matrix
-		std::vector<std::vector<bool> >						_is_active;		// Flag, which point is actually active
-
 };
 
 
