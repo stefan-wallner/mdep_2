@@ -5,22 +5,11 @@
 #include<string>
 
 #include"method.h"
-
-//#define USE_FULL_COMA
-#define USE_ANCHOR_T
-#ifdef USE_ANCHOR_T
 #include"anchor_t.h"
-typedef anchor_t METHOD;
-#else//USE_ANCHOR_T
-#ifdef USE_FULL_COMA
 #include"full_covariance.h"
-typedef full_covariance METHOD;
-#else//USE_FULL_COMA
 #include"old_method.h"
-typedef old_method METHOD;
-#endif//USE_FULL_COMA
-#endif//USE_ANCHOR_T
 
+typedef method METHOD; // Otherwise, the class method 'method()' and the type 'method' would have the same name --> typedef method METHOD
 
 #include"Math/Minimizer.h"
 #include"Math/Factory.h"
@@ -34,21 +23,21 @@ double MIN_STEP_SIZE = 0.00001;
 class minimize{
 	public:
 		minimize();
-
+		~minimize(){delete _method;};
 #ifdef USE_YAML
 		minimize(std::string card);
 #endif//USE_YAML
 
-		double 			operator()			()				{return _method();};
-		double 			operator()			(std::vector<double>&xx)	{return _method(xx);};
-		double 			operator()			(const double*xx)		{return _method(xx);};
+		double 			operator()			()				{return (*_method)(&_best_par[0]);};
+		double 			operator()			(std::vector<double>&xx)	{return (*_method)(xx);};
+		double 			operator()			(const double*xx)		{return (*_method)(xx);};
 
-	// Fitting routines
-		double 			fit();
-		void 			initCouplings(size_t nSeeds = 1);
+		// Fitting routines
+		double 			fit				();
+		void 			initCouplings			(size_t nSeeds = 1		);
 
 	// Setters and getters
-		METHOD*		method(){return &_method;};
+		METHOD*			method()							{return _method;};
 		void 			setParameter			(int i, double par		);
 		void 			setParameter			(std::string name, double par	);
 		void 			setParameters			(std::vector<double> pars	);
@@ -85,11 +74,13 @@ class minimize{
 
 #ifdef USE_YAML	
 		void 			loadFitterDefinitions(YAML::Node &waveset);
+		size_t			get_method(YAML::Node &card)			const;
 #endif//USE_YAML
 	protected:
 	//METHOD
-		METHOD			_method;						// The method used (at the moment anchor_t)
+		METHOD*			_method;						// The method used (at the moment anchor_t)
 
+		size_t			_method_type;
 	// OWN STUFF
 		std::vector<double> 	_best_par; 						// Best paramters
 		double 			_randRange; 						// Range for random paramters (couplings and branchings)

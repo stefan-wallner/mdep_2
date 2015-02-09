@@ -52,7 +52,7 @@ void method::setParameters(
 };
 //#######################################################################################################################################################
 ///Get parameters
-const std::vector<double> method::parameters()													const{
+const std::vector<double> method::parameters()														const{
 
 	std::vector<double> par(_nTot);
 	for (size_t i=0;i<_nTot;i++){

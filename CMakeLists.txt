@@ -70,7 +70,7 @@ add_library(minimize              SHARED minimize.cxx           )
 #set execuatbles
 add_executable(fitmd.exe         fitmd.cc                       )
 #add_executable(de_isobarring     test_de-isobar.cc              )
-add_executable(standard_test.exe standard_test.cc               )
+#add_executable(standard_test.exe standard_test.cc               )
 add_executable(amplitude         test_amplitude.cc              )
 
 if ( use_multiNest )
@@ -89,7 +89,7 @@ target_link_libraries(minimize   full_SDM                       )
 target_link_libraries(fitmd.exe  method                         )
 target_link_libraries(fitmd.exe  old_method                     )
 target_link_libraries(fitmd.exe  minimize                       )
-target_link_libraries(standard_test.exe minimize                )
+#target_link_libraries(standard_test.exe minimize                )
 #target_link_libraries(de_isobarring anchor_t                    )
 
 #link ROOT
@@ -98,7 +98,7 @@ target_link_libraries(minimize ${ROOT_LIBS} )
 #link YAML
 if ( use_YAML )
   target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
-  target_link_libraries(standard_test.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
+#  target_link_libraries(standard_test.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
   target_link_libraries(waveset /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
 endif()
 

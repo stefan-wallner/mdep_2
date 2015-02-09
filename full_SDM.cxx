@@ -112,9 +112,9 @@ void full_SDM::loadData(
 	};
 	update_is_active();
 	if (_waveset.nBins() != _data[tbin].size()){
-		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _data.size()="<<_data[tbin].size()<<std::endl;
+		std::cout << "'full_SDM.cxx' loadData(...): Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _data.size()="<<_data[tbin].size()<<std::endl;
 	}else{
-		std::cout << "File delivered the right size for _data"<<std::endl;
+		std::cout << "'full_SDM.cxx' loadData(...): File delivered the right size for _data"<<std::endl;
 	};
 };
 //########################################################################################################################################################

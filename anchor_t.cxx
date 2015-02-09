@@ -47,21 +47,8 @@ anchor_t::anchor_t(
 };
 #endif//USE_YAML
 //########################################################################################################################################################
-///Evaluate Chi2 with the internal _parameters (Call the oter operator)
-double anchor_t::operator()(){
-
-	return (*this)(&parameters()[0]);
-};
-//########################################################################################################################################################
 ///Evaluate Chi2 with the paramters xx
-double anchor_t::operator()(
-							std::vector<double> 						&xx){
-
-	return (*this)(&xx[0]);
-};
-//########################################################################################################################################################
-///Evaluate Chi2 with the paramters xx
-double anchor_t::operator()(
+double anchor_t::mainEval(
 							const double							*xx){
 
 
@@ -922,9 +909,9 @@ void anchor_t::loadData(
 	};
 	update_is_active();
 	if (_waveset.nBins() != _data[tbin].size()){
-		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _data.size()="<<_data[tbin].size()<<std::endl;
+		std::cout << "'anchor_t.cxx' loadData(...): Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _data.size()="<<_data[tbin].size()<<std::endl;
 	}else{
-		std::cout << "File delivered the right size for _data"<<std::endl;
+		std::cout << "'anchor_t.cxx' loadData(...): File delivered the right size for _data"<<std::endl;
 	};
 };
 //########################################################################################################################################################
@@ -951,9 +938,9 @@ void anchor_t::loadComa(
 		};
 	};
 	if (_waveset.nBins() != _coma[tbin].size()){
-		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
+		std::cout << "'anchor_t.cxx' loadComa(...): Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
 	}else{
-		std::cout<< "File delivered the right size for _coma"<<std::endl;
+		std::cout<< "'anchor_t.cxx' loadComa(...): File delivered the right size for _coma"<<std::endl;
 	};
 };
 //########################################################################################################################################################
@@ -963,8 +950,9 @@ int anchor_t::getNanc(){
 };
 //########################################################################################################################################################
 ///Switches on/off usage of branchings in the operator()
-void anchor_t::setUseBranch(bool in){
+bool anchor_t::setUseBranch(bool in){
 	_useBranch = in;
+	return true;
 };
 //########################################################################################################################################################
 ///Gets the total number of paramters with only anchor couplings

@@ -6,6 +6,7 @@
 #include"minimize.h"
 #include"method.h"
 #include"old_method.h"
+#include"anchor_t.h"
 
 #include"../chi_squared/breitWigners.h"
 #include"yaml-cpp/yaml.h"
@@ -37,6 +38,8 @@ int main(int argc, char* argv[]){
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 	minimize Chi2(card);
+	std::cout<<"got out?"<<std::endl;
+//	Chi2.finish_setUp();
 	//int n = Chi2.getParNumber("G_a1(1260)");
 	//Chi2.setParLimits(n,.13,13.);
 	//Chi2.printStatus();
@@ -51,6 +54,7 @@ int main(int argc, char* argv[]){
 	size_t nFtw = Chi2.method()->Waveset()->nFtw();
 
 	size_t dummy = nTbin*nFtw;
+
 	dummy+=dummy;
 
 	Chi2.printStatus();
@@ -58,9 +62,14 @@ int main(int argc, char* argv[]){
 
 	std::cout<< "nPar: "<<nPar<<"; nCpl: "<<nCpl<<"; nBra: "<<nBra<<"; nIso: "<<nIso<<" => nTot: "<<nTot<<std::endl;
 
-
 	std::vector<double> parrrr = load_file("./erte");
 	std::cout<<"Found file with "<<parrrr.size()<<" paramters"<<std::endl;
+
+	std::cout<<(*Chi2.method())()<<std::endl;
+	std::cout<<Chi2(&Chi2.method()->parameters()[0])<<std::endl;
+	std::cout<<Chi2.method()->className()<<std::endl;
+//	return 0;
+
 
 //	for (size_t i=0;i<2*nCpl/nTbin;++i){
 //		Chi2.setParameter(i,parrrr[i]);
@@ -71,7 +80,7 @@ int main(int argc, char* argv[]){
 	std::cout<<currentDateTime()<<std::endl;
 	std::cout<<"-------------------"<<std::endl;
 
-//	Chi2.initCouplings(5);	
+	Chi2.initCouplings(5);	
 //	Chi2.relPar("M_pi1(1600)");
 //	Chi2.relPar("G_pi1(1600)");
 //	Chi2.fit();
@@ -86,7 +95,7 @@ int main(int argc, char* argv[]){
 	int ggg = Chi2.method()->getParNumber("G_pi1(1600)");
 
 	for (size_t i=0;i<parrrr.size();++i){
-		Chi2.setParameter(i,parrrr[i]);
+//		Chi2.setParameter(i,parrrr[i]);
 	};
 	std::cout<<"M: "<< Chi2.method()->getParameter(mmm)<<std::endl;
 	std::cout<<"G: "<< Chi2.method()->getParameter(ggg)<<std::endl;

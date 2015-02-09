@@ -43,21 +43,8 @@ full_covariance::full_covariance(
 };
 #endif//USE_YAML
 //########################################################################################################################################################
-///Evaluate Chi2 with the internal _parameters (Call the other operator)
-double full_covariance::operator()(){
-
-	return (*this)(&parameters()[0]);
-};
-//########################################################################################################################################################
 ///Evaluate Chi2 with the paramters xx
-double full_covariance::operator()(
-							std::vector<double> 						&xx){
-
-	return (*this)(&xx[0]);
-};
-//########################################################################################################################################################
-///Evaluate Chi2 with the paramters xx
-double full_covariance::operator()(
+double full_covariance::mainEval(
 							const double							*xx){
 
 
@@ -443,9 +430,9 @@ void full_covariance::loadComa(
 		};
 	};
 	if (_waveset.nBins() != _coma[tbin].size()){
-		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
+		std::cout << "'full_covariance.cxx' loadComa(...): Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
 	}else{
-		std::cout<< "File delivered the right size for _coma"<<std::endl;
+		std::cout<< "'full_covariance.cxx' loadComa(...): File delivered the right size for _coma"<<std::endl;
 	};
 };
 //########################################################################################################################################################

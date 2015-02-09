@@ -21,13 +21,7 @@ class anchor_t : public method{
 								std::string 						card);
 #endif//USE_YAML
 	// EVALUATION METHODS
-		double operator()();
-
-		double operator()(
-								std::vector<double> 					&xx);
-
-		double operator()(
-								const double						*xx);
+		double 			mainEval						(const double *xx);
 
 		template<typename xdouble>
 		xdouble EvalCP(
@@ -110,47 +104,47 @@ class anchor_t : public method{
 								const xdouble	 					*iso_par)			const;
 	// DERIVATIVES
 #ifdef ADOL_ON
-		std::vector<double> 			Diff(std::vector<double> &xx)								const;
-		std::vector<double> 			Diff(const double* xx)									const;
+		std::vector<double> 			Diff			(std::vector<double> &xx)				const;
+		std::vector<double> 			Diff			(const double* xx)					const;
 #endif//ADOL_ON
 	// PARAMETER HANDLING
 
-		std::vector<std::complex<double> > 	get_branchings(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par) const;
-		std::vector<std::complex<double> >	getAllCouplings(int tbin,const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
-		void 					branchCouplingsToOne();
+		std::vector<std::complex<double> > 	get_branchings		(const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<double> &iso_par) const;
+		std::vector<std::complex<double> >	getAllCouplings		(int tbin,const std::vector<std::complex<double> > &cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
+		void 					branchCouplingsToOne	();
 
 
 
 	// DATA HANDLING
-		bool 					set_data(int tbin, int bin, std::vector<double> data);
-		bool 					set_coma(int tbin, int bin, std::vector<std::vector<double> > coma);
-		void 					loadData(int tbin, const char* dataFile);
-		void 					loadComa(int tbin, const char* comaFile);
-		void 					nullify();
-		void 					conjugate();
+		bool 					set_data		(int tbin, int bin, std::vector<double> data);
+		bool 					set_coma		(int tbin, int bin, std::vector<std::vector<double> > coma);
+		void 					loadData		(int tbin, const char* dataFile);
+		void 					loadComa		(int tbin, const char* comaFile);
+		void 					nullify			();
+		void 					conjugate		();
 	// OTHER SETTERS & GETTERS
-		bool					useBranch		()const		{return _useBranch;};
-		const std::vector<std::vector<double> >*get_coma(int tbin, int bin)const	{return &_coma[tbin][bin];};
+		bool					useBranch		()							const			{return _useBranch;};
+		const std::vector<std::vector<double> >*get_coma		(int tbin, int bin)					const			{return &_coma[tbin][bin];};
 
-		std::vector<double>			getParameters		()const;
+		std::vector<double>			getParameters		()							const;
 
 		int getNtotAnc();
 		int getNanc();
-		void setUseBranch(bool in);
+		bool setUseBranch(bool in);
 
 
 	// OTHER METHODS
-		std::string 				className		()const		{return "anchor_t";};
-		void 					printStatus()		const;
-		void 					set_is_ampl(bool is_ampl);
-		void 					setTbinning(std::vector<std::vector<double> > binning);
-		void 					update_n_cpls();
-		void 					update_definitions();
-		void					update_is_active();
+		std::string 				className		()const										{return "anchor_t";};
+		void 					printStatus		()							const;
+		void 					set_is_ampl		(bool is_ampl);
+		void 					setTbinning		(std::vector<std::vector<double> > binning);
+		void 					update_n_cpls		();
+		void 					update_definitions	();
+		void					update_is_active	();
 
 	// PLOTTING
 		using					method::write_plots;
-		void					write_plots(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
+		void					write_plots		(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
 
 	protected:
 		size_t 									_nBrCplAnc; // Number of couplings with branchings in the anchor wave

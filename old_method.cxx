@@ -43,22 +43,8 @@ old_method::old_method(
 };
 #endif//USE_YAML
 //########################################################################################################################################################
-///Evaluate Chi2 with the internal _parameters (Call the other operator)
-double old_method::operator()(){
-
-	return (*this)(&parameters()[0]);
-};
-//########################################################################################################################################################
 ///Evaluate Chi2 with the paramters xx
-double old_method::operator()(
-							std::vector<double> 						&xx){
-
-	return (*this)(&xx[0]);
-};
-//########################################################################################################################################################
-///Evaluate Chi2 with the paramters xx
-double old_method::operator()(
-							const double							*xx){
+double old_method::mainEval(const double							*xx){
 
 
 //	const std::complex<double>* cpl = (std::complex<double>*)xx; // This is forbidden by Charly, build complex variables by hand :(
@@ -416,9 +402,9 @@ void old_method::loadComa(
 		};
 	};
 	if (_waveset.nBins() != _coma[tbin].size()){
-		std::cout << "Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
+		std::cout << "'old_method.cxx' loadComa(...): Warning: _waveset.nBins()="<<_waveset.nBins()<<" != _coma.size()="<<_coma[tbin].size() << std::endl;
 	}else{
-		std::cout<< "File delivered the right size for _coma"<<std::endl;
+		std::cout<< "'old_method.cxx' loadComa(...): File delivered the right size for _coma"<<std::endl;
 	};
 };
 //########################################################################################################################################################

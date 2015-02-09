@@ -21,12 +21,7 @@ class full_covariance : public full_SDM{
 								std::string 						card);
 #endif//USE_YAML
 	// EVALUATION METHODS
-		double operator()();
-
-		double operator()(
-								std::vector<double> 					&xx);
-
-		double operator()(
+		double mainEval(
 								const double						*xx);
 
 		template<typename xdouble>
