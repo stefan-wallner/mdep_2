@@ -68,9 +68,9 @@ class waveset {
 		void 				setFunctionName		(int i, std::string name);
 		void 				setParameterName	(int i, std::string name);
 		void 				setConstantName		(int i, std::string name);
-		void 				setIsobarName		(int i,std::string name);
-		void 				setIsoParName		(int i,std::string name);
-		void 				setIsoConstName		(int i,std::string name);
+		void 				setIsobarName		(int i, std::string name);
+		void 				setIsoParName		(int i, std::string name);
+		void 				setIsoConstName		(int i, std::string name);
 
 		// // BINNING
 		void 				setBinning		(std::vector<double> binning);
@@ -82,7 +82,7 @@ class waveset {
 
 #ifdef USE_YAML
 		// // YAML LOADER
-		bool				loadGlobalPhaseSpace		(YAML::Node &waveset);
+		bool				loadGlobalPhaseSpace	(YAML::Node &waveset);
 		std::map<std::string,int>	loadFunctions		(YAML::Node &waveset, YAML::Node &param);
 		bool 				loadWaves		(YAML::Node &waveset, YAML::Node &defs);
 		void				loadFtw			(YAML::Node &waveset, std::map<std::string,int> &fMap);

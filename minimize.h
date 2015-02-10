@@ -27,8 +27,8 @@ class minimize{
 #ifdef USE_YAML
 		minimize(std::string card);
 #endif//USE_YAML
-
-		double 			operator()			()				{return (*_method)(&_best_par[0]);};
+																			// In python
+		double 			operator()			()				{return (*_method)(&_best_par[0]);};	
 		double 			operator()			(std::vector<double>&xx)	{return (*_method)(xx);};
 		double 			operator()			(const double*xx)		{return (*_method)(xx);};
 
@@ -57,15 +57,15 @@ class minimize{
 
 
 	// Print routines
-		std::string 		className			()		const		{return "minimize";};
-		void 			printStatus();
+		std::string 		className			()		const		{return "minimize";};				// X
+		void 			printStatus();													// X
 
 	// Internal handlers
 		void 			update_definitions		();
 		void 			reload_par_definitions		(int mara_peter = -1);
 		bool 			initialize			(std::string s1="Minuit2", std::string s2="Migrad");
-		void 			setRandomCpl			();
-		void 			setRandomBra			();
+		void 			setRandomCpl			();										// X
+		void 			setRandomBra			();										// X
 		void			findRandRange			();
 		void 			finish_setUp			();
 

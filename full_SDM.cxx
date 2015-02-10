@@ -31,22 +31,22 @@ std::vector<std::complex<double> > full_SDM::getAllCouplings(
 	size_t cpls = _nCpl/nTbin;
 	std::vector<std::complex<double> > cpl_all(nFtw);
 	if (cpl.size() == nFtw*nTbin){
-		std::cout<<"Got all couplings for all 't bins"<<std::endl;
+//		std::cout<<"Got all couplings for all 't bins"<<std::endl;
 		for (size_t i=0;i<nFtw;++i){
 			cpl_all[i] = std::complex<double>(cpl[nFtw*tbin+i]);
 		};	
 	} else if (cpl.size() == _nCpl){
-		std::cout<< "Got branched couplings for all t' bins"<<std::endl;
+//		std::cout<< "Got branched couplings for all t' bins"<<std::endl;
 		std::vector<std::complex<double> > tCpls(cpls);
 		for (size_t i=0;i<cpls;++i){
 			tCpls[i]=cpl[tbin*cpls+i];
 		};
 		cpl_all = getUnbranchedCouplings(tCpls,bra);
 	} else if (cpl.size() == nFtw){
-		std::cout<<"Got all couplings for on t' bin"<<std::endl;
+//		std::cout<<"Got all couplings for on t' bin"<<std::endl;
 		cpl_all = cpl;
 	} else if (cpl.size() == cpls){
-		std::cout<<"Got branched couplings for one t' bin"<<std::endl;
+//		std::cout<<"Got branched couplings for one t' bin"<<std::endl;
 		cpl_all = getUnbranchedCouplings(cpl,bra);
 	}else{
 		throw std::invalid_argument("Unknown format for couplings");

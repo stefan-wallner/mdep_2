@@ -799,29 +799,29 @@ std::vector<std::complex<double> > anchor_t::getAllCouplings(
 		};
 		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl_t[0],&par[0],&iso[0]);//[0]//
 		cpl_all = getUnbranchedCouplings(cpl_all,bra);
-		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for all t' bins"<<std::endl;
 	}else if (cpl.size() == _nBrCplAnc){ 			// Anchor couplings for one t' bin
 		cpl_all = getMinimumCplBra(tbin,&bra[0],&cpl[0],&par[0],&iso[0]);//[0]//
 		cpl_all = getUnbranchedCouplings(cpl_all,bra);
-		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as anchor couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _waveset.nBrCpl()*_waveset.nTbin()){ 		// Branched couplings for all t' bins
 		std::vector<std::complex<double> > cpl_t;
 		for (size_t i=0;i<_waveset.nBrCpl();i++){
 			cpl_t.push_back(cpl[tbin*_waveset.nBrCpl()+i]);
 		};
 		cpl_all = getUnbranchedCouplings(cpl_t,bra);
-		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for all t' bins"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for all t' bins"<<std::endl;
 	}else if (cpl.size() == _waveset.nBrCpl()){ 			// Branched couplings for one t' bin
 		cpl_all = getUnbranchedCouplings(cpl,bra);
-		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for one t' bin"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as branched couplings for one t' bin"<<std::endl;
 	}else if (cpl.size() == _waveset.nTbin()*_waveset.nFtw()){ 			// Simple couplings for all t' bins
 		for (size_t i=0;i<_waveset.nFtw();i++){
 			cpl_all.push_back(cpl[tbin*_waveset.nFtw()+i]);
 		};
-		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for all t' bins"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for all t' bins"<<std::endl;
 	}else if (cpl.size() == _waveset.nFtw()){ 			// Simple couplings for one t' bin
 		cpl_all = cpl;
-		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for one t' bin"<<std::endl;
+//		std::cout<<"getAllCouplings(...): Take couplings as simple couplings for one t' bin"<<std::endl;
 	}else{
 		std::cerr<<"Error: Can't determine the format of the couplings"<<std::endl;
 	};

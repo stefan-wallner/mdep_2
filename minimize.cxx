@@ -79,7 +79,6 @@ double minimize::fit(){
 	}else if(_method_type ==2){
 		_f=ROOT::Math::Functor(*((old_method*)_method),_method->nTot());
 	};
-
 	if(_init){
 		_min->Minimize();
 		const double *xs = _min->X();

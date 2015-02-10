@@ -145,6 +145,8 @@ class anchor_t : public method{
 	// PLOTTING
 		using					method::write_plots;
 		void					write_plots		(std::string filename, int tbin,const std::vector<std::complex<double> >&cpl,const std::vector<double> &par,const std::vector<std::complex<double> > &bra,const std::vector<double> &iso) const;
+		std::vector<std::complex<double> > 	amplitudes		(double mass, int tbin, const std::vector<double> &param) const;
+
 
 	protected:
 		size_t 									_nBrCplAnc; // Number of couplings with branchings in the anchor wave

@@ -2,8 +2,10 @@ cmake_minimum_required (VERSION 2.8.8)
 
 project (Mdep)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder -fopenmp")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Werror -Wno-reorder -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -fopenmp")
 
+set(create_python_links ON)
 set(use_auto_diff ON) 
 set(use_YAML ON)
 #set(use_multiNest ON)
@@ -19,6 +21,18 @@ set( INCLUDE_DIRS
     ${ROOT_INCLUDE_DIR}
 )
 
+if(create_python_links)
+  find_package(Boost 1.45.0 COMPONENTS python)
+  set(Boost_USE_STATIC_LIBS OFF)
+  set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_STATIC_RUNTIME OFF)
+  set( INCLUDE_DIRS 
+     ${INCLUDE_DIRS} 
+     ${Boost_INCLUDE_DIRS} 	
+     /nfs/hicran/home/fkrinner/private/include/python2.7
+#     /usr/include/python2.6
+  )
+endif()
  
 #### Switch on single modules
 
@@ -50,6 +64,10 @@ if( use_multiNest )
       ${INCLUDE_DIRS}
       /nfs/hicran/project/compass/analysis/fkrinner/MultiNest-master/include
   )
+endif()
+
+if(create_python_links)
+  add_library(chi2py SHARED chi2py.cxx)
 endif()
 
 
@@ -109,6 +127,11 @@ if ( use_auto_diff )
   target_link_libraries(anchor_t  /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(minimize  /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
   target_link_libraries(amplitude /nfs/hicran/home/fkrinner/private/lib/libadolc.so )
+endif()
+
+if(create_python_links)
+  target_link_libraries(chi2py minimize)
+  target_link_libraries(chi2py ${Boost_LIBRARIES})
 endif()
 
 if ( use_multiNest )

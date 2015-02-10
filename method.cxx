@@ -338,3 +338,45 @@ void method::write_plots(
 	write_plots(filename,tbin,cpl,par,bra,iso);
 };
 //########################################################################################################################################################
+///Get the amplitudes for internal parameters
+std::vector<std::complex<double> > method::amplitudes( 	double 							mass, 
+							int							tbin)					const{
+	return amplitudes(mass, tbin, parameters());
+};
+//########################################################################################################################################################
+
+std::vector<std::complex<double> > method::amplitudes(	double							mass,
+							int							tbin,
+							const std::vector<double>				&param)					const{
+
+	std::vector<std::complex<double> > cpl(_nCpl);
+	std::vector<double> par(_nPar);	
+	std::vector<std::complex<double> > bra(_nBra);
+	std::vector<double> iso(_nIso);
+	int count =0;
+	for (size_t i=0;i<_nCpl;i++){
+		cpl[i] = std::complex<double>(param[count],param[count+1]);
+		count+=2;
+	};
+	for (size_t i=0;i<_nPar;i++){
+		par[i] = param[count];
+		count++;
+	};
+	for (size_t i=0;i<_nBra;i++){
+		bra[i] = std::complex<double>(param[count],param[count+1]);
+		count+=2;
+	};
+	for (size_t i=0;i<_nIso;i++){
+		iso[i]=param[count];
+		count++;
+	};
+	std::vector<std::complex<double> > cpl_all = getAllCouplings(tbin,cpl,par,bra,iso);
+	std::vector<std::vector<std::complex<double> > > iso_eval;
+	if(_waveset.has_isobars()){
+		iso_eval = _waveset.iso_funcs(&iso[0]);
+	};
+	std::vector<double> var = _waveset.getVar(mass,tbin);
+	std::vector<std::complex<double> > amplitudes = _waveset.amps(&var[0],&cpl_all[0],&par[0],iso_eval);
+	return amplitudes;
+};
+//########################################################################################################################################################
