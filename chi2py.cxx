@@ -78,6 +78,9 @@ struct chi2py:public minimize{
 	void write_plots(std::string file_name, size_t tbin){
 		_method->write_plots(file_name,tbin);
 	};
+//	void writeParamToYamlFile(const std::string& file_name){
+//		minimize::writeParamToYamlFile(file_name);
+//	}
 
 	bp::list parameterNames(){
 		std::vector<std::string> names = *_method->parNames();
@@ -173,6 +176,10 @@ BOOST_PYTHON_MODULE(libchi2py){
 	chi2.def("parameters",				&chi2py::parameters				);
 
 	chi2.def("write_plots",				&chi2py::write_plots				);
+
+	chi2.def("writeParamToYamlFile",    &chi2py::writeParamToYamlFile );
+	chi2.def("loadParamFromYamlFile",    &chi2py::loadParamFromYamlFile );
+	chi2.def("writeResultToYamlFile",    &chi2py::writeResultToYamlFile );
 };
 
 

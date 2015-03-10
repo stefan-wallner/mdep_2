@@ -7,6 +7,7 @@
 #include<fstream>
 #include<cstdlib>
 #include<stdexcept>
+#include<sstream>
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -604,9 +605,65 @@ size_t minimize::get_method(
 	if (card["method"].as<std::string>() == "old_method"){
 		return 2;
 	};
-	throw runtime_error("Invalid method ginven in the 'card'");
+	throw std::runtime_error("Invalid method ginven in the 'card'");
 	return 1111111;
 };
+//########################################################################################################################################################
+/// Generates parameter node
+YAML::Node minimize::get_parameter_node()const{
+	YAML::Node parameters;
+	for( size_t i = 0; i < _method->nTot(); ++i )
+		parameters[(*_method->parNames())[i]] = getParameter(i);
+	return parameters;
+}
+/// Sets parameters from parameter node
+void minimize::set_param_from_node(const YAML::Node& parameters){
+	std::cout << "Here" << std::endl;
+	for( YAML::const_iterator it=parameters.begin(); it != parameters.end(); ++it)
+		setParameter(it->first.as<std::string>(), it->second.as<double>());
+}
+///Writes the current parameters to file
+void minimize::writeParamToYamlFile(const std::string& filename) const{
+	YAML::Node parameters = get_parameter_node();
+
+	std::ofstream fout(filename.c_str());
+	fout << parameters;
+	fout.close();
+
+}
+///Loads parameters from file
+void minimize::loadParamFromYamlFile(const std::string& filename){
+	std::cout << "Load parameters from file: " << filename << std::endl;
+	set_param_from_node(YAML::LoadFile(filename));
+}
+///Writes full result information to yaml file --> can easily parsed
+void minimize::writeResultToYamlFile(const std::string& filename)const{
+	YAML::Node root;
+	const YAML::Node parameters = get_parameter_node();
+
+	const char* minimizer_states[] = {"NotDefined", "Converged", "CovarianceWasMadePosDef", "HesseIsInvalide", "EdmIsAboveMax", "ReachedCallLimit", "AnyOtherFailure" };
+
+
+	YAML::Node parameter_errors;
+	for( size_t i = 0; i < _method->nTot(); ++i )
+		parameter_errors[(*_method->parNames())[i]] = _min->Errors()[i];
+
+
+    root["parameters"]       = parameters;
+    root["parameter_errors"] = parameter_errors;
+    root["chi2"]             = _min->MinValue();
+    root["status"]           = minimizer_states[_min->Status()+1]; // DotDefine is status -1
+    root["edm"]              = _min->Edm();
+    root["ncalls"]           = _min->NCalls();
+
+
+	std::ofstream fout(filename.c_str());
+	fout << root;
+	fout.close();
+}
+
+
+
 #endif//USE_YAML
 //########################################################################################################################################################
 ///Cube required by the MultiNest package
