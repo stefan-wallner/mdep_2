@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3  -fopenmp")
 
 set(create_python_links ON)
-set(use_auto_diff ON) 
+set(use_auto_diff OFF) 
 set(use_YAML ON)
 #set(use_multiNest ON)
 #set(use_anchor_t ON)
@@ -21,7 +21,9 @@ set( INCLUDE_DIRS
     ${ROOT_INCLUDE_DIR}
 )
 
+
 if(create_python_links)
+  include(FindPythonLibs)
   find_package(Boost 1.45.0 COMPONENTS python)
   set(Boost_USE_STATIC_LIBS OFF)
   set(Boost_USE_MULTITHREADED ON)
@@ -29,7 +31,8 @@ if(create_python_links)
   set( INCLUDE_DIRS 
      ${INCLUDE_DIRS} 
      ${Boost_INCLUDE_DIRS} 	
-     /nfs/hicran/home/fkrinner/private/include/python2.7
+     ${PYTHON_INCLUDE_PATH}
+#     /nfs/hicran/home/fkrinner/private/include/python2.7
 #     /usr/include/python2.6
   )
 endif()
@@ -86,10 +89,10 @@ add_library(minimize              SHARED minimize.cxx           )
 
 
 #set execuatbles
-add_executable(fitmd.exe         fitmd.cc                       )
+#add_executable(fitmd.exe         fitmd.cc                       )
 #add_executable(de_isobarring     test_de-isobar.cc              )
 #add_executable(standard_test.exe standard_test.cc               )
-add_executable(amplitude         test_amplitude.cc              )
+#add_executable(amplitude         test_amplitude.cc              )
 
 if ( use_multiNest )
   add_executable(multinest       multinest.cc                   )
@@ -104,9 +107,9 @@ target_link_libraries(minimize   anchor_t                       )
 target_link_libraries(minimize   full_covariance                )
 target_link_libraries(minimize   old_method                     )
 target_link_libraries(minimize   full_SDM                       )
-target_link_libraries(fitmd.exe  method                         )
-target_link_libraries(fitmd.exe  old_method                     )
-target_link_libraries(fitmd.exe  minimize                       )
+#target_link_libraries(fitmd.exe  method                         )
+#target_link_libraries(fitmd.exe  old_method                     )
+#target_link_libraries(fitmd.exe  minimize                       )
 #target_link_libraries(standard_test.exe minimize                )
 #target_link_libraries(de_isobarring anchor_t                    )
 
@@ -115,7 +118,7 @@ target_link_libraries(minimize ${ROOT_LIBS} )
 
 #link YAML
 if ( use_YAML )
-  target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
+    #  target_link_libraries(fitmd.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
 #  target_link_libraries(standard_test.exe /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
   target_link_libraries(waveset /nfs/hicran/project/compass/analysis/fkrinner/yaml/build/libyaml-cpp.so )
 endif()
