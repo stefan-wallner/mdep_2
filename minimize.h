@@ -53,6 +53,8 @@ class minimize{
 		void 			fixPar(int i);
 		void 			relPar(std::string name);
 		void 			fixPar(std::string name);
+		void            relBranchings();
+		void            fixBranchings();
 		const std::vector<bool>*getReleased			()		const		{return &_released;};
 
 

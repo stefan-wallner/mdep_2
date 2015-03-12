@@ -387,6 +387,18 @@ void minimize::fixPar(
 	};
 };
 //########################################################################################################################################################
+///Release all branching parameters
+void minimize::relBranchings(){
+	for( int i = 2*_method->nCpl() + _method->nPar(); i < 2*_method->nCpl() + _method->nPar() + 2*_method->nBra(); i++ )
+		relPar(i);
+}
+//########################################################################################################################################################
+///Fix all branching parameters
+void minimize::fixBranchings(){
+	for( int i = 2*_method->nCpl() + _method->nPar(); i < 2*_method->nCpl() + _method->nPar() + 2*_method->nBra(); i++ )
+		fixPar(i);
+}
+//########################################################################################################################################################
 ///Prints the internal status
 void minimize::printStatus(){ 
 

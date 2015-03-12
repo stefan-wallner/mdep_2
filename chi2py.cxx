@@ -173,6 +173,8 @@ BOOST_PYTHON_MODULE(libchi2py){
 	chi2.def("initCouplings",			&chi2py::initCouplings				);
 	chi2.def("relPar",				&chi2py::relPar					);
 	chi2.def("fixPar",				&chi2py::fixPar					);
+	chi2.def("relBranchings",       &chi2py::relBranchings          );
+	chi2.def("fixBranchings",       &chi2py::fixBranchings          );
 	chi2.def("parameters",				&chi2py::parameters				);
 
 	chi2.def("write_plots",				&chi2py::write_plots				);
