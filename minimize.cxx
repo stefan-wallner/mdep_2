@@ -621,37 +621,10 @@ size_t minimize::get_method(
 	return 1111111;
 };
 //########################################################################################################################################################
-/// Generates parameter node
-YAML::Node minimize::get_parameter_node()const{
-	YAML::Node parameters;
-	for( size_t i = 0; i < _method->nTot(); ++i )
-		parameters[(*_method->parNames())[i]] = getParameter(i);
-	return parameters;
-}
-/// Sets parameters from parameter node
-void minimize::set_param_from_node(const YAML::Node& parameters){
-	std::cout << "Here" << std::endl;
-	for( YAML::const_iterator it=parameters.begin(); it != parameters.end(); ++it)
-		setParameter(it->first.as<std::string>(), it->second.as<double>());
-}
-///Writes the current parameters to file
-void minimize::writeParamToYamlFile(const std::string& filename) const{
-	YAML::Node parameters = get_parameter_node();
-
-	std::ofstream fout(filename.c_str());
-	fout << parameters;
-	fout.close();
-
-}
-///Loads parameters from file
-void minimize::loadParamFromYamlFile(const std::string& filename){
-	std::cout << "Load parameters from file: " << filename << std::endl;
-	set_param_from_node(YAML::LoadFile(filename));
-}
 ///Writes full result information to yaml file --> can easily parsed
 void minimize::writeResultToYamlFile(const std::string& filename)const{
 	YAML::Node root;
-	const YAML::Node parameters = get_parameter_node();
+	const YAML::Node parameters = _method->get_parameter_node();
 
 	const char* minimizer_states[] = {"NotDefined", "Converged", "CovarianceWasMadePosDef", "HesseIsInvalide", "EdmIsAboveMax", "ReachedCallLimit", "AnyOtherFailure" };
 

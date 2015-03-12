@@ -298,6 +298,34 @@ bool method::loadParameterValues(
 	};
 	return ookk;
 };
+
+//########################################################################################################################################################
+/// Generates parameter node
+YAML::Node method::get_parameter_node()const{
+	YAML::Node parameters;
+	for( size_t i = 0; i < nTot(); ++i )
+		parameters[(*parNames())[i]] = getParameter(i);
+	return parameters;
+}
+/// Sets parameters from parameter node
+void method::set_param_from_node(const YAML::Node& parameters){
+	for( YAML::const_iterator it=parameters.begin(); it != parameters.end(); ++it)
+		setParameter(it->first.as<std::string>(), it->second.as<double>());
+}
+///Writes the current parameters to file
+void method::writeParamToFile(const std::string& filename) const{
+	YAML::Node parameters = get_parameter_node();
+
+	std::ofstream fout(filename.c_str());
+	fout << parameters;
+	fout.close();
+
+}
+///Loads parameters from file
+void method::loadParamFromFile(const std::string& filename){
+	std::cout << "Load parameters from file: " << filename << std::endl;
+	set_param_from_node(YAML::LoadFile(filename));
+}
 #endif//USE_YAML
 //########################################################################################################################################################
 ///Writes plots with the internal _parameters

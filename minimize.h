@@ -78,10 +78,8 @@ class minimize{
 		void 			loadFitterDefinitions(YAML::Node &waveset);
 		size_t			get_method(YAML::Node &card)			const;
 
-		YAML::Node      get_parameter_node() const;
-		void            set_param_from_node(const YAML::Node& parameters);
-		void            writeParamToYamlFile(const std::string& filename)const;
-		void            loadParamFromYamlFile(const std::string& filename);
+		void            writeParamToFile(const std::string& filename)const{_method->writeParamToFile(filename);}
+		void            loadParamFromFile(const std::string& filename){_method->loadParamFromFile(filename);}
 		void            writeResultToYamlFile(const std::string& filename)const;
 #endif//USE_YAML
 	protected:

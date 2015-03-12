@@ -179,8 +179,8 @@ BOOST_PYTHON_MODULE(libchi2py){
 
 	chi2.def("write_plots",				&chi2py::write_plots				);
 
-	chi2.def("writeParamToYamlFile",    &chi2py::writeParamToYamlFile );
-	chi2.def("loadParamFromYamlFile",    &chi2py::loadParamFromYamlFile );
+	chi2.def("writeParamToFile",    &chi2py::writeParamToFile );
+	chi2.def("loadParamFromFile",    &chi2py::loadParamFromFile );
 	chi2.def("writeResultToYamlFile",    &chi2py::writeResultToYamlFile );
 };
 

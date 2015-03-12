@@ -61,6 +61,11 @@ class method{
 	// YAML SETTER
 		bool					loadDataComa					(YAML::Node &waveset);
 		bool					loadParameterValues				(YAML::Node &waveset, YAML::Node &param);
+
+		YAML::Node      get_parameter_node() const;
+		void            set_param_from_node(const YAML::Node& parameters);
+		void            writeParamToFile(const std::string& filename)const;
+		void            loadParamFromFile(const std::string& filename);
 #endif//USE_YAML
 
 	// PLOTTING
